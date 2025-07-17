@@ -152,7 +152,7 @@ GaiaLib is a comprehensive C# library for ROM modification of Illusion of Gaia. 
 | C# File | TypeScript Destination | Notes |
 |---------|----------------------|-------|
 | `Compression/ICompressionProvider.cs` | `gaia-core/src/compression/interface.ts` | Compression interface |
-| `Compression/QuintetLZ.cs` | `gaia-core/src/compression/quintet-lz.ts` | QuintetLZ algorithm |
+| `Compression/QuintetLZ.cs` | `gaia-core/src/compression/QuintetLZ.ts` | QuintetLZ algorithm |
 
 ### 6. Sprite Handling
 
