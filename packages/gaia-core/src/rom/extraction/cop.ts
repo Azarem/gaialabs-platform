@@ -1,6 +1,6 @@
 import { RomDataReader } from './reader';
-import { Address, AddressType, AddressSpace, LocationWrapper, MemberType } from 'gaia-shared';
-import type { CopDef } from 'gaia-shared';
+import { Address, AddressType, AddressSpace, LocationWrapper, MemberType, createTypedNumber } from 'gaia-shared';
+import type { CopDef, TypedNumber } from 'gaia-shared';
 import type { DbRoot } from 'gaia-shared';
 
 // Placeholder interface for BlockReader until it's implemented
@@ -91,9 +91,9 @@ export class CopCommandProcessor {
   ): unknown {
     switch (memberType) {
       case MemberType.Byte:
-        return this._romDataReader.readByte();
+        return createTypedNumber(this._romDataReader.readByte(), 1);
       case MemberType.Word:
-        return this._romDataReader.readUShort();
+        return createTypedNumber(this._romDataReader.readUShort(), 2);
       case MemberType.Offset:
         return this.createCopLocation(this._romDataReader.readUShort(), null, partStr, isPtr, referenceType, addrType);
       case MemberType.Address:

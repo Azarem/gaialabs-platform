@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import { join, dirname } from 'path';
 import { Op } from '../../assembly/Op';
-import { AddressingMode } from 'gaia-shared';
+import { AddressingMode, TypedNumber } from 'gaia-shared';
 import { 
   DbRoot, 
   DbPart, 
@@ -36,7 +36,8 @@ export enum ObjectType {
   ByteArray = 'ByteArray',
   Array = 'Array',
   String = 'String',
-  Number = 'Number'
+  Number = 'Number',
+  TypedNumber = 'TypedNumber'
 }
 
 export class BlockWriter {
@@ -336,6 +337,9 @@ export class BlockWriter {
       case ObjectType.Number:
         return this.writeNumber(obj as number);
 
+      case ObjectType.TypedNumber:
+        return this.writeTypedNumber(obj as TypedNumber);
+
       case ObjectType.String:
         return [String(obj)];
 
@@ -565,6 +569,14 @@ export class BlockWriter {
     } else {
       return [`#$${num.toString(16).toUpperCase().padStart(6, '0')}`];
     }
+  }
+
+  private writeTypedNumber(num: TypedNumber): string[] {
+    if (num.size === 1) {
+      return [`#${num.value.toString(16).toUpperCase().padStart(2, '0')}`];
+    }
+    const width = num.size * 2;
+    return [`#$${num.value.toString(16).toUpperCase().padStart(width, '0')}`];
   }
 
   private formatOperand(format: string, operands: any[]): string {

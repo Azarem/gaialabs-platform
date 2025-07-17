@@ -17,3 +17,4 @@ export * from './location';
 export * from './strings';
 export * from './structs';
 export * from './tables';
+export * from './operands';
