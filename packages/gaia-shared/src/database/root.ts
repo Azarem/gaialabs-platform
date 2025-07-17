@@ -98,6 +98,9 @@ export class DbRootUtils {
     // Process blocks and parts
     for (const block of blocks) {
       block.parts = parts.filter(p => p.block === block.name);
+      for (const part of block.parts) {
+        (part as any)._block = block;
+      }
     }
 
     const cfg = config[0];

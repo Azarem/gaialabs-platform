@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import { join, dirname } from 'path';
 import { Op } from '../../assembly/Op';
-import { AddressingMode } from 'gaia-shared';
+import { AddressingMode, TypedNumber } from 'gaia-shared';
 import { 
   DbRoot, 
   DbPart, 
@@ -36,7 +36,8 @@ export enum ObjectType {
   ByteArray = 'ByteArray',
   Array = 'Array',
   String = 'String',
-  Number = 'Number'
+  Number = 'Number',
+  TypedNumber = 'TypedNumber'
 }
 
 export class BlockWriter {
@@ -212,6 +213,9 @@ export class BlockWriter {
 
   private resolveOperand(op: Op, obj: any, isBranch: boolean = false): any {
     if (typeof obj === 'number') {
+      if (op.code.mode === AddressingMode.Immediate) {
+        return obj;
+      }
       return this._blockReader.resolveName(obj, AddressType.Address, isBranch);
     }
     if (this.getObjectType(obj) === ObjectType.LocationWrapper) {
@@ -333,6 +337,9 @@ export class BlockWriter {
       case ObjectType.Number:
         return this.writeNumber(obj as number);
 
+      case ObjectType.TypedNumber:
+        return this.writeTypedNumber(obj as TypedNumber);
+
       case ObjectType.String:
         return [String(obj)];
 
@@ -394,7 +401,9 @@ export class BlockWriter {
         if (op.operands && op.operands.length > 1) {
           const operandStrings: string[] = [];
           for (let i = 1; i < op.operands.length; i++) {
-            const operandLines = this.writeObject(op.operands[i], depth + 1, false);
+            // Resolve operand names similar to regular instructions
+            const resolved = this.resolveOperand(op, op.operands[i]);
+            const operandLines = this.writeObject(resolved, depth + 1, false);
             operandStrings.push(operandLines[0]);
           }
           opLine += ` ( ${operandStrings.join(', ')} )`;
@@ -562,6 +571,14 @@ export class BlockWriter {
     } else {
       return [`#$${num.toString(16).toUpperCase().padStart(6, '0')}`];
     }
+  }
+
+  private writeTypedNumber(num: TypedNumber): string[] {
+    if (num.size === 1) {
+      return [`#${num.value.toString(16).toUpperCase().padStart(2, '0')}`];
+    }
+    const width = num.size * 2;
+    return [`#$${num.value.toString(16).toUpperCase().padStart(width, '0')}`];
   }
 
   private formatOperand(format: string, operands: any[]): string {
