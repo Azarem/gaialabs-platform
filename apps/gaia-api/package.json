@@ -1,0 +1,62 @@
+{
+  "name": "gaia-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Node.js + TypeScript backend API for GaiaLabs platform",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm run-p build:*",
+    "build:types": "tsc --build",
+    "dev": "pnpm run-p dev:*",
+    "lint": "eslint . --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf --glob ./dist ./tsconfig.tsbuildinfo"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/scripts/seed.ts ../../ext/GaiaLib/db/us"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.0.1",
+    "@fastify/helmet": "^13.0.1",
+    "@fastify/jwt": "^9.1.0",
+    "@fastify/multipart": "^9.0.3",
+    "@fastify/static": "^8.2.0",
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.3",
+    "@prisma/client": "^6.11.1",
+    "bcryptjs": "^3.0.2",
+    "fastify": "^5.4.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "gaia-core": "workspace:*",
+    "gaia-git": "workspace:*",
+    "gaia-shared": "workspace:*",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.19.6",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "eslint": "^9.30.1",
+    "prisma": "^6.11.1",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.5.0",
+    "tsx": "^4.6.2",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "keywords": [
+    "api",
+    "backend",
+    "fastify",
+    "nodejs",
+    "typescript",
+    "prisma"
+  ],
+  "author": "GaiaLabs Team",
+  "license": "MIT"
+}

@@ -1,0 +1,366 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------
+// Master Game Data
+// Contains the canonical definition of all assets for a game,
+// independent of any specific release.
+// -------------------
+
+model Game {
+  id           String @id @default(cuid())
+  title        String @unique
+  description  String?
+  platform     String // e.g., "SNES", "Genesis"
+  meta         Json?  // For any other metadata
+
+  // Default ROM characteristics (from a "master" or common version)
+  romDeveloper Int?
+  romMode      Int?
+  romChipset   Int?
+  romSize      Int?
+  ramSize      Int?
+
+  files    GameFile[]
+  blocks   GameBlock[]
+  releases Release[]
+
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime? // For soft deletes
+  createdById String?   // Optional: Link to a User model
+  updatedById String?   // Optional: Link to a User model
+  deletedById String?
+
+  createdBy User? @relation("CreatedGames", fields: [createdById], references: [id])
+  updatedBy User? @relation("UpdatedGames", fields: [updatedById], references: [id])
+  deletedBy User? @relation("DeletedGames", fields: [deletedById], references: [id])
+}
+
+model GameFile {
+  id      String @id @default(cuid())
+  name    String
+  type    String? // e.g., "Graphics", "Text", "Code"
+  group   String? // For logical grouping
+  scene   String? // e.g., "Intro", "World Map"
+
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId String
+
+  releaseFiles ReleaseFile[]
+
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+  deletedById String?
+
+  createdBy User? @relation("CreatedGameFiles", fields: [createdById], references: [id])
+  updatedBy User? @relation("UpdatedGameFiles", fields: [updatedById], references: [id])
+  deletedBy User? @relation("DeletedGameFiles", fields: [deletedById], references: [id])
+
+  @@unique([gameId, name])
+}
+
+model GameBlock {
+  id    String  @id @default(cuid())
+  name  String
+  group String?
+  scene String?
+
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId String
+
+  parts         GamePart[]
+  releaseBlocks ReleaseBlock[]
+
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+  deletedById String?
+
+  createdBy User? @relation("CreatedGameBlocks", fields: [createdById], references: [id])
+  updatedBy User? @relation("UpdatedGameBlocks", fields: [updatedById], references: [id])
+  deletedBy User? @relation("DeletedGameBlocks", fields: [deletedById], references: [id])
+
+  @@unique([gameId, name])
+}
+
+model GamePart {
+  id     String  @id @default(cuid())
+  name   String
+  struct String? // Describes the data structure, e.g., "PlayerStats"
+  order  Int     @default(0) // Order within the block
+
+  block       GameBlock @relation(fields: [gameBlockId], references: [id], onDelete: Cascade)
+  gameBlockId String
+
+  releaseParts ReleasePart[]
+
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+  deletedById String?
+
+  createdBy User? @relation("CreatedGameParts", fields: [createdById], references: [id])
+  updatedBy User? @relation("UpdatedGameParts", fields: [updatedById], references: [id])
+  deletedBy User? @relation("DeletedGameParts", fields: [deletedById], references: [id])
+
+  @@unique([gameBlockId, name])
+}
+
+
+// -------------------
+// Release-Specific Data
+// Contains overrides and location-specific information for a
+// particular game release (e.g., US v1.0, JP v1.1).
+// -------------------
+
+model Release {
+  id           String @id @default(cuid())
+  romVersion   Int // e.g., 0 for "1.0"
+  romRegion    Int // e.g., 1 for "US"
+  romTitle     String?
+  romCode      String?
+  romCrc       Int?    // e.g. 0x1C3848C0
+
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId String
+
+  files  ReleaseFile[]
+  blocks ReleaseBlock[]
+  parts  ReleasePart[]
+
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+  deletedById String?
+
+  createdBy User? @relation("CreatedReleases", fields: [createdById], references: [id])
+  updatedBy User? @relation("UpdatedReleases", fields: [updatedById], references: [id])
+  deletedBy User? @relation("DeletedReleases", fields: [deletedById], references: [id])
+
+  @@unique([gameId, romVersion, romRegion])
+}
+
+// Override table for GameFile
+model ReleaseFile {
+  id String @id @default(cuid())
+
+  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  releaseId String
+
+  gameFile   GameFile @relation(fields: [gameFileId], references: [id], onDelete: Cascade)
+  gameFileId String
+
+  // --- Overridable fields ---
+  name  String?
+  type  String?
+  group String?
+  scene String?
+
+  // --- Release-specific fields ---
+  romLocation Int?
+  romSize     Int?
+
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+  deletedById String?
+
+  createdBy User? @relation("CreatedReleaseFiles", fields: [createdById], references: [id])
+  updatedBy User? @relation("UpdatedReleaseFiles", fields: [updatedById], references: [id])
+  deletedBy User? @relation("DeletedReleaseFiles", fields: [deletedById], references: [id])
+
+  @@unique([releaseId, gameFileId])
+}
+
+// Override table for GameBlock
+model ReleaseBlock {
+  id String @id @default(cuid())
+  
+  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  releaseId String
+
+  gameBlock   GameBlock @relation(fields: [gameBlockId], references: [id], onDelete: Cascade)
+  gameBlockId String
+
+  // --- Overridable fields ---
+  name  String?
+  group String?
+  scene String?
+  
+  // A ReleaseBlock is an organizational unit and does not have a direct location.
+  // Its Parts define the content and locations.
+
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+  deletedById String?
+
+  createdBy User? @relation("CreatedReleaseBlocks", fields: [createdById], references: [id])
+  updatedBy User? @relation("UpdatedReleaseBlocks", fields: [updatedById], references: [id])
+  deletedBy User? @relation("DeletedReleaseBlocks", fields: [deletedById], references: [id])
+
+  @@unique([releaseId, gameBlockId])
+}
+
+// Override table for GamePart
+model ReleasePart {
+  id String @id @default(cuid())
+
+  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  releaseId String
+
+  gamePart   GamePart @relation(fields: [gamePartId], references: [id], onDelete: Cascade)
+  gamePartId String
+
+  // --- Overridable fields ---
+  name   String?
+  struct String?
+  order  Int?
+
+  // --- Release-specific fields ---
+  romLocation Int? // The address of the part in the ROM
+  romSize     Int?
+
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+  deletedById String?
+
+  createdBy User? @relation("CreatedReleaseParts", fields: [createdById], references: [id])
+  updatedBy User? @relation("UpdatedReleaseParts", fields: [updatedById], references: [id])
+  deletedBy User? @relation("DeletedReleaseParts", fields: [deletedById], references: [id])
+
+  @@unique([releaseId, gamePartId])
+}
+
+// -------------------
+// Authentication & User Models
+// Based on the standard NextAuth.js Prisma Adapter schema for flexibility.
+// -------------------
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(USER)
+
+  accounts Account[]
+  sessions Session[]
+
+  // Audit fields
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // --- Relations for tracking user actions ---
+  createdGames        Game[]         @relation("CreatedGames")
+  updatedGames        Game[]         @relation("UpdatedGames")
+  deletedGames        Game[]         @relation("DeletedGames")
+
+  createdGameFiles    GameFile[]     @relation("CreatedGameFiles")
+  updatedGameFiles    GameFile[]     @relation("UpdatedGameFiles")
+  deletedGameFiles    GameFile[]     @relation("DeletedGameFiles")
+
+  createdGameBlocks   GameBlock[]    @relation("CreatedGameBlocks")
+  updatedGameBlocks   GameBlock[]    @relation("UpdatedGameBlocks")
+  deletedGameBlocks   GameBlock[]    @relation("DeletedGameBlocks")
+
+  createdGameParts    GamePart[]     @relation("CreatedGameParts")
+  updatedGameParts    GamePart[]     @relation("UpdatedGameParts")
+  deletedGameParts    GamePart[]     @relation("DeletedGameParts")
+
+  createdReleases     Release[]      @relation("CreatedReleases")
+  updatedReleases     Release[]      @relation("UpdatedReleases")
+  deletedReleases     Release[]      @relation("DeletedReleases")
+
+  createdReleaseFiles ReleaseFile[]  @relation("CreatedReleaseFiles")
+  updatedReleaseFiles ReleaseFile[]  @relation("UpdatedReleaseFiles")
+  deletedReleaseFiles ReleaseFile[]  @relation("DeletedReleaseFiles")
+
+  createdReleaseBlocks ReleaseBlock[] @relation("CreatedReleaseBlocks")
+  updatedReleaseBlocks ReleaseBlock[] @relation("UpdatedReleaseBlocks")
+  deletedReleaseBlocks ReleaseBlock[] @relation("DeletedReleaseBlocks")
+
+  createdReleaseParts ReleasePart[]  @relation("CreatedReleaseParts")
+  updatedReleaseParts ReleasePart[]  @relation("UpdatedReleaseParts")
+  deletedReleaseParts ReleasePart[]  @relation("DeletedReleaseParts")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}

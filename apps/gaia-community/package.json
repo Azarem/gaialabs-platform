@@ -1,0 +1,44 @@
+{
+  "name": "gaia-community",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Next.js 14 Community Platform with React 19 for Project Sharing",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .next"
+  },
+  "dependencies": {
+    "next": "^15.3.5",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+
+    "@next/font": "^14.2.15",
+    "@sanity/client": "^7.6.0",
+    "@sanity/image-url": "^1.1.0",
+    "next-sanity": "^9.12.0",
+    "zustand": "^5.0.6",
+    "gaia-shared": "workspace:*",
+    "gaia-core": "workspace:*",
+    "gaia-ui": "workspace:*",
+    "@supabase/supabase-js": "^2.39.0",
+    "@supabase/auth-ui-react": "^0.4.6",
+    "@supabase/auth-ui-shared": "^0.1.8",
+    "@supabase/auth-helpers-nextjs": "^0.8.7",
+    "gaia-git": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.4",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "eslint": "^9.30.1",
+    "eslint-config-next": "^15.3.5",
+    "typescript": "^5.8.3",
+    "tailwindcss": "^4.1.11",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32"
+  }
+} 

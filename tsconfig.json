@@ -1,0 +1,61 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "gaia-core": ["./packages/gaia-core/src"],
+      "gaia-shared": ["./packages/gaia-shared/src"],
+      "gaia-shared/*": ["./packages/gaia-shared/src/*"],
+      "gaia-ui": ["./packages/gaia-ui/src"],
+      "gaia-ui/*": ["./packages/gaia-ui/src/*"],
+      "gaia-auth": ["./packages/gaia-auth/src"],
+      "gaia-git": ["./packages/gaia-git/src"]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*",
+    "apps/*/src/**/*",
+    "*.config.ts",
+    "*.config.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".next",
+    "out",
+    "coverage",
+    "ext"
+  ],
+  "references": [
+    { "path": "./packages/gaia-shared" },
+    { "path": "./packages/gaia-core" },
+    { "path": "./packages/gaia-ui" },
+    { "path": "./packages/gaia-auth" },
+    { "path": "./packages/gaia-git" },
+    { "path": "./apps/gaia-studio" },
+    { "path": "./apps/gaia-api" },
+    { "path": "./apps/gaia-community" }
+  ]
+} 

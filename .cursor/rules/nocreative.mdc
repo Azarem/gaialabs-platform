@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+[GaiaLib Source](../../ext/GaiaLib)
+Don't get creative, use your source of truth. If you don't have a type definition, don't create one, find the source of truth. If it isn't in our source of truth, we don't need it. YAGNI

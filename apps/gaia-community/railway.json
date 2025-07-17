@@ -1,0 +1,14 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm run build --filter=gaia-community"
+  },
+  "deploy": {
+    "startCommand": "cd apps/gaia-community && pnpm run start",
+    "numReplicas": 1,
+    "sleepApplication": false,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+} 

@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Please keep things as simple as possible, do not overengineer. KISS, and DRY.

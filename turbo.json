@@ -1,0 +1,60 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local", "**/.env"],
+  "globalEnv": ["NODE_ENV", "SUPABASE_URL", "SUPABASE_ANON_KEY"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**",
+        "build/**",
+        "lib/**",
+        "out/**"
+      ],
+      "env": ["NODE_ENV", "SUPABASE_URL", "SUPABASE_ANON_KEY"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "env": ["NODE_ENV", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"]
+    },
+    "lint": {
+      "dependsOn": ["^build"],
+      "outputs": ["eslint-report.json"]
+    },
+    "lint:fix": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**", "test-results/**"],
+      "env": ["NODE_ENV"]
+    },
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "type-check": {
+      "dependsOn": ["^build"],
+      "outputs": ["tsconfig.tsbuildinfo"]
+    },
+    "clean": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:push": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false
+    }
+  },
+  "remoteCache": {
+    "enabled": false
+  }
+} 
