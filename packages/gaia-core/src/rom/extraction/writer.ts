@@ -212,6 +212,9 @@ export class BlockWriter {
 
   private resolveOperand(op: Op, obj: any, isBranch: boolean = false): any {
     if (typeof obj === 'number') {
+      if (op.code.mode === AddressingMode.Immediate) {
+        return obj;
+      }
       return this._blockReader.resolveName(obj, AddressType.Address, isBranch);
     }
     if (this.getObjectType(obj) === ObjectType.LocationWrapper) {

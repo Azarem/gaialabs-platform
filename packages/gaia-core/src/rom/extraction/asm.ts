@@ -60,12 +60,18 @@ export class AsmReader {
     // Apply label transforms to operands after processing. This ensures that the ROM state is processed and valid.
     this._transformProcessor.applyTransforms(operationContext.xForm1, operationContext.xForm2, operands);
 
-    return new Op(
+    const op = new Op(
       code,
       opStart,
       operands,
       this._romDataReader.position - opStart
     );
+
+    if (operationContext.copDef) {
+      op.copDef = operationContext.copDef;
+    }
+
+    return op;
   }
 
   /**
