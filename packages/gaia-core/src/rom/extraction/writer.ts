@@ -401,7 +401,9 @@ export class BlockWriter {
         if (op.operands && op.operands.length > 1) {
           const operandStrings: string[] = [];
           for (let i = 1; i < op.operands.length; i++) {
-            const operandLines = this.writeObject(op.operands[i], depth + 1, false);
+            // Resolve operand names similar to regular instructions
+            const resolved = this.resolveOperand(op, op.operands[i]);
+            const operandLines = this.writeObject(resolved, depth + 1, false);
             operandStrings.push(operandLines[0]);
           }
           opLine += ` ( ${operandStrings.join(', ')} )`;
