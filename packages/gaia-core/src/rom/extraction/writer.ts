@@ -597,14 +597,17 @@ export class BlockWriter {
   }
 
   private writeNumber(num: number): string[] {
-    // Format numbers based on value and context
-    if (num <= 0xFF) {
-      return [`#$${num.toString(16).toUpperCase().padStart(2, '0')}`];
-    } else if (num <= 0xFFFF) {
-      return [`#$${num.toString(16).toUpperCase().padStart(4, '0')}`];
-    } else {
-      return [`#$${num.toString(16).toUpperCase().padStart(6, '0')}`];
+    // Format numbers based on value and size
+    if (num <= 0xff) {
+      // Mirror C# BlockWriter: bytes omit the '$' prefix
+      return [`#${num.toString(16).toUpperCase().padStart(2, '0')}`];
     }
+
+    if (num <= 0xffff) {
+      return [`#$${num.toString(16).toUpperCase().padStart(4, '0')}`];
+    }
+
+    return [`#$${num.toString(16).toUpperCase().padStart(6, '0')}`];
   }
 
   private formatTypedNumber(num: TypedNumber | { _tag: string; value: number | string }): string {
@@ -617,7 +620,8 @@ export class BlockWriter {
 
     if (typeof num.value === 'number') {
       const width = size * 2;
-      return `#$${num.value.toString(16).toUpperCase().padStart(width, '0')}`;
+      const hex = num.value.toString(16).toUpperCase().padStart(width, '0');
+      return size === 1 ? `#${hex}` : `#$${hex}`;
     }
 
     return `#${num.value}`;
