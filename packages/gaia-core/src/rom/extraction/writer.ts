@@ -260,6 +260,9 @@ export class BlockWriter {
 
     // Check for explicit type tags first
     if (obj._tag) {
+      if (obj._tag === 'Byte' || obj._tag === 'Word') {
+        return ObjectType.TypedNumber;
+      }
       return obj._tag as ObjectType;
     }
 
@@ -351,7 +354,7 @@ export class BlockWriter {
         return this.writeNumber(obj as number);
 
       case ObjectType.TypedNumber:
-        return this.writeTypedNumber(obj as TypedNumber);
+        return this.writeTypedNumber(obj as any);
 
       case ObjectType.String:
         return [String(obj)];
@@ -584,11 +587,15 @@ export class BlockWriter {
     }
   }
 
-  private writeTypedNumber(num: TypedNumber): string[] {
-    if (num.size === 1) {
-      return [`#$${num.value.toString(16).toUpperCase().padStart(2, '0')}`];
+  private writeTypedNumber(num: TypedNumber | { _tag: string; value: number }): string[] {
+    let size = 1;
+    if ('size' in num) {
+      size = (num as TypedNumber).size;
+    } else if (num._tag === 'Word') {
+      size = 2;
     }
-    const width = num.size * 2;
+
+    const width = size * 2;
     return [`#$${num.value.toString(16).toUpperCase().padStart(width, '0')}`];
   }
 

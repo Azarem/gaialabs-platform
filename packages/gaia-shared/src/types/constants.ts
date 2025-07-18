@@ -29,8 +29,18 @@ export class RomProcessingConstants {
    * @throws Error when unable to determine size
    */
   public static getSize(obj: unknown): number {
-    if (obj && typeof obj === 'object' && 'size' in obj) {
-      return (obj as { size: number }).size;
+    if (obj && typeof obj === 'object') {
+      if ('size' in obj) {
+        return (obj as { size: number }).size;
+      }
+      if ('_tag' in obj) {
+        switch ((obj as { _tag: string })._tag) {
+          case 'Byte':
+            return 1;
+          case 'Word':
+            return 2;
+        }
+      }
     } else if (obj instanceof Uint8Array) {
       return obj.length;
     } else if (typeof obj === 'number') {
