@@ -79,6 +79,11 @@ export class BlockWriter {
 
       const lines: string[] = [];
 
+      // Write bank information if not movable
+      if (!block.movable && block.parts.length > 0) {
+        lines.push(`?BANK ${(block.parts[0].start >> 16).toString(16).toUpperCase().padStart(2, '0')}`);
+      }
+
       // Write includes - these should be from the block's include list
       const includes = DbBlockUtils.getIncludes(block);
       if (includes && includes.length > 0) {
@@ -86,11 +91,6 @@ export class BlockWriter {
           lines.push(`?INCLUDE '${inc.name}'`);
         }
         lines.push(''); // Empty line after includes
-      }
-
-      // Write bank information if not movable
-      if (!block.movable && block.parts.length > 0) {
-        lines.push(`?BANK ${(block.parts[0].start >> 16).toString(16).toUpperCase().padStart(2, '0')}`);
       }
 
       // Write mnemonics - these should be from the root mnemonics that are referenced in this block
@@ -228,14 +228,39 @@ export class BlockWriter {
           return obj;
       }
 
-      return this._blockReader.resolveName(obj, AddressType.Address, isBranch);
+      const name = this._blockReader.resolveName(obj, AddressType.Address, isBranch);
+      if (isBranch && typeof name === 'string' && name.startsWith('@')) {
+        return name.substring(1);
+      }
+      return name;
     }
     if (this.getObjectType(obj) === ObjectType.LocationWrapper) {
       const lw = obj as LocationWrapper;
-      return this._blockReader.resolveName(lw.location, lw.type, isBranch);
+      const name = this._blockReader.resolveName(lw.location, lw.type, isBranch);
+      if (isBranch && typeof name === 'string' && name.startsWith('@')) {
+        return name.substring(1);
+      }
+      return name;
     }
     if (this.getObjectType(obj) === ObjectType.Address) {
       const addr = obj as Address;
+      // Avoid label resolution for direct-page and stack addressing modes
+      switch (op.code.mode) {
+        case AddressingMode.DirectPage:
+        case AddressingMode.DirectPageIndexedX:
+        case AddressingMode.DirectPageIndexedY:
+        case AddressingMode.DirectPageIndexedIndirectX:
+        case AddressingMode.DirectPageIndirect:
+        case AddressingMode.DirectPageIndirectLong:
+        case AddressingMode.DirectPageIndirectLongIndexedY:
+        case AddressingMode.DirectPageIndirectIndexedY:
+        case AddressingMode.StackRelative:
+        case AddressingMode.StackRelativeIndirectIndexedY:
+        case AddressingMode.Stack:
+        case AddressingMode.StackInterrupt:
+          return addr.offset;
+      }
+
       if (op.size === 4) {
         return addr;
       }
@@ -574,9 +599,7 @@ export class BlockWriter {
 
   private writeNumber(num: number): string[] {
     // Format numbers based on value and context
-    if (num === 0) {
-      return ['#$0000'];
-    } else if (num <= 0xFF) {
+    if (num <= 0xFF) {
       return [`#$${num.toString(16).toUpperCase().padStart(2, '0')}`];
     } else if (num <= 0xFFFF) {
       return [`#$${num.toString(16).toUpperCase().padStart(4, '0')}`];

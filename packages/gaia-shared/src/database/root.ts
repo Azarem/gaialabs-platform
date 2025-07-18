@@ -171,9 +171,12 @@ export class DbRootUtils {
       }, {} as Record<string, DbStringType>)
     };
 
-    // Set root references in blocks
+    // Set root references in blocks and initialize per-block mnemonic maps
     for (const block of blocks) {
       block.root = root;
+      if (!block.mnemonics) {
+        block.mnemonics = {};
+      }
     }
 
     return root;
