@@ -13,7 +13,7 @@
 ---------------------------------------------
 
 h_sE6_gaia [
-  h_actor < #$0000, #$0000, #23 >   ;00
+  h_actor < #$0000, #$0000, #$23 >   ;00
 ]
 ---------------------------------------------
 
@@ -23,13 +23,13 @@ e_sE6_gaia {
     COP [A0] ( @code_09A096, #$0080, #$0058, #$1800 )
     LDA $0AAC
     CMP #$0004
-    BCC @code_08D7D3
-    LDA #$0
+    BCC code_08D7D3
+    LDA #$0000
 }
 code_08D7D3 {
     STA $0AB2
     STZ $0AAC
-    STA $0
+    STA $0000
     COP [D9] ( #$0000, &code_list_08D7E2 )
 }
 code_list_08D7E2 [
@@ -42,24 +42,24 @@ code_list_08D7E2 [
 
 func_08D7EA {
     LDA #$FFF0
-    TSB $JOYPAD_MASK_STD
-    LDY $PLAYER_ACTOR
+    TSB $joypad_mask_std
+    LDY $player_actor
     LDA $0010, Y
     ORA #$2000
     STA $0010, Y
     LDA $0014, Y
-    STA $@BMP_000000+14
+    STA $14
     LDA $0016, Y
-    STA $@BMP_000000+16
+    STA $16
     COP [08] ( #$0C0C )
     LDA #$2000
-    TRB $@BMP_000000+10
+    TRB $10
     COP [88] ( @table_0EE000 )
-    COP [80] ( #1C )
+    COP [80] ( #$1C )
     COP [89]
-    COP [DA] ( #1D )
+    COP [DA] ( #$1D )
     LDA $0B12
-    STA $SCENE_NEXT
+    STA $scene_next
     LDA $0B08
     ASL 
     ASL 
@@ -88,25 +88,25 @@ func_08D7EA {
 }
 code_08D856 {
     COP [C1]
-    COP [45] ( #07, #08, #09, #09, &code_08D862 )
-    BRA @code_08D863
+    COP [45] ( #$07, #$08, #$09, #$09, &code_08D862 )
+    BRA code_08D863
 }
 code_08D862 {
     RTL 
 }
 code_08D863 {
     COP [C1]
-    COP [45] ( #07, #08, #09, #09, &code_08D876 )
-    COP [45] ( #05, #0D, #0B, #0F, &func_08D7EA )
+    COP [45] ( #$07, #$08, #$09, #$09, &code_08D876 )
+    COP [45] ( #$05, #$0D, #$0B, #$0F, &func_08D7EA )
     RTL 
 }
 code_08D876 {
     COP [C8] ( &code_08DAF0 )
-    BRA @code_08D856
+    BRA code_08D856
 }
 code_08D87C {
     LDA $0AD4
-    STA $0
+    STA $0000
     COP [D9] ( #$0000, &code_list_08D888 )
 }
 code_list_08D888 [
@@ -115,292 +115,292 @@ code_list_08D888 [
   &code_08D966   ;02
 ]
 code_08D88E {
-    COP [32] ( #88 )
+    COP [32] ( #$88 )
     COP [33]
-    COP [32] ( #8A )
+    COP [32] ( #$8A )
     COP [33]
-    COP [D0] ( #B4, #00, &code_08D8A8 )
-    COP [32] ( #8E )
+    COP [D0] ( #$B4, #$00, &code_08D8A8 )
+    COP [32] ( #$8E )
     COP [33]
-    COP [32] ( #8F )
+    COP [32] ( #$8F )
     COP [33]
 }
 code_08D8A8 {
     COP [C1]
-    COP [45] ( #07, #08, #09, #09, &code_08D8C4 )
-    COP [45] ( #03, #0A, #05, #0B, &code_08D8C4 )
-    COP [45] ( #0B, #0A, #0D, #0B, &code_08D8C4 )
-    BRA @code_08D8C5
+    COP [45] ( #$07, #$08, #$09, #$09, &code_08D8C4 )
+    COP [45] ( #$03, #$0A, #$05, #$0B, &code_08D8C4 )
+    COP [45] ( #$0B, #$0A, #$0D, #$0B, &code_08D8C4 )
+    BRA code_08D8C5
 }
 code_08D8C4 {
     RTL 
 }
 code_08D8C5 {
     COP [C1]
-    COP [45] ( #07, #08, #09, #09, &code_08D8E8 )
-    COP [45] ( #03, #0A, #05, #0B, &code_08D8EE )
-    COP [45] ( #0B, #0A, #0D, #0B, &code_08D8F4 )
-    COP [45] ( #05, #0D, #0B, #0F, &func_08D7EA )
+    COP [45] ( #$07, #$08, #$09, #$09, &code_08D8E8 )
+    COP [45] ( #$03, #$0A, #$05, #$0B, &code_08D8EE )
+    COP [45] ( #$0B, #$0A, #$0D, #$0B, &code_08D8F4 )
+    COP [45] ( #$05, #$0D, #$0B, #$0F, &func_08D7EA )
     RTL 
 }
 code_08D8E8 {
     COP [C8] ( &code_08DAF0 )
-    BRA @code_08D8A8
+    BRA code_08D8A8
 }
 code_08D8EE {
     COP [C8] ( &code_08F088 )
-    BRA @code_08D8A8
+    BRA code_08D8A8
 }
 code_08D8F4 {
     COP [C8] ( &func_08F3EA )
-    BRA @code_08D8A8
+    BRA code_08D8A8
 }
 code_08D8FA {
-    COP [32] ( #87 )
+    COP [32] ( #$87 )
     COP [33]
-    COP [32] ( #8A )
+    COP [32] ( #$8A )
     COP [33]
-    COP [D0] ( #B4, #00, &code_08D914 )
-    COP [32] ( #8E )
+    COP [D0] ( #$B4, #$00, &code_08D914 )
+    COP [32] ( #$8E )
     COP [33]
-    COP [32] ( #8F )
+    COP [32] ( #$8F )
     COP [33]
 }
 code_08D914 {
     COP [C1]
-    COP [45] ( #07, #08, #09, #09, &code_08D930 )
-    COP [45] ( #03, #0A, #05, #0B, &code_08D930 )
-    COP [45] ( #0B, #0A, #0D, #0B, &code_08D930 )
-    BRA @code_08D931
+    COP [45] ( #$07, #$08, #$09, #$09, &code_08D930 )
+    COP [45] ( #$03, #$0A, #$05, #$0B, &code_08D930 )
+    COP [45] ( #$0B, #$0A, #$0D, #$0B, &code_08D930 )
+    BRA code_08D931
 }
 code_08D930 {
     RTL 
 }
 code_08D931 {
     COP [C1]
-    COP [45] ( #07, #08, #09, #09, &code_08D954 )
-    COP [45] ( #03, #0A, #05, #0B, &code_08D95A )
-    COP [45] ( #0B, #0A, #0D, #0B, &code_08D960 )
-    COP [45] ( #05, #0D, #0B, #0F, &func_08D7EA )
+    COP [45] ( #$07, #$08, #$09, #$09, &code_08D954 )
+    COP [45] ( #$03, #$0A, #$05, #$0B, &code_08D95A )
+    COP [45] ( #$0B, #$0A, #$0D, #$0B, &code_08D960 )
+    COP [45] ( #$05, #$0D, #$0B, #$0F, &func_08D7EA )
     RTL 
 }
 code_08D954 {
     COP [C8] ( &code_08DAF0 )
-    BRA @code_08D914
+    BRA code_08D914
 }
 code_08D95A {
     COP [C8] ( &func_08F2DF )
-    BRA @code_08D914
+    BRA code_08D914
 }
 code_08D960 {
     COP [C8] ( &func_08F3EA )
-    BRA @code_08D914
+    BRA code_08D914
 }
 code_08D966 {
-    COP [32] ( #87 )
+    COP [32] ( #$87 )
     COP [33]
-    COP [32] ( #8A )
+    COP [32] ( #$8A )
     COP [33]
-    COP [32] ( #8D )
+    COP [32] ( #$8D )
     COP [33]
-    COP [32] ( #8F )
+    COP [32] ( #$8F )
     COP [33]
 
   code_08D97A:
     COP [C1]
-    COP [45] ( #07, #08, #09, #09, &code_08D996 )
-    COP [45] ( #03, #0A, #05, #0B, &code_08D996 )
-    COP [45] ( #0B, #0A, #0D, #0B, &code_08D996 )
-    BRA @code_08D997
+    COP [45] ( #$07, #$08, #$09, #$09, &code_08D996 )
+    COP [45] ( #$03, #$0A, #$05, #$0B, &code_08D996 )
+    COP [45] ( #$0B, #$0A, #$0D, #$0B, &code_08D996 )
+    BRA code_08D997
 }
 code_08D996 {
     RTL 
 }
 code_08D997 {
     COP [C1]
-    COP [45] ( #07, #08, #09, #09, &code_08D9BA )
-    COP [45] ( #03, #0A, #05, #0B, &code_08D9C0 )
-    COP [45] ( #0B, #0A, #0D, #0B, &code_08D9C6 )
-    COP [45] ( #05, #0D, #0B, #0F, &func_08D7EA )
+    COP [45] ( #$07, #$08, #$09, #$09, &code_08D9BA )
+    COP [45] ( #$03, #$0A, #$05, #$0B, &code_08D9C0 )
+    COP [45] ( #$0B, #$0A, #$0D, #$0B, &code_08D9C6 )
+    COP [45] ( #$05, #$0D, #$0B, #$0F, &func_08D7EA )
     RTL 
 }
 code_08D9BA {
     COP [C8] ( &code_08DAF0 )
-    BRA @code_08D97A
+    BRA code_08D97A
 }
 code_08D9C0 {
     COP [C8] ( &func_08F2DF )
-    BRA @code_08D97A
+    BRA code_08D97A
 }
 code_08D9C6 {
     COP [C8] ( &code_08F088 )
-    BRA @code_08D97A
+    BRA code_08D97A
 }
 code_08D9CC {
-    COP [32] ( #8A )
+    COP [32] ( #$8A )
     COP [33]
     PHX 
-    LDX #$0
+    LDX #$0000
 
   code_08D9D5:
-    LDA $@BINARY_08EB5A, X
-    BEQ @code_08DA44
+    LDA $@binary_08EB5A, X
+    BEQ code_08DA44
     AND #$00FF
     CMP $0B12
-    BEQ @code_08D9E7
+    BEQ code_08D9E7
     INX 
     INX 
-    BRA @code_08D9D5
+    BRA code_08D9D5
 }
 code_08D9E7 {
-    LDA $@BINARY_08EB5A+1, X
+    LDA $@binary_08EB5A+1, X
     AND #$00FF
     PLX 
     AND #$000F
-    BEQ @code_08DA1C
-    COP [32] ( #86 )
+    BEQ code_08DA1C
+    COP [32] ( #$86 )
     COP [33]
-    LDA #$0
+    LDA #$0000
     STA $7F0010, X
-    COP [A5] ( @func_08E9D4, #00, #00, #$3800 )
+    COP [A5] ( @func_08E9D4, #$00, #$00, #$3800 )
     LDA #$0040
     STA $0014, Y
     LDA #$006D
     STA $0016, Y
-    LDA $@BMP_000000+6
+    LDA $06
     STA $0026, Y
-    BRA @code_08DA45
+    BRA code_08DA45
 }
 code_08DA1C {
-    COP [32] ( #8B )
+    COP [32] ( #$8B )
     COP [33]
     LDA #$0001
     STA $7F0010, X
-    COP [A5] ( @func_08E9D4, #00, #00, #$3800 )
+    COP [A5] ( @func_08E9D4, #$00, #$00, #$3800 )
     LDA #$0040
     STA $0014, Y
     LDA #$0054
     STA $0016, Y
-    LDA $@BMP_000000+6
+    LDA $06
     STA $0026, Y
-    BRA @code_08DA45
+    BRA code_08DA45
 }
 code_08DA44 {
     PLX 
 }
 code_08DA45 {
     COP [C1]
-    COP [45] ( #07, #08, #09, #09, &code_08DA51 )
-    BRA @code_08DA52
+    COP [45] ( #$07, #$08, #$09, #$09, &code_08DA51 )
+    BRA code_08DA52
 }
 code_08DA51 {
     RTL 
 }
 code_08DA52 {
     COP [C1]
-    COP [45] ( #07, #08, #09, #09, &code_08DA65 )
-    COP [45] ( #05, #0D, #0B, #0F, &func_08D7EA )
+    COP [45] ( #$07, #$08, #$09, #$09, &code_08DA65 )
+    COP [45] ( #$05, #$0D, #$0B, #$0F, &func_08D7EA )
     RTL 
 }
 code_08DA65 {
     COP [C8] ( &code_08DAF0 )
-    BRA @code_08DA45
+    BRA code_08DA45
     LDA $7F0010, X
-    BNE @code_08DA77
+    BNE code_08DA77
     COP [C8] ( &func_08F2DF )
-    BRA @code_08DA45
+    BRA code_08DA45
 }
 code_08DA77 {
     COP [C8] ( &code_08F088 )
-    BRA @code_08DA45
+    BRA code_08DA45
 }
 code_08DA7D {
     LDA #$0001
     STA $0AAC
-    JMP $&CODE_08D87C
-    COP [32] ( #8B )
+    JMP $code_08D87C
+    COP [32] ( #$8B )
     COP [33]
-    COP [32] ( #8F )
+    COP [32] ( #$8F )
     COP [33]
-    COP [32] ( #89 )
+    COP [32] ( #$89 )
     COP [33]
-    COP [32] ( #8A )
+    COP [32] ( #$8A )
     COP [33]
-    COP [A5] ( @func_08EF32, #00, #00, #$3800 )
+    COP [A5] ( @func_08EF32, #$00, #$00, #$3800 )
     LDA #$00C0
     STA $0014, Y
     LDA #$0078
     STA $0016, Y
-    LDA $@BMP_000000+6
+    LDA $06
     STA $0026, Y
 
   code_08DAB4:
     COP [C1]
-    COP [45] ( #07, #08, #09, #09, &code_08DAC8 )
-    COP [45] ( #03, #0A, #05, #0B, &code_08DAC8 )
-    BRA @code_08DAC9
+    COP [45] ( #$07, #$08, #$09, #$09, &code_08DAC8 )
+    COP [45] ( #$03, #$0A, #$05, #$0B, &code_08DAC8 )
+    BRA code_08DAC9
 }
 code_08DAC8 {
     RTL 
 }
 code_08DAC9 {
     COP [C1]
-    COP [45] ( #07, #08, #09, #09, &code_08DAE4 )
-    COP [45] ( #03, #0A, #05, #0B, &code_08DAEA )
-    COP [45] ( #05, #0D, #0B, #0F, &func_08D7EA )
+    COP [45] ( #$07, #$08, #$09, #$09, &code_08DAE4 )
+    COP [45] ( #$03, #$0A, #$05, #$0B, &code_08DAEA )
+    COP [45] ( #$05, #$0D, #$0B, #$0F, &func_08D7EA )
     RTL 
 }
 code_08DAE4 {
     COP [C8] ( &code_08DAF0 )
-    BRA @code_08DAB4
+    BRA code_08DAB4
 }
 code_08DAEA {
     COP [C8] ( &func_08F3EA )
-    BRA @code_08DAB4
+    BRA code_08DAB4
 }
 code_08DAF0 {
     LDA #$FFF0
-    TSB $JOYPAD_MASK_STD
-    COP [DA] ( #05 )
+    TSB $joypad_mask_std
+    COP [DA] ( #$05 )
     LDA #$FFF0
-    TRB $JOYPAD_MASK_STD
-    LDY $@BMP_000000+6
+    TRB $joypad_mask_std
+    LDY $06
     LDA #$FFFF
     STA $0024, Y
-    COP [D0] ( #DC, #01, &code_08DB14 )
-    COP [CC] ( #DC )
+    COP [D0] ( #$DC, #$01, &code_08DB14 )
+    COP [CC] ( #$DC )
     COP [BF] ( &widestring_08DD0B )
 }
 code_08DB14 {
     LDA $0ACE
     CMP $0ACA
-    BEQ @code_08DB37
+    BEQ code_08DB37
     COP [BF] ( &widestring_08DE4D )
     LDA #$FFF0
-    TSB $JOYPAD_MASK_STD
+    TSB $joypad_mask_std
     LDA #$0028
     STA $0B22
     COP [C1]
     LDA $0ACE
     CMP $0ACA
-    BEQ @code_08DB37
+    BEQ code_08DB37
     RTL 
 }
 code_08DB37 {
     PHX 
-    LDX #$0
+    LDX #$0000
 
   code_08DB3B:
-    LDA $@BINARY_08DE72, X
+    LDA $@binary_08DE72, X
     AND #$00FF
-    BEQ @code_08DB9A
+    BEQ code_08DB9A
     CMP $0B12
-    BEQ @code_08DB4C
+    BEQ code_08DB4C
     INX 
-    BRA @code_08DB3B
+    BRA code_08DB3B
 }
 code_08DB4C {
-    STX $0
+    STX $0000
     PLX 
     COP [D9] ( #$0000, &code_list_08DB56 )
 }
@@ -445,9 +445,9 @@ code_08DB9A {
 
   code_08DB9B:
     LDA #$FFF0
-    TRB $JOYPAD_MASK_STD
+    TRB $joypad_mask_std
     COP [BF] ( &widestring_08DDCB )
-    COP [BE] ( #02, #02, &code_list_08DBAB )
+    COP [BE] ( #$02, #$02, &code_list_08DBAB )
 }
 code_list_08DBAB [
   &code_08DBDA   ;00
@@ -456,15 +456,15 @@ code_list_08DBAB [
 ]
 code_08DBB1 {
     LDA $0D8C
-    JSL $@FUNC_03D916
-    COP [07] ( #29 )
+    JSL $func_03D916
+    COP [07] ( #$29 )
     LDA #$FFF0
-    TSB $JOYPAD_MASK_STD
-    COP [DA] ( #3B )
+    TSB $joypad_mask_std
+    COP [DA] ( #$3B )
     LDA #$FFF0
-    TRB $JOYPAD_MASK_STD
+    TRB $joypad_mask_std
     COP [BF] ( &widestring_08DDFE )
-    COP [BE] ( #02, #01, &code_list_08DBD4 )
+    COP [BE] ( #$02, #$01, &code_list_08DBD4 )
 }
 code_list_08DBD4 [
   &code_08DBE8   ;00
@@ -473,148 +473,148 @@ code_list_08DBD4 [
 ]
 code_08DBDA {
     COP [BF] ( &widestring_08DE43 )
-    LDY $@BMP_000000+6
-    LDA #$0
+    LDY $06
+    LDA #$0000
     STA $0024, Y
     COP [C5]
 }
 code_08DBE8 {
     COP [BF] ( &widestring_08DE32 )
-    LDY $@BMP_000000+6
-    LDA #$0
+    LDY $06
+    LDA #$0000
     STA $0024, Y
     LDA #$FFF0
-    TSB $JOYPAD_MASK_STD
-    LDY $PLAYER_ACTOR
+    TSB $joypad_mask_std
+    LDY $player_actor
     LDA $0010, Y
     ORA #$2000
     STA $0010, Y
     LDA $0014, Y
-    STA $@BMP_000000+14
+    STA $14
     LDA $0016, Y
-    STA $@BMP_000000+16
+    STA $16
     COP [88] ( @table_0EE000 )
     LDA #$2000
-    TRB $@BMP_000000+10
-    COP [80] ( #1C )
+    TRB $10
+    COP [80] ( #$1C )
     COP [89]
-    COP [05] ( #0E )
+    COP [05] ( #$0E )
     COP [C1]
     RTL 
 }
 code_08DC25 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC28 {
     COP [BF] ( &widestring_08DED3 )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC2F {
     COP [BF] ( &widestring_08DF80 )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC36 {
     COP [BF] ( &widestring_08DFEE )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC3D {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC40 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC43 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC46 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC49 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC4C {
     COP [BF] ( &widestring_08E1EE )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC53 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC56 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC59 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC5C {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC5F {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC62 {
     COP [BF] ( &widestring_08E2F8 )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC69 {
     COP [BF] ( &widestring_08E3A7 )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC70 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC73 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC76 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC79 {
     COP [BF] ( &widestring_08E428 )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC80 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC83 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC86 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC89 {
     COP [BF] ( &widestring_08E4A4 )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC90 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC93 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC96 {
     COP [BF] ( &widestring_08E540 )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DC9D {
     COP [BF] ( &widestring_08E58B )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DCA4 {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DCA7 {
     LDA $0AAC
-    BNE @code_08DCAF
-    JMP $&CODE_08DB9B
+    BNE code_08DCAF
+    JMP $code_08DB9B
 }
 code_08DCAF {
-    COP [D6] ( #24, &code_08DCEC )
-    COP [D4] ( #24, &code_08DCF3 )
+    COP [D6] ( #$24, &code_08DCEC )
+    COP [D4] ( #$24, &code_08DCF3 )
     COP [BF] ( &widestring_08E66C )
     LDA #$FFF0
-    TSB $JOYPAD_MASK_STD
-    COP [04] ( #18 )
-    COP [DA] ( #59 )
+    TSB $joypad_mask_std
+    COP [04] ( #$18 )
+    COP [DA] ( #$59 )
     COP [BF] ( &widestring_08E7E7 )
     COP [C1]
     SEP #$20
@@ -622,33 +622,33 @@ code_08DCAF {
     REP #$20
     AND #$00FF
     CMP #$00FF
-    BEQ @code_08DCDF
+    BEQ code_08DCDF
     RTL 
 }
 code_08DCDF {
-    COP [04] ( #16 )
-    COP [DA] ( #59 )
+    COP [04] ( #$16 )
+    COP [DA] ( #$59 )
     COP [BF] ( &widestring_08E722 )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DCEC {
     COP [BF] ( &widestring_08E722 )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DCF3 {
     COP [BF] ( &widestring_08E800 )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DCFA {
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DCFD {
     COP [BF] ( &widestring_08E853 )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 code_08DD04 {
     COP [BF] ( &widestring_08E98A )
-    JMP $&CODE_08DB9B
+    JMP $code_08DB9B
 }
 ---------------------------------------------
 
@@ -700,135 +700,135 @@ widestring_08E98A `[PRT:@88DE96][LU1:68][LU2:A3]is only[N]temporary. Try standin
 
 func_08E9D4 {
     PHX 
-    LDX #$0
-    LDY #$0
+    LDX #$0000
+    LDY #$0000
 
   code_08E9DB:
-    LDA $@BINARY_08EB5A, X
-    BEQ @code_08E9EE
+    LDA $@binary_08EB5A, X
+    BEQ code_08E9EE
     AND #$00FF
     CMP $0B12
-    BEQ @code_08E9F1
+    BEQ code_08E9F1
     INX 
     INX 
     INY 
-    BRA @code_08E9DB
+    BRA code_08E9DB
 }
 code_08E9EE {
     PLX 
     COP [E0]
 }
 code_08E9F1 {
-    LDA $@BINARY_08EB5A+1, X
+    LDA $@binary_08EB5A+1, X
     AND #$00FF
-    STA $@BMP_000000+24
+    STA $24
     AND $0AA2
-    BNE @code_08E9EE
+    BNE code_08E9EE
     TYA 
     STA $0AAC
     PLX 
-    COP [8D] ( #0A )
+    COP [8D] ( #$0A )
     LDA #$2000
-    TRB $@BMP_000000+10
+    TRB $10
     COP [C1]
     COP [C1]
     COP [8B]
-    COP [45] ( #03, #0A, #05, #0B, &code_08EA1B )
+    COP [45] ( #$03, #$0A, #$05, #$0B, &code_08EA1B )
     RTL 
 }
 code_08EA1B {
     LDA #$FFF0
-    TSB $JOYPAD_MASK_STD
-    COP [DA] ( #05 )
-    JSR $&SUB_08EB2F
-    CMP #$0
-    BEQ @code_08EA78
+    TSB $joypad_mask_std
+    COP [DA] ( #$05 )
+    JSR $sub_08EB2F
+    CMP #$0000
+    BEQ code_08EA78
     LDA $0AD4
-    BEQ @code_08EA58
+    BEQ code_08EA58
     CMP #$0002
-    BEQ @code_08EA38
-    BRA @code_08EA9B
+    BEQ code_08EA38
+    BRA code_08EA9B
 }
 code_08EA38 {
-    LDY $PLAYER_ACTOR
+    LDY $player_actor
     SEP #$20
-    LDA #$^FUNC_08F2A3
+    LDA #$^func_08F2A3
     STA $0002, Y
     REP #$20
-    LDA #$&FUNC_08F2A3
-    STA $0, Y
-    LDA #$0
+    LDA #$&func_08F2A3
+    STA $0000, Y
+    LDA #$0000
     STA $0008, Y
     LDA #$0800
-    TSB $PLAYER_FLAGS
-    BRA @code_08EA9B
+    TSB $player_flags
+    BRA code_08EA9B
 }
 code_08EA58 {
-    LDY $PLAYER_ACTOR
+    LDY $player_actor
     SEP #$20
-    LDA #$^FUNC_08F26E
+    LDA #$^func_08F26E
     STA $0002, Y
     REP #$20
-    LDA #$&FUNC_08F26E
-    STA $0, Y
-    LDA #$0
+    LDA #$&func_08F26E
+    STA $0000, Y
+    LDA #$0000
     STA $0008, Y
     LDA #$0800
-    TSB $PLAYER_FLAGS
-    BRA @code_08EA9B
+    TSB $player_flags
+    BRA code_08EA9B
 }
 code_08EA78 {
     LDA $0AD4
-    BEQ @code_08EA9B
-    LDY $PLAYER_ACTOR
+    BEQ code_08EA9B
+    LDY $player_actor
     SEP #$20
-    LDA #$^FUNC_08F37D
+    LDA #$^func_08F37D
     STA $0002, Y
     REP #$20
-    LDA #$&FUNC_08F37D
-    STA $0, Y
-    LDA #$0
+    LDA #$&func_08F37D
+    STA $0000, Y
+    LDA #$0000
     STA $0008, Y
     LDA #$0800
-    TSB $PLAYER_FLAGS
+    TSB $player_flags
 }
 code_08EA9B {
     COP [C1]
     COP [C1]
     COP [8B]
-    LDA $PLAYER_FLAGS
+    LDA $player_flags
     BIT #$0800
-    BEQ @code_08EAAA
+    BEQ code_08EAAA
     RTL 
 }
 code_08EAAA {
-    COP [CA] ( #08 )
+    COP [CA] ( #$08 )
     LDA #$FFF0
-    TSB $JOYPAD_MASK_STD
+    TSB $joypad_mask_std
     COP [C1]
     COP [8B]
     COP [CB]
-    LDA $@BMP_000000+24
+    LDA $24
     ORA $0AA2
     STA $0AA2
-    COP [86] ( #0A, #03, #14 )
+    COP [86] ( #$0A, #$03, #$14 )
     COP [8A]
-    COP [84] ( #0A, #03 )
+    COP [84] ( #$0A, #$03 )
     COP [8A]
-    LDY $PLAYER_ACTOR
+    LDY $player_actor
     LDA $0014, Y
     STA $7F0018, X
     LDA $0016, Y
     SEC 
     SBC #$0010
     STA $7F001A, X
-    COP [22] ( #0A, #01 )
+    COP [22] ( #$0A, #$01 )
     LDA #$2000
-    TSB $@BMP_000000+10
+    TSB $10
     LDA #$0800
-    TRB $@BMP_000000+10
-    COP [04] ( #18 )
-    COP [DA] ( #59 )
+    TRB $10
+    COP [04] ( #$18 )
+    COP [DA] ( #$59 )
     COP [BF] ( &widestring_08EB68 )
     COP [C1]
     SEP #$20
@@ -836,45 +836,45 @@ code_08EAAA {
     REP #$20
     AND #$00FF
     CMP #$00FF
-    BEQ @code_08EB0D
+    BEQ code_08EB0D
     RTL 
 }
 code_08EB0D {
-    LDY $@BMP_000000+26
+    LDY $26
     LDA #$FFFF
     STA $0024, Y
     COP [BF] ( &widestring_08EB85 )
-    LDY $@BMP_000000+26
-    LDA #$0
+    LDY $26
+    LDA #$0000
     STA $0024, Y
-    COP [04] ( #16 )
-    COP [DA] ( #3B )
+    COP [04] ( #$16 )
+    COP [DA] ( #$3B )
     LDA #$FFF0
-    TRB $JOYPAD_MASK_STD
+    TRB $joypad_mask_std
     COP [E0]
 }
 ---------------------------------------------
 
 sub_08EB2F {
     PHX 
-    LDX #$0
+    LDX #$0000
 
   code_08EB33:
-    LDA $@BINARY_08EB5A, X
-    BEQ @code_08EB57
+    LDA $@binary_08EB5A, X
+    BEQ code_08EB57
     AND #$00FF
     CMP $0B12
-    BEQ @code_08EB45
+    BEQ code_08EB45
     INX 
     INX 
-    BRA @code_08EB33
+    BRA code_08EB33
 }
 code_08EB45 {
-    LDA $@BINARY_08EB5A+1, X
+    LDA $@binary_08EB5A+1, X
     AND #$00FF
     PLX 
     AND #$00F0
-    BNE @code_08EB53
+    BNE code_08EB53
     RTS 
 }
 code_08EB53 {
@@ -928,79 +928,79 @@ widestring_08EE8B `The Earthquaker is a[N][LU1:C][LU2:25][LU1:D7]can only[N]be [
 ---------------------------------------------
 
 func_08EF32 {
-    COP [D6] ( #24, &code_08EFC7 )
-    COP [8D] ( #0A )
+    COP [D6] ( #$24, &code_08EFC7 )
+    COP [8D] ( #$0A )
     LDA #$2000
-    TRB $@BMP_000000+10
+    TRB $10
 
   code_08EF3F:
     COP [C1]
     COP [C1]
     COP [8B]
-    COP [45] ( #0B, #0A, #0D, #0B, &code_08EF4E )
+    COP [45] ( #$0B, #$0A, #$0D, #$0B, &code_08EF4E )
     RTL 
 }
 code_08EF4E {
     LDA #$FFF0
-    TSB $JOYPAD_MASK_STD
-    COP [DA] ( #05 )
-    COP [D4] ( #24, &code_08EFC9 )
-    COP [86] ( #0A, #03, #14 )
+    TSB $joypad_mask_std
+    COP [DA] ( #$05 )
+    COP [D4] ( #$24, &code_08EFC9 )
+    COP [86] ( #$0A, #$03, #$14 )
     COP [8A]
-    COP [84] ( #0A, #03 )
+    COP [84] ( #$0A, #$03 )
     COP [8A]
-    LDY $PLAYER_ACTOR
+    LDY $player_actor
     LDA $0014, Y
     STA $7F0018, X
     LDA $0016, Y
     SEC 
     SBC #$0010
     STA $7F001A, X
-    COP [22] ( #0A, #01 )
+    COP [22] ( #$0A, #$01 )
     LDA #$2000
-    TSB $@BMP_000000+10
+    TSB $10
     LDA #$0800
-    TRB $@BMP_000000+10
+    TRB $10
     LDA #$0080
     TSB $09EC
-    COP [19] ( #17, @widestring_08EFEF )
-    COP [DA] ( #03 )
+    COP [19] ( #$17, @widestring_08EFEF )
+    COP [DA] ( #$03 )
     COP [C1]
     SEP #$20
     LDA $APUIO1
     REP #$20
     AND #$00FF
     CMP #$00FF
-    BEQ @code_08EFAD
+    BEQ code_08EFAD
     RTL 
 }
 code_08EFAD {
-    LDY $@BMP_000000+26
+    LDY $26
     LDA #$FFFF
     STA $0024, Y
     COP [BF] ( &widestring_08F003 )
-    LDY $@BMP_000000+26
-    LDA #$0
+    LDY $26
+    LDA #$0000
     STA $0024, Y
     LDA #$FFF0
-    TRB $JOYPAD_MASK_STD
+    TRB $joypad_mask_std
 }
 code_08EFC7 {
     COP [E0]
 }
 code_08EFC9 {
     LDA #$0800
-    TRB $@BMP_000000+10
+    TRB $10
     COP [BF] ( &widestring_08F060 )
     LDA #$0800
-    TSB $@BMP_000000+10
+    TSB $10
     LDA #$FFF0
-    TRB $JOYPAD_MASK_STD
+    TRB $joypad_mask_std
     COP [C1]
     COP [C1]
     COP [8B]
-    COP [45] ( #0B, #0A, #0D, #0B, &code_08EFEE )
-    JMP $&CODE_08EF3F
+    COP [45] ( #$0B, #$0A, #$0D, #$0B, &code_08EFEE )
+    JMP $code_08EF3F
 }
 code_08EFEE {
     RTL 
@@ -1011,33 +1011,33 @@ widestring_08F060 `[DEF][LU1:68][LU1:A0]is full. [N]Store [LU1:E0][LU2:A9][N]and
 code_08F088 {
     LDA $0AD4
     CMP #$0001
-    BEQ @code_08F0CA
+    BEQ code_08F0CA
     LDA #$FFF0
-    TSB $JOYPAD_MASK_STD
-    COP [DA] ( #05 )
+    TSB $joypad_mask_std
+    COP [DA] ( #$05 )
     LDA #$FFF0
-    TRB $JOYPAD_MASK_STD
-    COP [D0] ( #F7, #01, &code_08F0CC )
-    COP [CC] ( #F7 )
+    TRB $joypad_mask_std
+    COP [D0] ( #$F7, #$01, &code_08F0CC )
+    COP [CC] ( #$F7 )
     COP [BF] ( &widestring_08F157 )
-    LDY $PLAYER_ACTOR
+    LDY $player_actor
     SEP #$20
-    LDA #$^FUNC_08F235
+    LDA #$^func_08F235
     STA $0002, Y
     REP #$20
-    LDA #$&FUNC_08F235
-    STA $0, Y
-    LDA #$0
+    LDA #$&func_08F235
+    STA $0000, Y
+    LDA #$0000
     STA $0008, Y
     LDA #$0800
-    TSB $PLAYER_FLAGS
+    TSB $player_flags
 }
 code_08F0CA {
     COP [C5]
 }
 code_08F0CC {
     COP [BF] ( &widestring_08F12B )
-    COP [BE] ( #02, #02, &code_list_08F0D6 )
+    COP [BE] ( #$02, #$02, &code_list_08F0D6 )
 }
 code_list_08F0D6 [
   &code_08F125   ;00
@@ -1047,32 +1047,32 @@ code_list_08F0D6 [
 code_08F0DC {
     COP [BF] ( &widestring_08F155 )
     LDA $0AD4
-    BNE @code_08F105
-    LDY $PLAYER_ACTOR
+    BNE code_08F105
+    LDY $player_actor
     SEP #$20
-    LDA #$^FUNC_08F26E
+    LDA #$^func_08F26E
     STA $0002, Y
     REP #$20
-    LDA #$&FUNC_08F26E
-    STA $0, Y
-    LDA #$0
+    LDA #$&func_08F26E
+    STA $0000, Y
+    LDA #$0000
     STA $0008, Y
     LDA #$0800
-    TSB $PLAYER_FLAGS
+    TSB $player_flags
     COP [C5]
 }
 code_08F105 {
-    LDY $PLAYER_ACTOR
+    LDY $player_actor
     SEP #$20
-    LDA #$^FUNC_08F2A3
+    LDA #$^func_08F2A3
     STA $0002, Y
     REP #$20
-    LDA #$&FUNC_08F2A3
-    STA $0, Y
-    LDA #$0
+    LDA #$&func_08F2A3
+    STA $0000, Y
+    LDA #$0000
     STA $0008, Y
     LDA #$0800
-    TSB $PLAYER_FLAGS
+    TSB $player_flags
     COP [C5]
 }
 code_08F125 {
@@ -1085,90 +1085,90 @@ widestring_08F157 `[TPL:B][CLR][TPL:0]Will hears a [LU1:EE][N]in his head. [FIN]
 ---------------------------------------------
 
 func_08F235 {
-    COP [8E] ( #05 )
-    COP [80] ( #00 )
+    COP [8E] ( #$05 )
+    COP [80] ( #$00 )
     COP [89]
     COP [08] ( #$2525 )
-    COP [84] ( #02, #02 )
+    COP [84] ( #$02, #$02 )
     COP [8A]
-    COP [84] ( #03, #02 )
+    COP [84] ( #$03, #$02 )
     COP [8A]
-    COP [3B] ( #0C, @func_00B519 )
-    COP [84] ( #08, #02 )
+    COP [3B] ( #$0C, @func_00B519 )
+    COP [84] ( #$08, #$02 )
     COP [8A]
-    COP [84] ( #09, #02 )
+    COP [84] ( #$09, #$02 )
     COP [8A]
-    COP [80] ( #0A )
+    COP [80] ( #$0A )
     COP [89]
     LDA #$0001
     STA $0AD4
-    JSR $&SUB_08F6D3
+    JSR $sub_08F6D3
     RTL 
 }
 ---------------------------------------------
 
 func_08F26E {
-    COP [8E] ( #05 )
-    COP [80] ( #01 )
+    COP [8E] ( #$05 )
+    COP [80] ( #$01 )
     COP [89]
     COP [08] ( #$2525 )
-    COP [80] ( #02 )
+    COP [80] ( #$02 )
     COP [89]
-    COP [80] ( #03 )
+    COP [80] ( #$03 )
     COP [89]
-    COP [3B] ( #0C, @func_00B519 )
-    COP [80] ( #08 )
+    COP [3B] ( #$0C, @func_00B519 )
+    COP [80] ( #$08 )
     COP [89]
-    COP [80] ( #09 )
+    COP [80] ( #$09 )
     COP [89]
-    COP [80] ( #0B )
+    COP [80] ( #$0B )
     COP [89]
     LDA #$0001
     STA $0AD4
-    JSR $&SUB_08F6D3
+    JSR $sub_08F6D3
     RTL 
 }
 ---------------------------------------------
 
 func_08F2A3 {
-    COP [8E] ( #05 )
-    COP [80] ( #0D )
+    COP [8E] ( #$05 )
+    COP [80] ( #$0D )
     COP [89]
     COP [08] ( #$2525 )
-    COP [80] ( #10 )
+    COP [80] ( #$10 )
     COP [89]
-    COP [80] ( #0F )
+    COP [80] ( #$0F )
     COP [89]
-    COP [80] ( #0E )
+    COP [80] ( #$0E )
     COP [89]
     LDA #$0001
     STA $0AD4
     COP [C2]
-    COP [3B] ( #0C, @func_00B519 )
-    COP [80] ( #08 )
+    COP [3B] ( #$0C, @func_00B519 )
+    COP [80] ( #$08 )
     COP [89]
-    COP [80] ( #09 )
+    COP [80] ( #$09 )
     COP [89]
-    COP [80] ( #0B )
+    COP [80] ( #$0B )
     COP [89]
-    JSR $&SUB_08F6D3
+    JSR $sub_08F6D3
     RTL 
 }
 ---------------------------------------------
 
 func_08F2DF {
     LDA $0AD4
-    BNE @code_08F2E6
+    BNE code_08F2E6
     COP [C5]
 }
 code_08F2E6 {
     LDA #$FFF0
-    TSB $JOYPAD_MASK_STD
-    COP [DA] ( #05 )
+    TSB $joypad_mask_std
+    COP [DA] ( #$05 )
     LDA #$FFF0
-    TRB $JOYPAD_MASK_STD
+    TRB $joypad_mask_std
     COP [BF] ( &widestring_08F357 )
-    COP [BE] ( #02, #01, &code_list_08F2FF )
+    COP [BE] ( #$02, #$01, &code_list_08F2FF )
 }
 code_list_08F2FF [
   &code_08F351   ;00
@@ -1179,32 +1179,32 @@ code_08F305 {
     COP [BF] ( &widestring_08F37B )
     LDA $0AD4
     CMP #$0001
-    BNE @code_08F331
-    LDY $PLAYER_ACTOR
+    BNE code_08F331
+    LDY $player_actor
     SEP #$20
-    LDA #$^FUNC_08F37D
+    LDA #$^func_08F37D
     STA $0002, Y
     REP #$20
-    LDA #$&FUNC_08F37D
-    STA $0, Y
-    LDA #$0
+    LDA #$&func_08F37D
+    STA $0000, Y
+    LDA #$0000
     STA $0008, Y
     LDA #$0800
-    TSB $PLAYER_FLAGS
+    TSB $player_flags
     COP [C5]
 }
 code_08F331 {
-    LDY $PLAYER_ACTOR
+    LDY $player_actor
     SEP #$20
-    LDA #$^FUNC_08F3B1
+    LDA #$^func_08F3B1
     STA $0002, Y
     REP #$20
-    LDA #$&FUNC_08F3B1
-    STA $0, Y
-    LDA #$0
+    LDA #$&func_08F3B1
+    STA $0000, Y
+    LDA #$0000
     STA $0008, Y
     LDA #$0800
-    TSB $PLAYER_FLAGS
+    TSB $player_flags
     COP [C5]
 }
 code_08F351 {
@@ -1216,76 +1216,76 @@ widestring_08F37B `[CLD]`
 ---------------------------------------------
 
 func_08F37D {
-    COP [8E] ( #05 )
-    COP [80] ( #06 )
+    COP [8E] ( #$05 )
+    COP [80] ( #$06 )
     COP [89]
     COP [08] ( #$2525 )
-    COP [80] ( #09 )
+    COP [80] ( #$09 )
     COP [89]
-    COP [80] ( #08 )
+    COP [80] ( #$08 )
     COP [89]
     STZ $0AD4
     COP [C2]
-    COP [3B] ( #0B, @func_00B519 )
-    COP [80] ( #03 )
+    COP [3B] ( #$0B, @func_00B519 )
+    COP [80] ( #$03 )
     COP [89]
-    COP [80] ( #02 )
+    COP [80] ( #$02 )
     COP [89]
-    COP [80] ( #05 )
+    COP [80] ( #$05 )
     COP [89]
-    JSR $&SUB_08F6D3
+    JSR $sub_08F6D3
     RTL 
 }
 ---------------------------------------------
 
 func_08F3B1 {
-    COP [8E] ( #05 )
-    COP [80] ( #0D )
+    COP [8E] ( #$05 )
+    COP [80] ( #$0D )
     COP [89]
     COP [08] ( #$2525 )
-    COP [80] ( #10 )
+    COP [80] ( #$10 )
     COP [89]
-    COP [80] ( #0F )
+    COP [80] ( #$0F )
     COP [89]
-    COP [80] ( #0E )
+    COP [80] ( #$0E )
     COP [89]
     STZ $0AD4
     COP [C2]
-    COP [3B] ( #0B, @func_00B519 )
-    COP [80] ( #03 )
+    COP [3B] ( #$0B, @func_00B519 )
+    COP [80] ( #$03 )
     COP [89]
-    COP [80] ( #02 )
+    COP [80] ( #$02 )
     COP [89]
-    COP [80] ( #05 )
+    COP [80] ( #$05 )
     COP [89]
-    JSR $&SUB_08F6D3
+    JSR $sub_08F6D3
     RTL 
 }
 ---------------------------------------------
 
 func_08F3EA {
-    COP [D0] ( #B4, #00, &code_08F41B )
+    COP [D0] ( #$B4, #$00, &code_08F41B )
     LDA $0AD4
     CMP #$0002
-    BEQ @code_08F41B
+    BEQ code_08F41B
     LDA #$FFF0
-    TSB $JOYPAD_MASK_STD
-    COP [DA] ( #05 )
+    TSB $joypad_mask_std
+    COP [DA] ( #$05 )
     LDA #$FFF0
-    TRB $JOYPAD_MASK_STD
-    COP [D0] ( #DD, #01, &code_08F41D )
-    COP [CC] ( #DD )
+    TRB $joypad_mask_std
+    COP [D0] ( #$DD, #$01, &code_08F41D )
+    COP [CC] ( #$DD )
     COP [BF] ( &widestring_08F4B1 )
     LDA $0AD4
-    BEQ @code_08F436
-    BRA @code_08F456
+    BEQ code_08F436
+    BRA code_08F456
 }
 code_08F41B {
     COP [C5]
 }
 code_08F41D {
     COP [BF] ( &widestring_08F47C )
-    COP [BE] ( #02, #02, &code_list_08F427 )
+    COP [BE] ( #$02, #$02, &code_list_08F427 )
 }
 code_list_08F427 [
   &code_08F476   ;00
@@ -1295,34 +1295,34 @@ code_list_08F427 [
 code_08F42D {
     COP [BF] ( &widestring_08F4AF )
     LDA $0AD4
-    BNE @code_08F456
+    BNE code_08F456
 }
 code_08F436 {
-    LDY $PLAYER_ACTOR
+    LDY $player_actor
     SEP #$20
-    LDA #$^FUNC_08F5F9
+    LDA #$^func_08F5F9
     STA $0002, Y
     REP #$20
-    LDA #$&FUNC_08F5F9
-    STA $0, Y
-    LDA #$0
+    LDA #$&func_08F5F9
+    STA $0000, Y
+    LDA #$0000
     STA $0008, Y
     LDA #$0800
-    TSB $PLAYER_FLAGS
+    TSB $player_flags
     COP [C5]
 }
 code_08F456 {
-    LDY $PLAYER_ACTOR
+    LDY $player_actor
     SEP #$20
-    LDA #$^FUNC_08F63C
+    LDA #$^func_08F63C
     STA $0002, Y
     REP #$20
-    LDA #$&FUNC_08F63C
-    STA $0, Y
-    LDA #$0
+    LDA #$&func_08F63C
+    STA $0000, Y
+    LDA #$0000
     STA $0008, Y
     LDA #$0800
-    TSB $PLAYER_FLAGS
+    TSB $player_flags
     COP [C5]
 }
 code_08F476 {
@@ -1335,65 +1335,65 @@ widestring_08F4B1 `[TPL:B]A [LU1:EE]echoes inside[N]his head.[FIN][TPL:4][LU1:20
 ---------------------------------------------
 
 func_08F5F9 {
-    COP [8E] ( #05 )
-    COP [80] ( #00 )
+    COP [8E] ( #$05 )
+    COP [80] ( #$00 )
     COP [89]
     COP [08] ( #$2525 )
-    COP [80] ( #02 )
+    COP [80] ( #$02 )
     COP [89]
-    COP [80] ( #03 )
+    COP [80] ( #$03 )
     COP [89]
-    COP [3B] ( #6C, @func_00B519 )
-    COP [80] ( #0E )
+    COP [3B] ( #$6C, @func_00B519 )
+    COP [80] ( #$0E )
     COP [89]
-    COP [80] ( #0F )
+    COP [80] ( #$0F )
     COP [89]
-    COP [A5] ( @e_actor_02B20E, #00, #00, #$2800 )
+    COP [A5] ( @e_actor_02B20E, #$00, #$00, #$2800 )
     LDA #$0002
     STA $0AD4
-    COP [80] ( #10 )
+    COP [80] ( #$10 )
     COP [89]
-    COP [80] ( #12 )
+    COP [80] ( #$12 )
     COP [89]
-    JSR $&SUB_08F6D3
+    JSR $sub_08F6D3
     RTL 
 }
 ---------------------------------------------
 
 func_08F63C {
-    COP [8E] ( #05 )
-    COP [80] ( #07 )
+    COP [8E] ( #$05 )
+    COP [80] ( #$07 )
     COP [89]
     COP [08] ( #$2525 )
-    COP [80] ( #09 )
+    COP [80] ( #$09 )
     COP [89]
-    COP [80] ( #08 )
+    COP [80] ( #$08 )
     COP [89]
-    COP [3B] ( #6C, @func_00B519 )
-    COP [80] ( #0E )
+    COP [3B] ( #$6C, @func_00B519 )
+    COP [80] ( #$0E )
     COP [89]
-    COP [80] ( #0F )
+    COP [80] ( #$0F )
     COP [89]
-    COP [A5] ( @e_actor_02B20E, #00, #00, #$2800 )
+    COP [A5] ( @e_actor_02B20E, #$00, #$00, #$2800 )
     LDA #$0002
     STA $0AD4
-    COP [80] ( #10 )
+    COP [80] ( #$10 )
     COP [89]
-    COP [80] ( #12 )
+    COP [80] ( #$12 )
     COP [89]
-    JSR $&SUB_08F6D3
+    JSR $sub_08F6D3
     RTL 
 }
 ---------------------------------------------
 
 h_actor_08F67F [
-  h_actor < #02, #$0000, #28 >   ;00
+  h_actor < #$02, #$0000, #$28 >   ;00
 ]
 ---------------------------------------------
 
 e_actor_08F67F {
     LDA #$1000
-    TSB $@BMP_000000+12
+    TSB $12
 }
 code_08F687 {
     COP [C2]
@@ -1402,20 +1402,20 @@ code_08F687 {
     ASL 
     ASL 
     ASL 
-    STA $@BMP_000000+8
+    STA $08
     COP [9C] ( @code_08F69C, #$1B02 )
-    BRA @code_08F687
+    BRA code_08F687
 }
 code_08F69C {
     LDA #$1000
-    TSB $@BMP_000000+12
+    TSB $12
     COP [88] ( @table_0EE000 )
-    COP [8D] ( #02 )
-    LDA #$0
-    STA $@BMP_000000+16
+    COP [8D] ( #$02 )
+    LDA #$0000
+    STA $16
     COP [23]
     ASL 
-    STA $@BMP_000000+14
+    STA $14
     AND #$0003
     ASL 
     CLC 
@@ -1428,21 +1428,21 @@ code_08F69C {
     COP [B1]
     COP [C1]
     COP [89]
-    LDA $@BMP_000000+16
+    LDA $16
     CMP #$00FF
-    BCC @code_08F6C4
+    BCC code_08F6C4
     COP [E0]
 }
 ---------------------------------------------
 
 sub_08F6D3 {
     PHX 
-    LDX $PLAYER_ACTOR
-    LDA #$*CODE_02C3C8
+    LDX $player_actor
+    LDA #$*code_02C3C8
     STA $0002, X
-    LDA #$&CODE_02C3C8
-    STA $0, X
-    LDA #$0
+    LDA #$&code_02C3C8
+    STA $0000, X
+    LDA #$0000
     STA $002C, X
     STA $002E, X
     STA $0008, X
@@ -1451,59 +1451,59 @@ sub_08F6D3 {
     ORA #$0008
     STA $0010, X
     LDA #$0F00
-    TRB $JOYPAD_MASK_STD
+    TRB $joypad_mask_std
     LDA #$0800
-    TRB $PLAYER_FLAGS
+    TRB $player_flags
     PLX 
     RTS 
 }
 ---------------------------------------------
 
 e_actor_09A090 {
-    COP [80] ( #00 )
+    COP [80] ( #$00 )
     COP [89]
     RTL 
 }
 code_09A096 {
-    COP [8D] ( #01 )
-    LDA #$0
-    STA $@BMP_000000+24
+    COP [8D] ( #$01 )
+    LDA #$0000
+    STA $24
 
   code_09A09E:
     COP [C1]
-    LDA $@BMP_000000+24
-    BNE @code_09A0A5
+    LDA $24
+    BNE code_09A0A5
     RTL 
 }
 code_09A0A5 {
     LDA $06F8
-    BNE @code_09A0AB
+    BNE code_09A0AB
     RTL 
 }
 code_09A0AB {
     COP [23]
     AND #$0003
     DEC 
-    BEQ @code_09A0C1
+    BEQ code_09A0C1
     DEC 
-    BEQ @code_09A0CC
-    COP [80] ( #01 )
+    BEQ code_09A0CC
+    COP [80] ( #$01 )
     COP [89]
     COP [C1]
     COP [8B]
-    BRA @code_09A09E
+    BRA code_09A09E
 }
 code_09A0C1 {
-    COP [80] ( #02 )
+    COP [80] ( #$02 )
     COP [89]
     COP [C1]
     COP [8B]
-    BRA @code_09A09E
+    BRA code_09A09E
 }
 code_09A0CC {
-    COP [80] ( #03 )
+    COP [80] ( #$03 )
     COP [89]
     COP [C1]
     COP [8B]
-    BRA @code_09A09E
+    BRA code_09A09E
 }
