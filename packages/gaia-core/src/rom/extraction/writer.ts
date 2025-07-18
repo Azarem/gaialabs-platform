@@ -216,6 +216,24 @@ export class BlockWriter {
       if (op.code.mode === AddressingMode.Immediate) {
         return obj;
       }
+
+      // Direct page and stack operations should not resolve to labels
+      switch (op.code.mode) {
+        case AddressingMode.DirectPage:
+        case AddressingMode.DirectPageIndexedX:
+        case AddressingMode.DirectPageIndexedY:
+        case AddressingMode.DirectPageIndexedIndirectX:
+        case AddressingMode.DirectPageIndirect:
+        case AddressingMode.DirectPageIndirectLong:
+        case AddressingMode.DirectPageIndirectLongIndexedY:
+        case AddressingMode.DirectPageIndirectIndexedY:
+        case AddressingMode.StackRelative:
+        case AddressingMode.StackRelativeIndirectIndexedY:
+        case AddressingMode.Stack:
+        case AddressingMode.StackInterrupt:
+          return obj;
+      }
+
       return this._blockReader.resolveName(obj, AddressType.Address, isBranch);
     }
     if (this.getObjectType(obj) === ObjectType.LocationWrapper) {
@@ -565,7 +583,7 @@ export class BlockWriter {
     if (num === 0) {
       return ['#$0000'];
     } else if (num <= 0xFF) {
-      return [`#${num.toString(16).toUpperCase().padStart(2, '0')}`];
+      return [`#$${num.toString(16).toUpperCase().padStart(2, '0')}`];
     } else if (num <= 0xFFFF) {
       return [`#$${num.toString(16).toUpperCase().padStart(4, '0')}`];
     } else {
@@ -575,7 +593,7 @@ export class BlockWriter {
 
   private writeTypedNumber(num: TypedNumber): string[] {
     if (num.size === 1) {
-      return [`#${num.value.toString(16).toUpperCase().padStart(2, '0')}`];
+      return [`#$${num.value.toString(16).toUpperCase().padStart(2, '0')}`];
     }
     const width = num.size * 2;
     return [`#$${num.value.toString(16).toUpperCase().padStart(width, '0')}`];
@@ -584,7 +602,7 @@ export class BlockWriter {
   private formatOperand(format: string, operands: any[]): string {
     return format.replace(/\{(\d+)(?::([^}]+))?\}/g, (match, index, formatSpec) => {
       const operand = operands[parseInt(index)];
-      if (formatSpec && operand) {
+      if (formatSpec && typeof operand === 'number') {
         if (formatSpec.startsWith('X')) {
           const width = parseInt(formatSpec.substring(1)) || 2;
           return operand.toString(16).toUpperCase().padStart(width, '0');

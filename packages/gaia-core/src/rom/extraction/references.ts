@@ -93,7 +93,7 @@ export class ReferenceManager {
   }
 
   public resolveName(location: number, type: AddressType, isBranch: boolean): string {
-    const prefix = Address.codeFromType(type) || '';
+    const prefix = isBranch ? '' : (Address.codeFromType(type) || '');
     let name: string;
     let label: string | null = null;
     let resolvedLocation = location;
