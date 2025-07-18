@@ -196,19 +196,13 @@ export class BlockWriter {
   }
 
   private getMnemonicsForBlock(block: DbBlock): [string, number][] {
-    // For now, return the common mnemonics that appear in the expected output
-    // This should be replaced with logic to scan the block content and find referenced mnemonics
-    const commonMnemonics: [string, number][] = [
-      ['scene_next', 0x0642],
-      ['joypad_mask_std', 0x065A],
-      ['player_actor', 0x09AA],
-      ['player_flags', 0x09AE],
-      ['APUIO1', 0x2141]
-    ];
+    if (!block.mnemonics) {
+      return [];
+    }
 
-    // TODO: Implement proper logic to scan block content for mnemonic references
-    // For now, return the common ones for testing
-    return commonMnemonics;
+    return Object.entries(block.mnemonics)
+      .map(([k, v]) => [v, parseInt(k, 10)] as [string, number])
+      .sort((a, b) => a[1] - b[1]);
   }
 
   private resolveOperand(op: Op, obj: any, isBranch: boolean = false): any {
