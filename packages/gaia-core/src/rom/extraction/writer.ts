@@ -250,6 +250,16 @@ export class BlockWriter {
 
       return addr.offset;
     }
+
+    // Preserve tag information when resolving typed numbers
+    if (obj && typeof obj === 'object' && obj._tag && 'value' in obj) {
+      const typed = obj as { _tag: string; value: any };
+      if (typeof typed.value === 'number' && op.code.mode !== AddressingMode.Immediate) {
+        const resolved = this._blockReader.resolveName(typed.value, AddressType.Address, isBranch);
+        return { ...typed, value: resolved };
+      }
+      return obj;
+    }
     return obj;
   }
 
@@ -467,7 +477,11 @@ export class BlockWriter {
     if (typeof operand === 'string') {
       return operand; // Already formatted
     }
-    
+
+    if (operand && typeof operand === 'object' && operand._tag && 'value' in operand) {
+      return this.formatTypedNumber(operand);
+    }
+
     if (typeof operand === 'number') {
       const hexSize = (size - 1) * 2;
       if (hexSize === 2) {
@@ -587,7 +601,7 @@ export class BlockWriter {
     }
   }
 
-  private writeTypedNumber(num: TypedNumber | { _tag: string; value: number }): string[] {
+  private formatTypedNumber(num: TypedNumber | { _tag: string; value: number | string }): string {
     let size = 1;
     if ('size' in num) {
       size = (num as TypedNumber).size;
@@ -595,13 +609,30 @@ export class BlockWriter {
       size = 2;
     }
 
-    const width = size * 2;
-    return [`#$${num.value.toString(16).toUpperCase().padStart(width, '0')}`];
+    if (typeof num.value === 'number') {
+      const width = size * 2;
+      return `#$${num.value.toString(16).toUpperCase().padStart(width, '0')}`;
+    }
+
+    return `#${num.value}`;
+  }
+
+  private writeTypedNumber(num: TypedNumber | { _tag: string; value: number | string }): string[] {
+    return [this.formatTypedNumber(num)];
   }
 
   private formatOperand(format: string, operands: any[]): string {
     return format.replace(/\{(\d+)(?::([^}]+))?\}/g, (match, index, formatSpec) => {
       const operand = operands[parseInt(index)];
+      if (operand && typeof operand === 'object' && operand._tag && 'value' in operand) {
+        const value = operand.value;
+        if (formatSpec && typeof value === 'number' && formatSpec.startsWith('X')) {
+          const width = parseInt(formatSpec.substring(1)) || 2;
+          return value.toString(16).toUpperCase().padStart(width, '0');
+        }
+        return String(value);
+      }
+
       if (formatSpec && typeof operand === 'number') {
         if (formatSpec.startsWith('X')) {
           const width = parseInt(formatSpec.substring(1)) || 2;
