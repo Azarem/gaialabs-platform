@@ -2,7 +2,17 @@ import { Op, Registers } from '../../assembly';
 import { RomDataReader } from './reader';
 import { StringReader } from './strings';
 import { ReferenceManager } from './references';
-import { Address, AddressSpace, AddressType, DbBlockUtils, LocationWrapper, MemberType, StructDef } from 'gaia-shared';
+import {
+  Address,
+  AddressSpace,
+  AddressType,
+  DbBlockUtils,
+  LocationWrapper,
+  MemberType,
+  StructDef,
+  createByte,
+  createWord,
+} from 'gaia-shared';
 import type { DbRoot, DbBlock, DbPart } from 'gaia-shared';
 import type { DbStruct } from 'gaia-shared';
 import type { DbStringType } from 'gaia-shared';
@@ -50,9 +60,9 @@ export class TypeParser {
     if (mType !== null) {
       switch (mType) {
         case MemberType.Byte:
-          return this._romDataReader.readByte();
+          return createByte(this._romDataReader.readByte());
         case MemberType.Word:
-          return this.parseWordSafe();
+          return createWord(this.parseWordSafe() as number);
         case MemberType.Offset:
           return this.parseLocation(this._romDataReader.readUShort(), bank, null, AddressType.Offset);
         case MemberType.Address:

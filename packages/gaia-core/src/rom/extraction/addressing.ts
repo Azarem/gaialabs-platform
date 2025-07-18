@@ -1,5 +1,14 @@
 import { OpCode, Registers } from '../../assembly';
-import { AddressingMode, AddressType, AddressSpace, Address, LocationWrapper, StatusFlags } from 'gaia-shared';
+import {
+  AddressingMode,
+  AddressType,
+  AddressSpace,
+  Address,
+  LocationWrapper,
+  StatusFlags,
+  createByte,
+  createWord,
+} from 'gaia-shared';
 import { RomDataReader } from './reader';
 import { StackOperations } from './stack';
 import { TransformProcessor } from './transforms';
@@ -105,27 +114,34 @@ export class AddressingModeHandler {
     this.updateRegisterForImmediateInstruction(mnemonic, operand, reg);
   }
 
-  private readImmediateOperand(size: number): number {
-    return size === 3 ? this._dataReader.readUShort() : this._dataReader.readByte();
+  private readImmediateOperand(size: number) {
+    return size === 3
+      ? createWord(this._dataReader.readUShort())
+      : createByte(this._dataReader.readByte());
   }
 
-  private updateRegisterForImmediateInstruction(mnemonic: string, operand: number, reg: Registers): void {
+  private updateRegisterForImmediateInstruction(
+    mnemonic: string,
+    operand: number | { value: number },
+    reg: Registers
+  ): void {
+    const value = typeof operand === 'number' ? operand : operand.value;
     switch (mnemonic) {
       case 'LDA':
-        reg.accumulator = this.calculateRegisterValue(reg.accumulator, operand);
+        reg.accumulator = this.calculateRegisterValue(reg.accumulator, value);
         break;
 
       case 'LDX':
-        reg.xIndex = this.calculateRegisterValue(reg.xIndex, operand);
+        reg.xIndex = this.calculateRegisterValue(reg.xIndex, value);
         break;
 
       case 'LDY':
-        reg.yIndex = this.calculateRegisterValue(reg.yIndex, operand);
+        reg.yIndex = this.calculateRegisterValue(reg.yIndex, value);
         break;
 
       case 'SEP':
       case 'REP':
-        this.updateStatusFlags(mnemonic, operand);
+        this.updateStatusFlags(mnemonic, value);
         break;
     }
   }
