@@ -251,9 +251,15 @@ export class BlockWriter {
       return addr.offset;
     }
 
-    // Preserve tag information when resolving typed numbers
+    // Preserve tag information on typed numbers without resolving names
     if (obj && typeof obj === 'object' && obj._tag && 'value' in obj) {
       const typed = obj as { _tag: string; value: any };
+
+      // Byte/Word objects should remain untouched
+      if (typed._tag === 'Byte' || typed._tag === 'Word' || typed._tag === 'TypedNumber') {
+        return obj;
+      }
+
       if (typeof typed.value === 'number' && op.code.mode !== AddressingMode.Immediate) {
         const resolved = this._blockReader.resolveName(typed.value, AddressType.Address, isBranch);
         return { ...typed, value: resolved };
