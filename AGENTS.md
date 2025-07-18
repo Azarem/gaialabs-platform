@@ -1,33 +1,29 @@
 # AGENTS Guide
 
-This repository hosts the **GaiaLabs Platform**, a monorepo for a web-based ROM editing suite.
+This repository contains the **GaiaLabs Platform** monorepo. Use this guide to understand the high level layout.
 
-## Repository Structure
-- **Apps** (`apps/`)
-  - `gaia-studio` – React 19 + PixiJS ROM editor
-  - `gaia-api` – Fastify backend API
-  - `gaia-community` – Next.js community platform
-- **Packages** (`packages/`)
-  - `gaia-core` – Core ROM processing engine
-  - `gaia-shared` – Shared TypeScript types/utilities
-  - `gaia-ui` – React components & themes
-  - `gaia-auth` – Auth helpers
-  - `gaia-git` – Git integration utilities
-- Additional resources include `ext/GaiaLib` (original C# code), `GAIALIB_TYPESCRIPT_MAPPING.md`, and environment examples in `env.example`.
+## Repository Overview
 
-## Key Documentation (docs/)
-- **Primer.md** – SNES development primer covering memory mapping, ROM header structure, DMA, CPU features, graphics modes, debugging tips, and best practices.
-- **GaiaLabs-MVP-Roadmap.md** and **GaiaLabs-MVP-Roadmap-v2.md** – Roadmaps describing the vision for a universal ROM editor platform with phased development plans and role-based permissions.
-- **AssemblyComparison.md** – Notes on discrepancies between C# disassembly and current TypeScript output (missing COP parameters, rewritten literals, missing include directives) with suggestions for investigation.
+- **apps/** – deployable applications
+  - **gaia-studio/** – Vite powered React 19 + PixiJS editor. Source lives in `src/` with `App.tsx` as the main entry.
+  - **gaia-api/** – Fastify backend with Prisma. Database schema and migrations are under `prisma/`.
+  - **gaia-community/** – Next.js 14 community site using the `app/` directory.
+- **packages/** – shared TypeScript libraries
+  - **gaia-core/** – ROM processing engine. Modules include `assembly/`, `compression/`, `rom/`, `sprites/` and more.
+  - **gaia-shared/** – Common data definitions and helpers found in `database/`, `project/`, `types/`, etc.
+  - **gaia-ui/** – React components and design tokens.
+  - **gaia-auth/** – Authentication service wrappers.
+  - **gaia-git/** – Git and GitHub helpers.
+- **docs/** – Technical references like `Primer.md` and roadmap documents.
+- **ext/** – External references including the original C# project `GaiaLib`.
+- **truth/** – Reference assembly output for regression checking.
 
 ## Getting Started
-- Install Node.js 20+ and pnpm.
-- Run `pnpm install` then `pnpm dev` to start local development.
-- See `DEVELOPMENT.md` and package READMEs for per-package commands.
+
+Install Node.js 20+ and pnpm. Run `pnpm install` and then `pnpm dev` from the repo root to start all apps. See each package's AGENTS guide for additional commands.
 
 ## Next Steps
-1. Explore `packages/gaia-core` and its submodules (`assembly/`, `compression/`, `rom/`, etc.).
-2. Review the migration mapping in `GAIALIB_TYPESCRIPT_MAPPING.md` to correlate with the C# reference.
-3. Run tests located under `__tests__` directories to see usage examples.
-4. Consult the docs listed above for SNES technical context and overall project roadmap.
 
+1. Explore `packages/gaia-core/src` for the main ROM engine implementation.
+2. Review documentation under `docs/` for SNES technical context and project planning.
+3. Compare features with the C# code in `ext/GaiaLib` when porting functionality.
