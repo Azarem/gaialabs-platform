@@ -4,12 +4,6 @@
 ?INCLUDE 'actor_02B20E'
 ?INCLUDE 'player_character'
 
-!scene_next                     0642
-!joypad_mask_std                065A
-!player_actor                   09AA
-!player_flags                   09AE
-!APUIO1                         2141
-
 ---------------------------------------------
 
 h_sE6_gaia [
