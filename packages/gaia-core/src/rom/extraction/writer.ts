@@ -228,38 +228,14 @@ export class BlockWriter {
           return obj;
       }
 
-      const name = this._blockReader.resolveName(obj, AddressType.Address, isBranch);
-      if (isBranch && typeof name === 'string' && name.startsWith('@')) {
-        return name.substring(1);
-      }
-      return name;
+      return this._blockReader.resolveName(obj, AddressType.Address, isBranch);
     }
     if (this.getObjectType(obj) === ObjectType.LocationWrapper) {
       const lw = obj as LocationWrapper;
-      const name = this._blockReader.resolveName(lw.location, lw.type, isBranch);
-      if (isBranch && typeof name === 'string' && name.startsWith('@')) {
-        return name.substring(1);
-      }
-      return name;
+      return this._blockReader.resolveName(lw.location, lw.type, isBranch);
     }
     if (this.getObjectType(obj) === ObjectType.Address) {
       const addr = obj as Address;
-      // Avoid label resolution for direct-page and stack addressing modes
-      switch (op.code.mode) {
-        case AddressingMode.DirectPage:
-        case AddressingMode.DirectPageIndexedX:
-        case AddressingMode.DirectPageIndexedY:
-        case AddressingMode.DirectPageIndexedIndirectX:
-        case AddressingMode.DirectPageIndirect:
-        case AddressingMode.DirectPageIndirectLong:
-        case AddressingMode.DirectPageIndirectLongIndexedY:
-        case AddressingMode.DirectPageIndirectIndexedY:
-        case AddressingMode.StackRelative:
-        case AddressingMode.StackRelativeIndirectIndexedY:
-        case AddressingMode.Stack:
-        case AddressingMode.StackInterrupt:
-          return addr.offset;
-      }
 
       if (op.size === 4) {
         return addr;

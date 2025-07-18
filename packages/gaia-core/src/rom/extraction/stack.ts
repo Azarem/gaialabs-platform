@@ -1,11 +1,7 @@
 import { Registers } from '../../assembly';
 import { StatusFlags } from 'gaia-shared';
 import { RomDataReader } from './reader';
-
-// Placeholder interface for BlockReader until it's implemented
-interface BlockReader {
-  _romDataReader: RomDataReader;
-}
+import type { BlockReader } from './blocks';
 
 /**
  * Handles stack operations for various stack-related instructions

@@ -5,7 +5,7 @@
 
 // Platform detection
 const isNode = typeof process !== 'undefined' && process.versions?.node;
-const isBrowser = typeof globalThis !== 'undefined' && 'window' in globalThis;
+// const isBrowser = typeof globalThis !== 'undefined' && 'window' in globalThis;
 
 export interface FileReadOptions {
   encoding?: 'utf8' | 'binary';

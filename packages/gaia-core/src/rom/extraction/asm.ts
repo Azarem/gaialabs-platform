@@ -2,19 +2,7 @@ import { Op, OpCode, Registers } from '../../assembly';
 import { RomDataReader } from './reader';
 import { TransformProcessor } from './transforms';
 import { AddressingModeHandler, OperationContext } from './addressing';
-import type { DbRoot } from 'gaia-shared';
-
-// Placeholder interface for BlockReader until it's implemented
-interface BlockReader {
-  _romDataReader: RomDataReader;
-  _root: DbRoot;
-  _referenceManager: any;
-  _currentPart: { struct?: string } | null;
-  AccumulatorFlags: Map<number, boolean>;
-  IndexFlags: Map<number, boolean>;
-  NoteType(location: number, type: string, isPush?: boolean, reg?: Registers): string;
-  ResolveInclude(location: number, isBranch: boolean): void;
-}
+import type { BlockReader } from './blocks';
 
 /**
  * Parses assembly instructions from ROM data, handling different addressing modes

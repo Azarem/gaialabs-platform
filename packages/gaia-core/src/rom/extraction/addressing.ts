@@ -5,22 +5,7 @@ import { StackOperations } from './stack';
 import { TransformProcessor } from './transforms';
 import { CopCommandProcessor } from './cop';
 import type { DbRoot } from 'gaia-shared';
-
-// Placeholder interfaces for dependencies that aren't implemented yet
-interface BlockReader {
-  _romDataReader: RomDataReader;
-  _root: DbRoot;
-  _currentPart: { struct?: string } | null;
-  AccumulatorFlags: Map<number, boolean>;
-  IndexFlags: Map<number, boolean>;
-  NoteType(location: number, type: string, isPush?: boolean, reg?: Registers): string;
-}
-
-
-
-
-
-
+import type { BlockReader } from './blocks';
 
 /**
  * Context information for an operation being processed
@@ -176,7 +161,7 @@ export class AddressingModeHandler {
     if (address.space === AddressSpace.ROM) {
       const wrapper = new LocationWrapper(address.toInt(), AddressType.Address);
       if (this.isJumpInstruction(mnemonic)) {
-        this._blockReader.NoteType(wrapper.location, 'Code', false, reg);
+        this._blockReader.noteType(wrapper.location, 'Code', false, reg);
       }
       operands.push(wrapper);
     } else {
@@ -199,7 +184,7 @@ export class AddressingModeHandler {
       ? nextAddress + this._dataReader.readShort()
       : nextAddress + this._dataReader.readSByte();
 
-    this._blockReader.NoteType(relative, 'Code', undefined, reg);
+    this._blockReader.noteType(relative, 'Code', undefined, reg);
     operands.push(relative);
   }
 
@@ -249,7 +234,7 @@ export class AddressingModeHandler {
     if (addr.isROM) {
       const wrapper = new LocationWrapper(addr.toInt(), AddressType.Offset);
       if (isJump) {
-        const name = this._blockReader.NoteType(wrapper.location, 'Code', isPush, registers);
+        const name = this._blockReader.noteType(wrapper.location, 'Code', isPush, registers);
 
         if (isPush) {
           operands.push(`&${name}-1`);

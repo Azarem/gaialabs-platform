@@ -211,13 +211,6 @@ export class BlockReader {
     return name;
   }
 
-  /**
-   * PascalCase wrapper for noteType (for C# compatibility)
-   */
-  public NoteType(loc: number, type: string, silent: boolean = false, reg?: Registers): string {
-    return this.noteType(loc, type, silent, reg);
-  }
-
   private updateRegisterState(loc: number, reg: Registers): void {
     if (reg.accumulatorFlag !== undefined) {
       this._stateManager.tryAddAccumulatorFlag(loc, reg.accumulatorFlag);
@@ -257,34 +250,6 @@ export class BlockReader {
   public partCanContinue(): boolean {
     return this._romDataReader.position < this._partEnd && 
            !this._referenceManager.containsStruct(this._romDataReader.position);
-  }
-
-  /**
-   * PascalCase wrapper for delimiterReached (for C# compatibility)
-   */
-  public DelimiterReached(delimiter?: number): boolean {
-    return this.delimiterReached(delimiter);
-  }
-
-  /**
-   * PascalCase wrapper for partCanContinue (for C# compatibility)
-   */
-  public PartCanContinue(): boolean {
-    return this.partCanContinue();
-  }
-
-  /**
-   * PascalCase wrapper for resolveInclude (for C# compatibility)
-   */
-  public ResolveInclude(location: number, isBranch: boolean): void {
-    this.resolveInclude(location, isBranch);
-  }
-
-  /**
-   * PascalCase wrapper for resolveName (for C# compatibility)
-   */
-  public ResolveName(location: number, type: AddressType, isBranch: boolean): string {
-    return this.resolveName(location, type, isBranch);
   }
 
   /**

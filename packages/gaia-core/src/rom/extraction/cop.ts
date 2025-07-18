@@ -2,14 +2,7 @@ import { RomDataReader } from './reader';
 import { Address, AddressType, AddressSpace, LocationWrapper, MemberType, createTypedNumber } from 'gaia-shared';
 import type { CopDef, TypedNumber } from 'gaia-shared';
 import type { DbRoot } from 'gaia-shared';
-
-// Placeholder interface for BlockReader until it's implemented
-interface BlockReader {
-  _romDataReader: RomDataReader;
-  _root: DbRoot;
-  _currentPart: { struct?: string } | null;
-  NoteType(location: number, type: string, silent?: boolean): void;
-}
+import type { BlockReader } from './blocks';
 
 /**
  * Handles COP (Coprocessor) command processing
@@ -119,7 +112,7 @@ export class CopCommandProcessor {
     if (addr.space === AddressSpace.ROM) {
       const location = addr.toInt();
       if (partStr !== 'Address' && isPtr && !this._blockReader._root.rewrites[location]) {
-        this._blockReader.NoteType(location, otherStr, true);
+        this._blockReader.noteType(location, otherStr, true);
       }
 
       // When address is unknown, try to use the part string (for Offset or Address)

@@ -1,15 +1,7 @@
 import { RomDataReader } from './reader';
 import { ReferenceManager } from './references';
 import { RomProcessingConstants } from 'gaia-shared';
-import type { DbRoot } from 'gaia-shared';
-
-// Placeholder interface for BlockReader until it's implemented
-interface BlockReader {
-  _romDataReader: RomDataReader;
-  _referenceManager: ReferenceManager;
-  _root: DbRoot;
-  ResolveInclude(location: number, isBranch: boolean): void;
-}
+import type { BlockReader } from './blocks';
 
 /**
  * Handles transform processing for assembly instructions
@@ -44,7 +36,7 @@ export class TransformProcessor {
     const referenceLocation = this.resolveTransformReference(transformName);
     
     if (referenceLocation !== null) {
-      this._blockReader.ResolveInclude(referenceLocation, false);
+      this._blockReader.resolveInclude(referenceLocation, false);
     }
 
     return transform;
@@ -84,7 +76,7 @@ export class TransformProcessor {
       referenceName = nameResult.referenceName!;
     }
     
-    this._blockReader.ResolveInclude(value, false);
+    this._blockReader.resolveInclude(value, false);
     operands[operandIndex] = `&${referenceName}`;
   }
 

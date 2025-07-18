@@ -7,21 +7,7 @@ import type { DbRoot, DbBlock, DbPart } from 'gaia-shared';
 import type { DbStruct } from 'gaia-shared';
 import type { DbStringType } from 'gaia-shared';
 import { AsmReader } from './asm';
-
-// Placeholder interfaces for dependencies that aren't implemented yet
-interface BlockReader {
-  _romDataReader: RomDataReader;
-  _stringReader: StringReader;
-  _referenceManager: ReferenceManager;
-  _root: DbRoot;
-  _currentBlock: DbBlock | null;
-  _currentPart: DbPart | null;
-  _partEnd: number;
-  _asmReader: AsmReader;
-  DelimiterReached(delimiter?: number): boolean;
-  PartCanContinue(): boolean;
-  HydrateRegisters(reg: Registers): void;
-}
+import type { BlockReader } from './blocks';
 
 /**
  * Handles parsing of different data types from ROM
@@ -91,7 +77,7 @@ export class TypeParser {
 
     // Continue to iterate until end or delimiter is reached
     let delReached: boolean;
-    while (!(delReached = this._blockReader.DelimiterReached(delimiter))) {
+    while (!(delReached = this._blockReader.delimiterReached(delimiter))) {
       const startPosition = this._romDataReader.position;
       let targetType = parentType;
 
@@ -146,7 +132,7 @@ export class TypeParser {
       }
 
       // Stop if the reader should not continue
-      if (!this._blockReader.PartCanContinue()) {
+      if (!this._blockReader.partCanContinue()) {
         break;
       }
     }
@@ -183,7 +169,7 @@ export class TypeParser {
     // Advance the reader until we reach the end of the section
     do {
       this._romDataReader.position++;
-    } while (this._blockReader.PartCanContinue());
+    } while (this._blockReader.partCanContinue());
 
     // Length is determined by the new position relative to the old
     const len = this._romDataReader.position - startPosition;

@@ -21,44 +21,57 @@ export interface DbBlock {
  */
 export class DbBlockUtils {
   /**
-   * Check if a location is outside this block
+   * Check if a location is outside this block and return the part (matches C# IsOutside)
+   * Returns [isOutside, part] where part is the part containing the location
    */
-  static isOutside(block: DbBlock, location: number): boolean {
-    let foundPart: DbPart | null = null;
-    
-    if (this.isInside(block, location, foundPart)) {
-      return false;
+  static isOutsideWithPart(block: DbBlock, location: number): [boolean, DbPart | null] {
+    const [isInside, part] = this.isInsideWithPart(block, location);
+    if (isInside) {
+      return [false, part];
     }
 
     // Find chunk this reference belongs to
     if (block.root?.blocks) {
       for (const otherBlock of block.root.blocks) {
-        if (otherBlock !== block && this.isInside(otherBlock, location, foundPart)) {
-          return true;
+        if (otherBlock !== block) {
+          const [otherIsInside, otherPart] = this.isInsideWithPart(otherBlock, location);
+          if (otherIsInside) {
+            return [true, otherPart];
+          }
         }
       }
     }
 
-    return true;
+    return [true, null];
   }
 
   /**
-   * Check if a location is inside this block
+   * Check if a location is inside this block and return the part (matches C# IsInside)
+   * Returns [isInside, part] where part is the part containing the location
    */
-  static isInside(block: DbBlock, location: number, foundPart?: DbPart | null): boolean {
+  static isInsideWithPart(block: DbBlock, location: number): [boolean, DbPart | null] {
     for (const part of block.parts) {
       if (DbPartUtils.isInside(part, location)) {
-        if (foundPart !== undefined) {
-          foundPart = part;
-        }
-        return true;
+        return [true, part];
       }
     }
+    return [false, null];
+  }
 
-    if (foundPart !== undefined) {
-      foundPart = null;
-    }
-    return false;
+  /**
+   * Check if a location is outside this block (shorthand version)
+   */
+  static isOutside(block: DbBlock, location: number): boolean {
+    const [isOutside] = this.isOutsideWithPart(block, location);
+    return isOutside;
+  }
+
+  /**
+   * Check if a location is inside this block (shorthand version)
+   */
+  static isInside(block: DbBlock, location: number): boolean {
+    const [isInside] = this.isInsideWithPart(block, location);
+    return isInside;
   }
 
   /**

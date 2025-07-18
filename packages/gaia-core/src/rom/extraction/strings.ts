@@ -1,19 +1,8 @@
 import { RomDataReader } from './reader';
-import { Address, AddressSpace, AddressType, MemberType, RomProcessingConstants } from 'gaia-shared';
+import { Address, AddressSpace, AddressType, MemberType, RomProcessingConstants, DbBlockUtils } from 'gaia-shared';
 import type { DbStringType, DbStringCommand } from 'gaia-shared';
 import type { StringWrapper } from 'gaia-shared';
-import type { DbRoot } from 'gaia-shared';
-
-// Placeholder interfaces for dependencies that aren't implemented yet
-interface BlockReader {
-  _romDataReader: RomDataReader;
-  _root: DbRoot;
-  _currentBlock: any;
-  _markerTable: Record<number, number>;
-  PartCanContinue(): boolean;
-  ResolveInclude(location: number, isBranch: boolean): void;
-  ResolveName(location: number, type: AddressType, isBranch: boolean): string;
-}
+import type { BlockReader } from './blocks';
 
 interface TableEntry {
   Location: number;
@@ -75,7 +64,7 @@ export class StringReader {
                 builder.push(',');
               }
               builder.push(r.toString(16).toUpperCase());
-            } while (this._blockReader.PartCanContinue());
+            } while (this._blockReader.partCanContinue());
             break;
           default:
             throw new Error('Unsupported member type');
@@ -98,7 +87,7 @@ export class StringReader {
       const c = this._romDataReader.readByte();
       if (c === terminator) {
         if (stringType.greedyTerminator) {
-          while (this._romDataReader.peekByte() === terminator && this._blockReader.PartCanContinue()) {
+          while (this._romDataReader.peekByte() === terminator && this._blockReader.partCanContinue()) {
             this._romDataReader.position++;
           }
         }
@@ -120,7 +109,7 @@ export class StringReader {
           builder.push(`[${c.toString(16).toUpperCase()}]`);
         }
       }
-    } while (this._blockReader.PartCanContinue());
+    } while (this._blockReader.partCanContinue());
 
     return {
       string: builder.join(''),
@@ -163,8 +152,8 @@ export class StringReader {
         if (!isNaN(sloc)) {
           const addrs = new Address(sloc >> 16, sloc & 0xFFFF);
           if (addrs.space === AddressSpace.ROM) {
-            this._blockReader.ResolveInclude(sloc, false);
-            const name = this._blockReader.ResolveName(sloc, AddressType.Unknown, false);
+            this._blockReader.resolveInclude(sloc, false);
+            const name = this._blockReader.resolveName(sloc, AddressType.Unknown, false);
             const opix = this.indexOfAny(name, RomProcessingConstants.OPERATORS);
             
             if (opix > 0) {
@@ -172,7 +161,7 @@ export class StringReader {
               let offset: number;
               
               if (offsetStr === 'M') {
-                offset = this._blockReader._markerTable[sloc] || 0;
+                offset = this._blockReader._referenceManager.markerTable.get(sloc) || 0;
               } else {
                 offset = parseInt(offsetStr, 16) || 0;
               }
@@ -184,12 +173,14 @@ export class StringReader {
               const targetName = name.substring(0, opix);
               const target = sloc - offset;
               
-              // Try to find the target in the current block
-              // This is a simplified implementation
-              if (this._blockReader._currentBlock && this._blockReader._currentBlock.IsOutside) {
-                // More complex logic would go here
-                // For now, just mark the offset
-                sw.marker = offset;
+              // Try to find the target using IsOutside pattern
+              const [isOutside, prt] = DbBlockUtils.isOutsideWithPart(this._blockReader._currentBlock, sloc);
+              if (prt != null) {
+                const root = prt.objectRoot as TableEntry[];
+                const entry = root?.find(x => x.Location === target);
+                if (entry && entry.Object) {
+                  entry.Object.marker = offset;
+                }
               }
             }
           }

@@ -1,5 +1,5 @@
 import { AddressingMode } from '../types/addressing';
-import { HexString } from '../types/hex';
+// import { HexString } from '../types/hex';
 
 /**
  * COP instruction definition
