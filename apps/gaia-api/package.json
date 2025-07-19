@@ -6,9 +6,9 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "pnpm run-p build:*",
-    "build:types": "tsc --build",
-    "dev": "pnpm run-p dev:*",
+    "build": "tsup src/index.ts --format esm --dts",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
     "lint": "eslint . --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "test": "vitest",

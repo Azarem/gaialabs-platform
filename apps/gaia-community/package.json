@@ -29,6 +29,7 @@
     "gaia-git": "workspace:*"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "^15.4.2",
     "@types/node": "^20.10.4",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
