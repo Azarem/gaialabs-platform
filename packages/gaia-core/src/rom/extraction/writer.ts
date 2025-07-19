@@ -411,12 +411,15 @@ export class BlockWriter {
       const partLines = this.writeObject(part, depth);
       parts.push(partLines[0]);
     }
-    return [`${structObj.name} < ${parts.join(', ')} >`];
+    const line = `${structObj.name} < ${parts.join(', ')} >`;
+    this._isInline = false; // match C# spacing behaviour
+    return [line];
   }
 
   private writeOpArray(opList: Op[], depth: number): string[] {
     const lines: string[] = [];
     lines.push('{');
+    this._isInline = true; // instructions follow immediately
     
     let first = true;
     for (const op of opList) {
@@ -482,6 +485,7 @@ export class BlockWriter {
     }
     
     lines.push('}');
+    this._isInline = false; // ensure following object is separated by blank line
     return lines;
   }
 
@@ -496,13 +500,8 @@ export class BlockWriter {
 
     if (typeof operand === 'number') {
       const hexSize = (size - 1) * 2;
-      if (hexSize === 2) {
-        return `#$${operand.toString(16).toUpperCase().padStart(2, '0')}`;
-      } else if (hexSize === 4) {
-        return `#$${operand.toString(16).toUpperCase().padStart(4, '0')}`;
-      } else {
-        return `$${operand.toString(16).toUpperCase().padStart(hexSize, '0')}`;
-      }
+      const hex = operand.toString(16).toUpperCase().padStart(hexSize, '0');
+      return `$${hex}`;
     }
     
     return String(operand);
@@ -588,7 +587,8 @@ export class BlockWriter {
   private writeArray(arr: any[], depth: number): string[] {
     const lines: string[] = [];
     lines.push('[');
-    
+    this._isInline = false; // start elements on their own lines
+
     for (let i = 0; i < arr.length; i++) {
       const objLines = this.writeObject(arr[i], depth + 1);
       const indent = '  '.repeat(depth + 1);
@@ -597,8 +597,9 @@ export class BlockWriter {
         lines.push(...objLines.slice(1).map(line => `${indent}${line}`));
       }
     }
-    
+
     lines.push('  '.repeat(depth) + ']');
+    this._isInline = true; // arrays only add a single blank line after closing
     return lines;
   }
 
