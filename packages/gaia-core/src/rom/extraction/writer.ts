@@ -77,38 +77,12 @@ export class BlockWriter {
         // File doesn't exist, continue with creation
       }
 
-      const lines: string[] = [];
-
-      // Write bank information if not movable
-      if (!block.movable && block.parts.length > 0) {
-        lines.push(`?BANK ${(block.parts[0].start >> 16).toString(16).toUpperCase().padStart(2, '0')}`);
-      }
-
-      // Write includes - these should be from the block's include list
-      const includes = DbBlockUtils.getIncludes(block);
-      if (includes && includes.length > 0) {
-        for (const inc of includes) {
-          lines.push(`?INCLUDE '${inc.name}'`);
-        }
-        lines.push(''); // Empty line after includes
-      }
-
-      // Write mnemonics - these should be from the root mnemonics that are referenced in this block
-      const mnemonics = this.getMnemonicsForBlock(block);
-      if (mnemonics && mnemonics.length > 0) {
-        for (const [name, address] of mnemonics) {
-          const paddedName = name.padEnd(30, ' ');
-          lines.push(`!${paddedName} ${address.toString(16).toUpperCase().padStart(4, '0')}`);
-        }
-        lines.push(''); // Empty line after mnemonics
-      }
-
-      // Handle transforms
-      let xforms: XformDef[] | null = null;
       const xformFile = block.group 
         ? join(transformPath, block.group, `${block.name}.${xRes.extension}`)
         : join(transformPath, `${block.name}.${xRes.extension}`);
 
+      // Handle transforms
+      let xforms: XformDef[] | null = null;
       try {
         const xformData = await fs.readFile(xformFile, 'utf-8');
         xforms = JSON.parse(xformData) as XformDef[];
@@ -116,84 +90,116 @@ export class BlockWriter {
         // Transform file doesn't exist, continue without transforms
       }
 
-      // Process lookup transforms
-      if (xforms) {
-        for (const x of xforms.filter(x => x.type === XformType.Lookup)) {
-          const table = block.parts[0].objectRoot as TableEntry[];
-          const tableEntry = table?.[0];
-          const entries = tableEntry?.object as object[];
-          const newParts: TableEntry[] = [];
-          const newList: (string | number)[] = [];
-
-          newParts.push({ location: tableEntry.location, object: newList });
-
-          let eIx = 1;
-          for (const entry of entries.filter(e => e && typeof e === 'object' && 'name' in e && 'parts' in e)) {
-            const structEntry = entry as StructDef;
-            let cIx = 0;
-            let key: number | null = null;
-            let value: any = null;
-
-            for (const obj of structEntry.parts) {
-              if (cIx === x.keyIx) {
-                key = Number(obj);
-              } else if (cIx === x.valueIx) {
-                value = obj;
-              }
-              cIx++;
-            }
-
-            if (key === null || value === null) {
-              throw new Error('Could not locate key or value for transform');
-            }
-
-            const name = `entry_${key.toString(16).toUpperCase().padStart(2, '0')}`;
-            const loc = tableEntry.location + eIx;
-
-            newParts.push({ location: loc, object: value });
-
-            // Force labels to match the new name
-            this._referenceManager.nameTable.set(loc, name);
-
-            while (newList.length <= key) {
-              newList.push(0);
-            }
-
-            newList[key] = `&${name}`;
-            eIx++;
-          }
-
-          block.parts[0].objectRoot = newParts;
-        }
-      }
-
-      // Process each part
-      for (const part of block.parts) {
-        this._currentPart = part;
-        this._isInline = true;
-
-        lines.push('---------------------------------------------');
-        lines.push('');
-
-        const objectLines = this.writeObject(part.objectRoot, 0);
-        lines.push(...objectLines);
-      }
-
-      let content = lines.join('\n');
-
-      // Apply replace transforms
-      if (xforms) {
-        for (const x of xforms.filter(x => x.type === XformType.Replace)) {
-          if (x.key && x.value) {
-            const regex = new RegExp(x.key, 'g');
-            content = content.replace(regex, x.value);
-          }
-        }
-      }
-
+      const content = await this.generateAsm(block, xforms);
+      
       await fs.writeFile(outFile, content);
     }
   }
+
+  generateAsm(block: DbBlock, xforms: XformDef[] | null): string{
+    const lines: string[] = [];
+
+    // Write bank information if not movable
+    if (!block.movable && block.parts.length > 0) {
+      lines.push(`?BANK ${(block.parts[0].start >> 16).toString(16).toUpperCase().padStart(2, '0')}`);
+    }
+
+    // Write includes - these should be from the block's include list
+    const includes = DbBlockUtils.getIncludes(block);
+    if (includes && includes.length > 0) {
+      for (const inc of includes) {
+        lines.push(`?INCLUDE '${inc.name}'`);
+      }
+      lines.push(''); // Empty line after includes
+    }
+
+    // Write mnemonics - these should be from the root mnemonics that are referenced in this block
+    const mnemonics = this.getMnemonicsForBlock(block);
+    if (mnemonics && mnemonics.length > 0) {
+      for (const [name, address] of mnemonics) {
+        const paddedName = name.padEnd(30, ' ');
+        lines.push(`!${paddedName} ${address.toString(16).toUpperCase().padStart(4, '0')}`);
+      }
+      lines.push(''); // Empty line after mnemonics
+    }
+
+    // Process lookup transforms
+    if (xforms) {
+      for (const x of xforms.filter(x => x.type === XformType.Lookup)) {
+        const table = block.parts[0].objectRoot as TableEntry[];
+        const tableEntry = table?.[0];
+        const entries = tableEntry?.object as object[];
+        const newParts: TableEntry[] = [];
+        const newList: (string | number)[] = [];
+
+        newParts.push({ location: tableEntry.location, object: newList });
+
+        let eIx = 1;
+        for (const entry of entries.filter(e => e && typeof e === 'object' && 'name' in e && 'parts' in e)) {
+          const structEntry = entry as StructDef;
+          let cIx = 0;
+          let key: number | null = null;
+          let value: any = null;
+
+          for (const obj of structEntry.parts) {
+            if (cIx === x.keyIx) {
+              key = Number(obj);
+            } else if (cIx === x.valueIx) {
+              value = obj;
+            }
+            cIx++;
+          }
+
+          if (key === null || value === null) {
+            throw new Error('Could not locate key or value for transform');
+          }
+
+          const name = `entry_${key.toString(16).toUpperCase().padStart(2, '0')}`;
+          const loc = tableEntry.location + eIx;
+
+          newParts.push({ location: loc, object: value });
+
+          // Force labels to match the new name
+          this._referenceManager.nameTable.set(loc, name);
+
+          while (newList.length <= key) {
+            newList.push(0);
+          }
+
+          newList[key] = `&${name}`;
+          eIx++;
+        }
+
+        block.parts[0].objectRoot = newParts;
+      }
+    }
+
+    // Process each part
+    for (const part of block.parts) {
+      this._currentPart = part;
+      this._isInline = true;
+
+      lines.push('---------------------------------------------');
+      lines.push('');
+
+      const objectLines = this.writeObject(part.objectRoot, 0);
+      lines.push(...objectLines);
+    }
+
+    let content = lines.join('\n');
+
+    // Apply replace transforms
+    if (xforms) {
+      for (const x of xforms.filter(x => x.type === XformType.Replace)) {
+        if (x.key && x.value) {
+          const regex = new RegExp(x.key, 'g');
+          content = content.replace(regex, x.value);
+        }
+      }
+    }
+
+    return content;
+  };
 
   private getMnemonicsForBlock(block: DbBlock): [string, number][] {
     if (!block.mnemonics) {

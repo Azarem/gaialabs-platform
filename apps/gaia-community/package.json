@@ -25,9 +25,7 @@
     "gaia-core": "workspace:*",
     "gaia-ui": "workspace:*",
     "@supabase/supabase-js": "^2.39.0",
-    "@supabase/auth-ui-react": "^0.4.6",
-    "@supabase/auth-ui-shared": "^0.1.8",
-    "@supabase/auth-helpers-nextjs": "^0.8.7",
+    "@supabase/ssr": "^0.6.1",
     "gaia-git": "workspace:*"
   },
   "devDependencies": {
