@@ -14,6 +14,7 @@ internal class BlockWriter
     public DbRoot _root;
     public BlockReader _blockReader;
     internal readonly ReferenceManager _referenceManager;
+    internal readonly PostProcessor _postProcessor;
 
     private bool _isInline;
     private DbPart _currentPart;
@@ -23,6 +24,7 @@ internal class BlockWriter
         _blockReader = reader;
         _root = reader._root;
         _referenceManager = reader._referenceManager;
+        _postProcessor = new(reader);
     }
 
     public void WriteBlocks(string outPath)
@@ -57,70 +59,7 @@ internal class BlockWriter
             foreach (var mnem in block.Mnemonics.OrderBy(x => x.Key))
                 writer.WriteLine("!{0} {1:X4}", mnem.Value.PadRight(30, ' '), mnem.Key);
 
-            IEnumerable<XformDef>? xforms = null;
-            var xformFile =
-                block.Group == null
-                    ? Path.Combine(transformPath, $"{block.Name}.{xRes.Extension}")
-                    : Path.Combine(
-                        transformPath,
-                        block.Group,
-                        $"{block.Name}.{xRes.Extension}"
-                    );
-            if (File.Exists(xformFile))
-                using (var xformStream = File.OpenRead(xformFile))
-                    xforms = JsonSerializer.Deserialize<IEnumerable<XformDef>>(
-                        xformStream,
-                        DbRoot.JsonOptions
-                    );
-
-            if (xforms != null)
-                foreach (var x in xforms.Where(x => x.Type == XformType.Lookup))
-                {
-                    var table = block.Parts.First().ObjectRoot as IEnumerable<TableEntry>;
-                    var tableEntry = table?.First();
-                    var entries = tableEntry?.Object as IEnumerable<object>;
-                    var newParts = new List<TableEntry>();
-                    var newList = new List<object>();
-
-                    newParts.Add(new() { Location = tableEntry.Location, Object = newList });
-                    //RefList[tableEntry.Location] = block.Name;
-
-                    int eIx = 1;
-                    foreach (var entry in entries.OfType<StructDef>())
-                    {
-                        int cIx = 0;
-                        int? key = null;
-                        object? value = null;
-                        foreach (var obj in entry.Parts)
-                        {
-                            if (cIx == x.KeyIx)
-                                key = Convert.ToInt32(obj);
-                            else if (cIx == x.ValueIx)
-                                value = obj;
-                            cIx++;
-                        }
-
-                        if (key == null || value == null)
-                            throw new("Could not locate key or value for transform");
-
-                        var name = $"entry_{key:X2}";
-                        var loc = tableEntry.Location + eIx;
-
-                        newParts.Add(new() { Location = loc, Object = value });
-
-                        //Force labels to match the new name
-                        _referenceManager._nameTable[loc] = name;
-
-                        while (newList.Count <= key)
-                            newList.Add((ushort)0);
-
-                        newList[key.Value] = $"&{name}";
-
-                        eIx++;
-                    }
-
-                    block.Parts.First().ObjectRoot = newParts;
-                }
+            _postProcessor.Process(block);
 
             bool first = true;
             foreach (var part in block.Parts) //Iterate over each part
@@ -141,14 +80,14 @@ internal class BlockWriter
 
             writer.Flush();
 
-            if (xforms?.Any(x => x.Type == XformType.Replace) == true)
+            if (block.Transforms?.Any() == true)
             {
                 string inString;
                 outStream.Position = 0;
                 using (var reader = new StreamReader(outStream, leaveOpen: true))
                     inString = reader.ReadToEnd();
 
-                foreach (var x in xforms.Where(x => x.Type == XformType.Replace))
+                foreach (var x in block.Transforms)
                     inString = Regex.Replace(inString, x.Key, x.Value);
 
                 outStream.Position = 0;
