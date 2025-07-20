@@ -58,10 +58,8 @@ export class BlockWriter {
 
   async writeBlocks(outPath: string): Promise<void> {
     const res = DbRootUtils.getPath(this._root, BinType.Assembly);
-    const xRes = DbRootUtils.getPath(this._root, BinType.Transform);
 
     const folderPath = join(outPath, res.folder);
-    const transformPath = join(outPath, xRes.folder);
 
     for (const block of this._root.blocks) {
       const groupedFolderPath = block.group 
@@ -178,7 +176,7 @@ export class BlockWriter {
       lines.push(...objectLines);
     }
 
-    let content = lines.join('\n');
+    let content = lines.join('\r\n');
 
     // Apply replace transforms
     if (block.transforms) {
