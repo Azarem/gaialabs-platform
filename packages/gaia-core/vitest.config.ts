@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     chaiConfig: {
-      truncateThreshold: 0,
+      truncateThreshold: 500,
     },
     env: {
       VITE_ROM_URL: process.env.VITE_ROM_URL,

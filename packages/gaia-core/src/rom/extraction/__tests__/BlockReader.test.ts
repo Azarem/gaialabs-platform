@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import fetch from 'node-fetch';
+import { createReadStream } from 'fs';
+import { join } from 'path';
+import unzipper from 'unzipper';
+import { readFileAsText, readFileAsBinary, createTempDirectory, removeDirectory } from 'gaia-shared';
 import { OpCode, ALL_OPCODES, GROUPED_OPCODES, OpCodeUtils } from '../../../assembly';
 import { AddressingMode, DbRootUtils } from 'gaia-shared';
 import { BlockReader } from '../blocks';
@@ -8,39 +11,29 @@ import { BlockWriter } from '../writer';
 
 describe('BlockReader', () => {
   let reader: BlockReader;
-  let asmTruth: string;
+  let writer: BlockWriter;
 
   beforeAll(async () => {
-    const romUrl = process.env.VITE_ROM_URL;
-    const romToken = process.env.VITE_ROM_TOKEN;
+    const data = await new Promise<Buffer>((resolve, reject) => {
+      createReadStream('../../truth/stripped.zip')
+        .pipe(unzipper.Parse())
+        .on('entry', async (entry) => {
+          if (entry.path === 'stripped.smc') {
+            const buffer = await entry.buffer();
+            resolve(buffer);
+          } else {
+            entry.autodrain();
+          }
+        })
+        .on('error', reject);
+    });
 
-    if (!romUrl) {
-      throw new Error('ROM_URL environment variable not set.');
-    }
-
-    const headers: { [key:string]: string } = {};
-    if (romToken) {
-      headers['Auth-Token'] = romToken;
-    }
-    
-    const asmResponse = await fetch(romUrl + '/asm/actors/sE6_gaia.asm', { headers });
-    if (!asmResponse.ok) {
-      throw new Error(`Failed to fetch truth file from ${asmResponse.url}: ${asmResponse.statusText}`);
-    }
-    asmTruth = await asmResponse.text();
-
-    const response = await fetch(romUrl + '/iog.smc', { headers });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ROM from ${romUrl}: ${response.statusText}`);
-    }
-    const buffer = await response.arrayBuffer();
-    const data = new Uint8Array(buffer);
-    
     const dbRoot = await DbRootUtils.fromFolder(
       '../../ext/GaiaLib/db/us',
       '../../ext/GaiaLib/db/snes'
     );
     reader = new BlockReader(data, dbRoot);
+    writer = new BlockWriter(reader);
   }, 30000);
 
   describe('BlockReader class', () => {
@@ -71,14 +64,24 @@ describe('BlockReader', () => {
       ).length).toEqual(reader._root.blocks.length);
     });
 
-    it('should pass a single source of truth', () => {
-      const sE6_gaia = reader._root.blocks.find(b => b.name === 'sE6_gaia');
-      if (!sE6_gaia) {
-        throw new Error('sE6_gaia block not found');
+    // it('should pass a single source of truth', async () => {
+    //   const block = reader._root.blocks.find(b => b.name === 'sE6_gaia');
+    //   if (!block) {
+    //     throw new Error('sE6_gaia block not found');
+    //   }
+    //   const truthPath = `../../truth/asm/${block.group ? (block.group + '/') : ''}${block.name}.asm`;
+    //   const truthContent = await readFileAsText(truthPath);
+    //   const asm = writer.generateAsm(block);
+    //   expect(asm).toEqual(truthContent);
+    // });
+
+    it('should pass multiple sources of truth', async () => {
+      for(const block of reader._root.blocks) {
+        const asm = writer.generateAsm(block);
+        const truthPath = `../../truth/asm/${block.group ? (block.group + '/') : ''}${block.name}.asm`;
+        const truthContent = await readFileAsText(truthPath);
+        expect(asm).toEqual(truthContent);
       }
-      const writer = new BlockWriter(reader);
-      const asm = writer.generateAsm(sE6_gaia, null);
-      expect(asm).toEqual(asmTruth);
     });
   });
 

@@ -21,6 +21,8 @@
             }
         }
 
+        public IEnumerable<KeyValuePair<string, string>>? Transforms { get; set; }
+
         public bool IsOutside(int loc, out DbPart? part)
         {
             if (IsInside(loc, out part))

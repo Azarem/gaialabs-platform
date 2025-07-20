@@ -10,7 +10,7 @@ export interface DbBlock {
   movable: boolean;
   group: string;
   parts: DbPart[];
-  
+  transforms?: { key: string; value: string }[];
   // Internal references (handled by database root)
   root?: any; // DbRoot reference
   mnemonics?: Record<number, string>;

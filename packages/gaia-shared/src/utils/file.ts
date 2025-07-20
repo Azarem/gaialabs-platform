@@ -22,22 +22,26 @@ export async function readFileAsText(path: string, options: FileReadOptions = {}
   
   if (isNode) {
     // Node.js environment
-    const fs = await import('fs');
+    const { readFile } = await import('fs/promises');
     const pathModule = await import('path');
     
     const fullPath = pathModule.resolve(path);
-    if (!fs.existsSync(fullPath)) {
-      throw new Error(`File not found: ${fullPath}`);
+    
+    try {
+      let text = await readFile(fullPath, { encoding });
+      
+      // Strip UTF-8 BOM if present
+      if (text.charCodeAt(0) === 0xFEFF) {
+        text = text.slice(1);
+      }
+      
+      return text;
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        throw new Error(`File not found: ${fullPath}`);
+      }
+      throw error;
     }
-    
-    let text = fs.readFileSync(fullPath, encoding);
-    
-    // Strip UTF-8 BOM if present
-    if (text.charCodeAt(0) === 0xFEFF) {
-      text = text.slice(1);
-    }
-    
-    return text;
   } else {
     // Browser environment
     const response = await fetch(path);
@@ -64,16 +68,20 @@ export async function readFileAsText(path: string, options: FileReadOptions = {}
 export async function readFileAsBinary(path: string): Promise<Uint8Array> {
   if (isNode) {
     // Node.js environment
-    const fs = await import('fs');
+    const { readFile } = await import('fs/promises');
     const pathModule = await import('path');
     
     const fullPath = pathModule.resolve(path);
-    if (!fs.existsSync(fullPath)) {
-      throw new Error(`File not found: ${fullPath}`);
+
+    try {
+      const buffer = await readFile(fullPath);
+      return new Uint8Array(buffer);
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        throw new Error(`File not found: ${fullPath}`);
+      }
+      throw error;
     }
-    
-    const buffer = fs.readFileSync(fullPath);
-    return new Uint8Array(buffer);
   } else {
     // Browser environment
     const response = await fetch(path);
@@ -104,11 +112,16 @@ export async function readJsonFile<T = any>(path: string): Promise<T> {
 export async function fileExists(path: string): Promise<boolean> {
   if (isNode) {
     // Node.js environment
-    const fs = await import('fs');
+    const { access } = await import('fs/promises');
     const pathModule = await import('path');
     
     const fullPath = pathModule.resolve(path);
-    return fs.existsSync(fullPath);
+    try {
+      await access(fullPath);
+      return true;
+    } catch {
+      return false;
+    }
   } else {
     // Browser environment - try to fetch and check if successful
     try {
@@ -134,5 +147,37 @@ export function getDirectory(filePath: string): string {
     // Browser environment
     const url = new URL(filePath, (globalThis as any).location.href);
     return url.pathname.split('/').slice(0, -1).join('/') || './';
+  }
+}
+
+/**
+ * Create a temporary directory.
+ * This is a Node.js-specific operation.
+ * @param prefix Prefix for the temporary directory name.
+ * @returns Promise<string> Path to the created temporary directory.
+ */
+export async function createTempDirectory(prefix: string): Promise<string> {
+  if (isNode) {
+    const { mkdtemp } = await import('fs/promises');
+    const { tmpdir } = await import('os');
+    const { join } = await import('path');
+    return mkdtemp(join(tmpdir(), prefix));
+  } else {
+    throw new Error('createTempDirectory is not supported in the browser environment.');
+  }
+}
+
+/**
+ * Remove a directory recursively.
+ * This is a Node.js-specific operation.
+ * @param dirPath Path to the directory to remove.
+ * @returns Promise<void>
+ */
+export async function removeDirectory(dirPath: string): Promise<void> {
+  if (isNode) {
+    const { rm } = await import('fs/promises');
+    return rm(dirPath, { recursive: true, force: true });
+  } else {
+    throw new Error('removeDirectory is not supported in the browser environment.');
   }
 } 

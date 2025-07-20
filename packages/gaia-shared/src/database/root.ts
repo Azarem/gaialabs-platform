@@ -13,6 +13,7 @@ import type { DbRewrite } from './rewrites';
 import type { DbStruct } from './structs';
 import type { DbStringType, DbStringCommand, DbStringLayer } from './strings';
 import type { CopDef } from './cop';
+import type { DbTransform } from './transforms';
 
 /**
  * Main database root class
@@ -77,7 +78,8 @@ export class DbRootUtils {
       opCodes,
       stringTypes,
       stringCommands,
-      stringLayers
+      stringLayers,
+      transforms
     ] = await Promise.all([
       this.readTable<DbMnemonic[]>(`${folderPath}/mnemonics_old.json`),
       this.readTable<DbOverride[]>(`${folderPath}/overrides.json`),
@@ -92,12 +94,14 @@ export class DbRootUtils {
       this.readTable<any[]>(`${systemPath}/opCodes.json`), // OpCode type (from gaia-core/assembly)
       this.readTable<DbStringType[]>(`${folderPath}/stringTypes.json`),
       this.readTable<DbStringCommand[]>(`${folderPath}/stringCommands.json`),
-      this.readTable<DbStringLayer[]>(`${folderPath}/stringLayers.json`)
+      this.readTable<DbStringLayer[]>(`${folderPath}/stringLayers.json`),
+      this.readTable<DbTransform[]>(`${folderPath}/transforms.json`)
     ]);
 
     // Process blocks and parts
     for (const block of blocks) {
       block.parts = parts.filter(p => p.block === block.name);
+      block.transforms = transforms.find(t => t.block === block.name)?.transforms;
       for (const part of block.parts) {
         (part as any)._block = block;
       }

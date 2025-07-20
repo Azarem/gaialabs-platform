@@ -57,8 +57,6 @@ internal class BlockWriter
             foreach (var mnem in block.Mnemonics.OrderBy(x => x.Key))
                 writer.WriteLine("!{0} {1:X4}", mnem.Value.PadRight(30, ' '), mnem.Key);
 
-            writer.WriteLine(); //Empty line
-
             IEnumerable<XformDef>? xforms = null;
             var xformFile =
                 block.Group == null
@@ -124,15 +122,21 @@ internal class BlockWriter
                     block.Parts.First().ObjectRoot = newParts;
                 }
 
+            bool first = true;
             foreach (var part in block.Parts) //Iterate over each part
             {
                 _currentPart = part;
                 _isInline = true;
 
-                writer.WriteLine("---------------------------------------------");
-                writer.WriteLine();
+                if (first)
+                    first = false;
+                else
+                    writer.WriteLine();
 
-                WriteObject(writer, part.ObjectRoot, 0);
+                writer.WriteLine();
+                writer.WriteLine("---------------------------------------------");
+
+                WriteObject(writer, part.ObjectRoot, -1);
             }
 
             writer.Flush();
@@ -198,17 +202,21 @@ internal class BlockWriter
             //    WriteObject(writer, tGroup.Locations, depth);
             //    writer.WriteLine();
             //}
-
+            var inline = _isInline;
+            _isInline = true;
+            bool first = true;
             foreach (var t in tGroup)
             {
-                _isInline = true;
-                writer.Write(
-                    $"{(_referenceManager.TryGetName(t.Location, out var s) ? s : $"loc_{t.Location:X6}")} "
-                );
-                WriteObject(writer, t.Object, depth);
+                var label = _referenceManager.TryGetName(t.Location, out var s) ? s : $"loc_{t.Location:X6}";
+                if (first)
+                    first = false;
+                else
+                    writer.WriteLine();
                 writer.WriteLine();
-                _isInline = false;
+                writer.Write(label + " ");
+                WriteObject(writer, t.Object, depth + 1);
             }
+            _isInline = inline;
             return;
         }
 
@@ -230,6 +238,7 @@ internal class BlockWriter
         }
         else if (obj is IEnumerable<Op> opList)
         {
+            var inline = _isInline;
             bool first = true;
             writer.WriteLine("{");
             _isInline = true;
@@ -324,8 +333,8 @@ internal class BlockWriter
                 //op = op.Next;
             }
 
-            _isInline = false;
-            writer.WriteLine("}");
+            writer.Write("}");
+            _isInline = inline;
         }
         //else if (obj is Location l)
         //    writer.Write(ResolveName(l, 0, isBranch));
@@ -422,6 +431,7 @@ internal class BlockWriter
         }
         else if (obj is IEnumerable arr)
         {
+            var inline = _isInline;
             writer.Write('[');
             _isInline = false;
             int ix = 0;
@@ -434,13 +444,13 @@ internal class BlockWriter
             writer.WriteLine();
             Indent();
             writer.Write(']');
-            _isInline = true;
+            _isInline = inline;
         }
         else
             writer.Write(obj);
 
-        if (depth == 0)
-            writer.WriteLine();
+        //if (depth == 0)
+        //    writer.WriteLine();
     }
 
 }

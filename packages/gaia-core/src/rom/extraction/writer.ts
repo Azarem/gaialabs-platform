@@ -77,26 +77,13 @@ export class BlockWriter {
         // File doesn't exist, continue with creation
       }
 
-      const xformFile = block.group 
-        ? join(transformPath, block.group, `${block.name}.${xRes.extension}`)
-        : join(transformPath, `${block.name}.${xRes.extension}`);
-
-      // Handle transforms
-      let xforms: XformDef[] | null = null;
-      try {
-        const xformData = await fs.readFile(xformFile, 'utf-8');
-        xforms = JSON.parse(xformData) as XformDef[];
-      } catch {
-        // Transform file doesn't exist, continue without transforms
-      }
-
-      const content = await this.generateAsm(block, xforms);
+      const content = this.generateAsm(block);
       
       await fs.writeFile(outFile, content);
     }
   }
 
-  generateAsm(block: DbBlock, xforms: XformDef[] | null): string{
+  generateAsm(block: DbBlock): string{
     const lines: string[] = [];
 
     // Write bank information if not movable
@@ -120,77 +107,76 @@ export class BlockWriter {
         const paddedName = name.padEnd(30, ' ');
         lines.push(`!${paddedName} ${address.toString(16).toUpperCase().padStart(4, '0')}`);
       }
-      lines.push(''); // Empty line after mnemonics
     }
 
-    // Process lookup transforms
-    if (xforms) {
-      for (const x of xforms.filter(x => x.type === XformType.Lookup)) {
-        const table = block.parts[0].objectRoot as TableEntry[];
-        const tableEntry = table?.[0];
-        const entries = tableEntry?.object as object[];
-        const newParts: TableEntry[] = [];
-        const newList: (string | number)[] = [];
+    // // Process lookup transforms
+    // if (xforms) {
+    //   for (const x of xforms.filter(x => x.type === XformType.Lookup)) {
+    //     const table = block.parts[0].objectRoot as TableEntry[];
+    //     const tableEntry = table?.[0];
+    //     const entries = tableEntry?.object as object[];
+    //     const newParts: TableEntry[] = [];
+    //     const newList: (string | number)[] = [];
 
-        newParts.push({ location: tableEntry.location, object: newList });
+    //     newParts.push({ location: tableEntry.location, object: newList });
 
-        let eIx = 1;
-        for (const entry of entries.filter(e => e && typeof e === 'object' && 'name' in e && 'parts' in e)) {
-          const structEntry = entry as StructDef;
-          let cIx = 0;
-          let key: number | null = null;
-          let value: any = null;
+    //     let eIx = 1;
+    //     for (const entry of entries.filter(e => e && typeof e === 'object' && 'name' in e && 'parts' in e)) {
+    //       const structEntry = entry as StructDef;
+    //       let cIx = 0;
+    //       let key: number | null = null;
+    //       let value: any = null;
 
-          for (const obj of structEntry.parts) {
-            if (cIx === x.keyIx) {
-              key = Number(obj);
-            } else if (cIx === x.valueIx) {
-              value = obj;
-            }
-            cIx++;
-          }
+    //       for (const obj of structEntry.parts) {
+    //         if (cIx === x.keyIx) {
+    //           key = Number(obj);
+    //         } else if (cIx === x.valueIx) {
+    //           value = obj;
+    //         }
+    //         cIx++;
+    //       }
 
-          if (key === null || value === null) {
-            throw new Error('Could not locate key or value for transform');
-          }
+    //       if (key === null || value === null) {
+    //         throw new Error('Could not locate key or value for transform');
+    //       }
 
-          const name = `entry_${key.toString(16).toUpperCase().padStart(2, '0')}`;
-          const loc = tableEntry.location + eIx;
+    //       const name = `entry_${key.toString(16).toUpperCase().padStart(2, '0')}`;
+    //       const loc = tableEntry.location + eIx;
 
-          newParts.push({ location: loc, object: value });
+    //       newParts.push({ location: loc, object: value });
 
-          // Force labels to match the new name
-          this._referenceManager.nameTable.set(loc, name);
+    //       // Force labels to match the new name
+    //       this._referenceManager.nameTable.set(loc, name);
 
-          while (newList.length <= key) {
-            newList.push(0);
-          }
+    //       while (newList.length <= key) {
+    //         newList.push(0);
+    //       }
 
-          newList[key] = `&${name}`;
-          eIx++;
-        }
+    //       newList[key] = `&${name}`;
+    //       eIx++;
+    //     }
 
-        block.parts[0].objectRoot = newParts;
-      }
-    }
+    //     block.parts[0].objectRoot = newParts;
+    //   }
+    // }
 
     // Process each part
     for (const part of block.parts) {
       this._currentPart = part;
       this._isInline = true;
 
-      lines.push('---------------------------------------------');
       lines.push('');
+      lines.push('---------------------------------------------');
 
-      const objectLines = this.writeObject(part.objectRoot, 0);
+      const objectLines = this.writeObject(part.objectRoot, -1);
       lines.push(...objectLines);
     }
 
-    let content = lines.join('\n');
+    let content = lines.join('\r\n');
 
     // Apply replace transforms
-    if (xforms) {
-      for (const x of xforms.filter(x => x.type === XformType.Replace)) {
+    if (block.transforms) {
+      for (const x of block.transforms) {
         if (x.key && x.value) {
           const regex = new RegExp(x.key, 'g');
           content = content.replace(regex, x.value);
@@ -339,77 +325,102 @@ export class BlockWriter {
 
   private writeObject(obj: any, depth: number, isBranch: boolean = false): string[] {
     const lines: string[] = [];
-    const indent = () => '  '.repeat(depth);
-
-    if (!this._isInline) {
-      lines.push('');
-    }
 
     const objType = this.getObjectType(obj);
+    let objLines: string[];
 
     switch (objType) {
       case ObjectType.TableEntryArray:
-        return this.writeTableEntryArray(obj as TableEntry[], depth);
+        objLines = this.writeTableEntryArray(obj as TableEntry[], depth);
+        break;
 
       case ObjectType.StructDef:
-        return this.writeStructDef(obj as StructDef, depth);
+        objLines = this.writeStructDef(obj as StructDef, depth);
+        break;
 
       case ObjectType.OpArray:
-        return this.writeOpArray(obj as Op[], depth);
+        objLines = this.writeOpArray(obj as Op[], depth);
+        break;
 
       case ObjectType.LocationWrapper:
-        return [this._blockReader.resolveName((obj as LocationWrapper).location, (obj as LocationWrapper).type, isBranch)];
+        objLines = [
+          this._blockReader.resolveName(
+            (obj as LocationWrapper).location,
+            (obj as LocationWrapper).type,
+            isBranch
+          ),
+        ];
+        break;
 
       case ObjectType.Address:
-        return [`$${(obj as Address).toString()}`];
+        objLines = [`$${(obj as Address).toString()}`];
+        break;
 
       case ObjectType.ByteArray:
-        return [`#${Array.from(obj as Uint8Array).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('')}`];
+        objLines = [
+          `#${Array.from(obj as Uint8Array)
+            .map(b => b.toString(16).toUpperCase().padStart(2, '0'))
+            .join('')}`,
+        ];
+        break;
 
       case ObjectType.StringWrapper:
-        return this.writeStringWrapper(obj as StringWrapper);
+        objLines = this.writeStringWrapper(obj as StringWrapper);
+        break;
 
       case ObjectType.Array:
-        return this.writeArray(obj as any[], depth);
+        objLines = this.writeArray(obj as any[], depth);
+        break;
 
       case ObjectType.Number:
-        return this.writeNumber(obj as number);
+        objLines = this.writeNumber(obj as number);
+        break;
 
       case ObjectType.TypedNumber:
-        return this.writeTypedNumber(obj as any);
+        objLines = this.writeTypedNumber(obj as any);
+        break;
 
       case ObjectType.String:
-        return [String(obj)];
+        objLines = [String(obj)];
+        break;
 
       default:
-        return [String(obj)];
+        objLines = [String(obj)];
+        break;
     }
+
+    lines.push(...objLines);
+
+    return lines;
   }
 
   private writeTableEntryArray(tGroup: TableEntry[], depth: number): string[] {
     const lines: string[] = [];
-    
+    const isInline = this._isInline;
+    this._isInline = true;
+
     for (const t of tGroup) {
       const nameResult = this._referenceManager.tryGetName(t.location);
       const name = nameResult.found ? nameResult.referenceName! : `loc_${t.location.toString(16).toUpperCase().padStart(6, '0')}`;
       
-      this._isInline = true;
-      const objectLines = this.writeObject(t.object, depth);
+      const objectLines = this.writeObject(t.object, depth + 1);
+      lines.push('');
       lines.push(`${name} ${objectLines[0]}`);
       if (objectLines.length > 1) {
         lines.push(...objectLines.slice(1));
       }
-      this._isInline = false;
     }
     
+    this._isInline = isInline;
     return lines;
   }
 
   private writeStructDef(structObj: StructDef, depth: number): string[] {
     const parts: string[] = [];
+    this._isInline = true;
     for (const part of structObj.parts) {
       const partLines = this.writeObject(part, depth);
-      parts.push(partLines[0]);
+      parts.push(partLines.join(', '));
     }
     const line = `${structObj.name} < ${parts.join(', ')} >`;
     this._isInline = false; // match C# spacing behaviour
@@ -516,12 +527,13 @@ export class BlockWriter {
       let ix = str.indexOf(char);
       while (ix >= 0) {
         const hexStr = str.substring(ix + 1, ix + 7);
-        const sloc = parseInt(hexStr, 16);
-        const adrs = new Address((sloc >> 16) & 0xFF, sloc & 0xFFFF);
+        const rawAddr = parseInt(hexStr, 16);
+        const adrs = new Address((rawAddr >> 16) & 0xFF, rawAddr & 0xFFFF);
         
         if (adrs.space === AddressSpace.ROM) {
           const addressType = char === '^' ? AddressType.Offset : AddressType.Address;
-          const name = this._blockReader.resolveName(sloc, addressType, false);
+          const location = adrs.toInt();
+          const name = this._blockReader.resolveName(location, addressType, false);
           str = str.replace(str.substring(ix, ix + 7), name);
         } else {
           throw new Error('Unsupported address space');
@@ -586,20 +598,21 @@ export class BlockWriter {
 
   private writeArray(arr: any[], depth: number): string[] {
     const lines: string[] = [];
-    lines.push('[');
+    const indent = '  '.repeat(depth);
+    const isInline = this._isInline;
+    lines.push(indent + '[');
     this._isInline = false; // start elements on their own lines
 
     for (let i = 0; i < arr.length; i++) {
       const objLines = this.writeObject(arr[i], depth + 1);
-      const indent = '  '.repeat(depth + 1);
-      lines.push(`${indent}${objLines[0]}   ;${i.toString(16).toUpperCase().padStart(2, '0')}`);
-      if (objLines.length > 1) {
-        lines.push(...objLines.slice(1).map(line => `${indent}${line}`));
+      for(const line of objLines) {
+        lines.push(`${indent}  ${line}`);
       }
+      lines[lines.length - 1] += `   ;${i.toString(16).toUpperCase().padStart(2, '0')}`;
     }
 
-    lines.push('  '.repeat(depth) + ']');
-    this._isInline = true; // arrays only add a single blank line after closing
+    lines.push(indent + ']');
+    this._isInline = isInline;
     return lines;
   }
 
