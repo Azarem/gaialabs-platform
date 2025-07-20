@@ -13,6 +13,7 @@ export * from './parser';
 export * from './asm';
 export * from './blocks';
 export * from './writer';
+export * from './postprocessor';
 
 // TODO: Add more extraction modules as they are converted:
 // BlockWriter remains 

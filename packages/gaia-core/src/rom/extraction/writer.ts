@@ -24,6 +24,7 @@ import {
 import { DbRootUtils } from 'gaia-shared';
 import { BlockReader } from './blocks';
 import { ReferenceManager } from './references';
+import { PostProcessor } from './postprocessor';
 
 // Type tags for better object identification
 export enum ObjectType {
@@ -44,6 +45,7 @@ export class BlockWriter {
   private _root: DbRoot;
   private _blockReader: BlockReader;
   private _referenceManager: ReferenceManager;
+  private _postProcessor: PostProcessor;
   private _isInline: boolean = false;
   private _currentPart: DbPart | null = null;
 
@@ -51,6 +53,7 @@ export class BlockWriter {
     this._blockReader = reader;
     this._root = reader._root;
     this._referenceManager = reader._referenceManager;
+    this._postProcessor = new PostProcessor(reader);
   }
 
   async writeBlocks(outPath: string): Promise<void> {
@@ -108,6 +111,9 @@ export class BlockWriter {
         lines.push(`!${paddedName} ${address.toString(16).toUpperCase().padStart(4, '0')}`);
       }
     }
+
+    // Apply any post processing defined for the block
+    this._postProcessor.process(block);
 
     // // Process lookup transforms
     // if (xforms) {
@@ -172,7 +178,7 @@ export class BlockWriter {
       lines.push(...objectLines);
     }
 
-    let content = lines.join('\r\n');
+    let content = lines.join('\n');
 
     // Apply replace transforms
     if (block.transforms) {
