@@ -1,12 +1,9 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { createReadStream } from 'fs';
-import { join } from 'path';
 import unzipper from 'unzipper';
-import { readFileAsText, readFileAsBinary, createTempDirectory, removeDirectory } from 'gaia-shared';
-import { OpCode, ALL_OPCODES, GROUPED_OPCODES, OpCodeUtils } from '../../../assembly';
-import { AddressingMode, DbRootUtils } from 'gaia-shared';
+import { readFileAsText } from 'gaia-shared';
+import { DbRootUtils } from 'gaia-shared';
 import { BlockReader } from '../blocks';
-import { TableEntry } from 'gaia-shared';
 import { BlockWriter } from '../writer';
 
 describe('BlockReader', () => {
@@ -17,7 +14,7 @@ describe('BlockReader', () => {
     const data = await new Promise<Buffer>((resolve, reject) => {
       createReadStream('../../truth/stripped.zip')
         .pipe(unzipper.Parse())
-        .on('entry', async (entry) => {
+        .on('entry', async (entry: any) => {
           if (entry.path === 'stripped.smc') {
             const buffer = await entry.buffer();
             resolve(buffer);
