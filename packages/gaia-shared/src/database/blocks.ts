@@ -11,6 +11,7 @@ export interface DbBlock {
   group: string;
   parts: DbPart[];
   transforms?: { key: string; value: string }[];
+  postProcess?: string;
   // Internal references (handled by database root)
   root?: any; // DbRoot reference
   mnemonics?: Record<number, string>;
