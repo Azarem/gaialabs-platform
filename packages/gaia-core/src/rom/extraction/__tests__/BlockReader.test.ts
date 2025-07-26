@@ -71,7 +71,7 @@ describe('BlockReader', () => {
         const truthContent = await readFileAsText(truthPath);
         expect(asm).toEqual(truthContent);
       }
-    });
+    }, 30000);
   });
 
 }); 

@@ -116,57 +116,6 @@ export class BlockWriter {
     // Apply any post processing defined for the block
     this._postProcessor.process(block);
 
-    // // Process lookup transforms
-    // if (xforms) {
-    //   for (const x of xforms.filter(x => x.type === XformType.Lookup)) {
-    //     const table = block.parts[0].objectRoot as TableEntry[];
-    //     const tableEntry = table?.[0];
-    //     const entries = tableEntry?.object as object[];
-    //     const newParts: TableEntry[] = [];
-    //     const newList: (string | number)[] = [];
-
-    //     newParts.push({ location: tableEntry.location, object: newList });
-
-    //     let eIx = 1;
-    //     for (const entry of entries.filter(e => e && typeof e === 'object' && 'name' in e && 'parts' in e)) {
-    //       const structEntry = entry as StructDef;
-    //       let cIx = 0;
-    //       let key: number | null = null;
-    //       let value: any = null;
-
-    //       for (const obj of structEntry.parts) {
-    //         if (cIx === x.keyIx) {
-    //           key = Number(obj);
-    //         } else if (cIx === x.valueIx) {
-    //           value = obj;
-    //         }
-    //         cIx++;
-    //       }
-
-    //       if (key === null || value === null) {
-    //         throw new Error('Could not locate key or value for transform');
-    //       }
-
-    //       const name = `entry_${key.toString(16).toUpperCase().padStart(2, '0')}`;
-    //       const loc = tableEntry.location + eIx;
-
-    //       newParts.push({ location: loc, object: value });
-
-    //       // Force labels to match the new name
-    //       this._referenceManager.nameTable.set(loc, name);
-
-    //       while (newList.length <= key) {
-    //         newList.push(0);
-    //       }
-
-    //       newList[key] = `&${name}`;
-    //       eIx++;
-    //     }
-
-    //     block.parts[0].objectRoot = newParts;
-    //   }
-    // }
-
     // Process each part
     for (const part of block.parts) {
       this._currentPart = part;
@@ -179,8 +128,7 @@ export class BlockWriter {
       lines.push(...objectLines);
     }
 
-    const sanitized = lines.map(l => l.replace(/\r/g, ''));
-    let content = sanitized.join(NEWLINE);
+    let content = lines.join(NEWLINE);
 
     // Apply replace transforms
     if (block.transforms) {
@@ -192,7 +140,9 @@ export class BlockWriter {
       }
     }
 
-    content = content.replace(/\r/g, '');
+    if(process.platform !== 'win32'){
+      content = content.replace(/\r/g, '');
+    }
 
     return content;
   };
