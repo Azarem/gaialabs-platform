@@ -26,6 +26,8 @@ import { BlockReader } from './blocks';
 import { ReferenceManager } from './references';
 import { PostProcessor } from './postprocessor';
 
+const NEWLINE = process.platform === 'win32' ? '\r\n' : '\n';
+
 // Type tags for better object identification
 export enum ObjectType {
   TableEntryArray = 'TableEntryArray',
@@ -177,7 +179,8 @@ export class BlockWriter {
       lines.push(...objectLines);
     }
 
-    let content = lines.join('\r\n');
+    const sanitized = lines.map(l => l.replace(/\r/g, ''));
+    let content = sanitized.join(NEWLINE);
 
     // Apply replace transforms
     if (block.transforms) {
@@ -188,6 +191,8 @@ export class BlockWriter {
         }
       }
     }
+
+    content = content.replace(/\r/g, '');
 
     return content;
   };
@@ -431,7 +436,7 @@ export class BlockWriter {
     this._isInline = true;
     for (const part of structObj.parts) {
       const partLines = this.writeObject(part, depth);
-      parts.push(partLines.join('\r\n'));
+      parts.push(partLines.join(NEWLINE));
     }
     const line = `${structObj.name} < ${parts.join(', ')} >`;
     this._isInline = isInline; // match C# spacing behaviour
