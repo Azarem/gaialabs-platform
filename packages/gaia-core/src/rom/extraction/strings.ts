@@ -3,6 +3,7 @@ import { Address, AddressSpace, AddressType, MemberType, RomProcessingConstants,
 import type { DbStringType, DbStringCommand } from 'gaia-shared';
 import type { StringWrapper } from 'gaia-shared';
 import type { BlockReader } from './blocks';
+import { indexOfAny } from '../../utils';
 
 interface TableEntry {
   Location: number;
@@ -142,7 +143,7 @@ export class StringReader {
 
   public resolveString(sw: StringWrapper, isBranch: boolean): void {
     let str = sw.string;
-    let ix = this.indexOfAny(str, StringReader.STRING_REFERENCE_CHARACTERS);
+    let ix = indexOfAny(str, StringReader.STRING_REFERENCE_CHARACTERS);
     
     while (ix >= 0) {
       if (ix + 6 < str.length) {
@@ -154,7 +155,7 @@ export class StringReader {
           if (addrs.space === AddressSpace.ROM) {
             this._blockReader.resolveInclude(sloc, false);
             const name = this._blockReader.resolveName(sloc, AddressType.Unknown, false);
-            const opix = this.indexOfAny(name, RomProcessingConstants.OPERATORS);
+            const opix = indexOfAny(name, RomProcessingConstants.OPERATORS);
             
             if (opix > 0) {
               const offsetStr = name.substring(opix + 1);
@@ -187,19 +188,8 @@ export class StringReader {
         }
       }
       
-      ix = this.indexOfAny(str, StringReader.STRING_REFERENCE_CHARACTERS, ix + 7);
+      ix = indexOfAny(str, StringReader.STRING_REFERENCE_CHARACTERS, ix + 7);
     }
   }
 
-  /**
-   * Helper method to find the index of any character in a string
-   */
-  private indexOfAny(str: string, chars: string[], startIndex = 0): number {
-    for (let i = startIndex; i < str.length; i++) {
-      if (chars.includes(str[i])) {
-        return i;
-      }
-    }
-    return -1;
-  }
-} 
+}

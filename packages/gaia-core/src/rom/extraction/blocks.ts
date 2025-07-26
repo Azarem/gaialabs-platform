@@ -22,6 +22,7 @@ import type { DbRoot } from 'gaia-shared';
 import type { DbBlock } from 'gaia-shared';
 import type { DbPart } from 'gaia-shared';
 import { DbBlockUtils } from 'gaia-shared';
+import { indexOfAny } from '../../utils';
 
 /**
  * Central class for reading and analyzing ROM blocks
@@ -144,7 +145,7 @@ export class BlockReader {
       return;
     }
 
-    const ix = this.indexOfAny(label, RomProcessingConstants.OPERATORS);
+    const ix = indexOfAny(label, RomProcessingConstants.OPERATORS);
     if (ix >= 0) {
       let opnd = parseInt(label.substring(ix + 1), 16);
       const op = label[ix];
@@ -450,15 +451,4 @@ export class BlockReader {
     this.hydrateRegisters(reg);
   }
 
-  /**
-   * Helper method to find the index of any character in a string
-   */
-  private indexOfAny(str: string, chars: string[], startIndex = 0): number {
-    for (let i = startIndex; i < str.length; i++) {
-      if (chars.includes(str[i])) {
-        return i;
-      }
-    }
-    return -1;
-  }
-} 
+}
