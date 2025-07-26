@@ -114,16 +114,14 @@ export class TransformProcessor {
   }
 
   private resolveTransformReference(transformName: string): number | null {
-    // First check reference table
-    const nameResult = this._referenceManager.tryGetName(0); // This is a bit hacky, but we need to iterate through the name table
-    // TODO: Add a method to ReferenceManager to search by name instead of location
-    
-    // For now, let's try to parse the location pattern directly
-    const match = TransformProcessor.LOCATION_REGEX.exec(transformName);
-    if (match) {
-      return parseInt(match[1], 16);
+    // Directly resolve by name in the reference table
+    const location = this._referenceManager.findLocationByName(transformName);
+    if (location !== undefined) {
+      return location;
     }
 
-    return null;
+    // Fallback to parsing the location pattern
+    const match = TransformProcessor.LOCATION_REGEX.exec(transformName);
+    return match ? parseInt(match[1], 16) : null;
   }
-} 
+}

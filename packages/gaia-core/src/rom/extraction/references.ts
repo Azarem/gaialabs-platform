@@ -80,7 +80,7 @@ export class ReferenceManager {
   }
 
   public createFallbackName(location: number): string {
-    const fileMatch = this.root.files.find(x => 
+    const fileMatch = this.root.files.find(x =>
       x.start <= location && x.end > location
     );
 
@@ -90,6 +90,18 @@ export class ReferenceManager {
     }
 
     return location.toString(16).toUpperCase().padStart(6, '0');
+  }
+
+  /**
+   * Finds a reference location by its assigned name.
+   */
+  public findLocationByName(name: string): number | undefined {
+    for (const [loc, refName] of this.nameTable) {
+      if (refName === name) {
+        return loc;
+      }
+    }
+    return undefined;
   }
 
   public resolveName(location: number, type: AddressType, isBranch: boolean): string {
