@@ -1,8 +1,8 @@
+
 ?INCLUDE 'inventory_spritemap'
 ?INCLUDE 'actor_00CD59'
 ?INCLUDE 'chunk_008000'
 ?INCLUDE 'chunk_03BAE1'
-
 
 ---------------------------------------------
 

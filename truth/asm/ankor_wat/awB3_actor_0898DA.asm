@@ -1,3 +1,4 @@
+
 ?INCLUDE 'player_character'
 
 !joypad_mask_std                065A

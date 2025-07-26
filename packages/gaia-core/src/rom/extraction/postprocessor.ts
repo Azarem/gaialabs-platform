@@ -1,6 +1,6 @@
 import { DbBlock } from 'gaia-shared';
 import { TableEntry } from 'gaia-shared';
-import { StructDef } from 'gaia-shared';
+import { StructDef, createWord } from 'gaia-shared';
 import { BlockReader } from './blocks';
 import { ReferenceManager } from './references';
 
@@ -81,7 +81,11 @@ export class PostProcessor {
 
       for (const obj of struct.parts) {
         if (cIx === kix) {
-          key = Number(obj);
+          if(obj && typeof obj === 'object' && 'value' in obj) {
+            key = obj.value as number;
+          } else {
+            key = obj as number;
+          }
         } else if (cIx === vix) {
           value = obj;
         }
@@ -101,7 +105,7 @@ export class PostProcessor {
       this._referenceManager.nameTable.set(loc, name);
 
       while (newList.length <= key) {
-        newList.push(0);
+        newList.push(createWord(0));
       }
 
       newList[key] = `&${name}`;

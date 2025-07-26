@@ -1,3 +1,4 @@
+
 ?INCLUDE 'table_0EDA00'
 
 !joypad_mask_std                065A

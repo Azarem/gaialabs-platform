@@ -1,3 +1,4 @@
+
 ?INCLUDE 'table_0EE000'
 ?INCLUDE 'chunk_008000'
 ?INCLUDE 'reward_table_01AADE'

@@ -1,4 +1,5 @@
 ?BANK 02
+
 ?INCLUDE 'player_character'
 ?INCLUDE 'func_00F3C9'
 ?INCLUDE 'table_179000'

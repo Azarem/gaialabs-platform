@@ -1,4 +1,5 @@
 ?BANK 09
+
 ?INCLUDE 'misc_actors_09E64B'
 ?INCLUDE 'func_09E8E4'
 

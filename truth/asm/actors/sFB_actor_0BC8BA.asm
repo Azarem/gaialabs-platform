@@ -1,3 +1,4 @@
+
 ?INCLUDE 'system_strings'
 
 !joypad_mask_std                065A

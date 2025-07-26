@@ -1,3 +1,4 @@
+
 ?INCLUDE 'actor_00E3BA'
 
 !player_x_pos                   09A2

@@ -1,9 +1,9 @@
+
 ?INCLUDE 'func_00DB8A'
 ?INCLUDE 'actor_00DA78'
 ?INCLUDE 'func_00DF15'
 ?INCLUDE 'chunk_008000'
 ?INCLUDE 'func_00DDF2'
-
 
 ---------------------------------------------
 

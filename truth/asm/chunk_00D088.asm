@@ -1,4 +1,5 @@
 ?BANK 00
+
 ?INCLUDE 'player_character'
 ?INCLUDE 'binary_01D8BE'
 

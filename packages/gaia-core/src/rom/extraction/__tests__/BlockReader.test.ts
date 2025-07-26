@@ -60,22 +60,14 @@ describe('BlockReader', () => {
           && p.objectRoot.every(o => o.location > 0 && !!o.object)).length == b.parts.length
       ).length).toEqual(reader._root.blocks.length);
     });
+  });
 
-    // it('should pass a single source of truth', async () => {
-    //   const block = reader._root.blocks.find(b => b.name === 'sE6_gaia');
-    //   if (!block) {
-    //     throw new Error('sE6_gaia block not found');
-    //   }
-    //   const truthPath = `../../truth/asm/${block.group ? (block.group + '/') : ''}${block.name}.asm`;
-    //   const truthContent = await readFileAsText(truthPath);
-    //   const asm = writer.generateAsm(block);
-    //   expect(asm).toEqual(truthContent);
-    // });
-
+  describe('BlockReader ASM content', () => {
     it('should pass multiple sources of truth', async () => {
       for(const block of reader._root.blocks) {
         const asm = writer.generateAsm(block);
         const truthPath = `../../truth/asm/${block.group ? (block.group + '/') : ''}${block.name}.asm`;
+        console.log(`Validating content of "${truthPath}" vs "${truthPath.replace('truth', 'working')}"`);
         const truthContent = await readFileAsText(truthPath);
         expect(asm).toEqual(truthContent);
       }

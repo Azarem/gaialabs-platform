@@ -1,3 +1,4 @@
+
 ?INCLUDE 'table_0EE000'
 
 !player_y_pos                   09A4

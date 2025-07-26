@@ -1,4 +1,3 @@
-import { HexString } from '../types/hex';
 
 /**
  * Database part definition
@@ -9,7 +8,7 @@ export interface DbPart {
   start: number;
   end: number;
   struct: string;
-  bank?: HexString;
+  bank?: number;
   block: string;
   
   // Internal references (handled by database root)

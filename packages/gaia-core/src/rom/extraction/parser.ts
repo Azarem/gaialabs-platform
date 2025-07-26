@@ -39,6 +39,7 @@ export class TypeParser {
   }
 
   public parseType(typeName: string, reg: Registers | null, depth: number, bank?: number): unknown {
+    
     // Shortcut for symbolic Offsets
     if (typeName[0] === '&') {
       return this.parseLocation(this._romDataReader.readUShort(), bank, typeName.substring(1), AddressType.Offset);
@@ -198,7 +199,7 @@ export class TypeParser {
   private parseLocation(offset: number, bank: number | undefined, typeName: string | null, addrType: AddressType): unknown {
     // If bank is not provided and offset is 0, it should resolve to #$0000
     if (bank === undefined && offset === 0) {
-      return offset;
+      return createWord(offset);
     }
 
     // Bank cannot be null, instead use bank from current position
@@ -254,7 +255,7 @@ export class TypeParser {
       }
 
       // Parse instruction
-      const op = this._blockReader._asmReader.ParseAsm(reg);
+      const op = this._blockReader._asmReader.parseAsm(reg);
 
       // Add instruction to list
       opList.push(op);

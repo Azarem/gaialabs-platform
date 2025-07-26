@@ -1,4 +1,5 @@
 ?BANK 05
+
 ?INCLUDE 'table_14C0C8'
 ?INCLUDE 'stats_01ABF0'
 ?INCLUDE 'entry_points_00C418'

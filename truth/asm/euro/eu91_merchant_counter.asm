@@ -1,5 +1,5 @@
-?INCLUDE 'f_inventory_full'
 
+?INCLUDE 'f_inventory_full'
 
 ---------------------------------------------
 

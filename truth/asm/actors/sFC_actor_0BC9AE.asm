@@ -1,3 +1,4 @@
+
 ?INCLUDE 'chunk_028000'
 
 !joypad_mask_std                065A

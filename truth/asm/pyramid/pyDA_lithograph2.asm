@@ -1,6 +1,6 @@
+
 ?INCLUDE 'pyDA_lithograph1'
 ?INCLUDE 'f_inventory_full'
-
 
 ---------------------------------------------
 

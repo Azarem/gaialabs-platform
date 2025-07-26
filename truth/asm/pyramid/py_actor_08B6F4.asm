@@ -1,3 +1,4 @@
+
 ?INCLUDE 'table_0EE000'
 
 !player_actor                   09AA

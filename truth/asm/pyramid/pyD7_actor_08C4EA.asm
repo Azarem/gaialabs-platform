@@ -1,3 +1,4 @@
+
 ?INCLUDE 'func_09BB17'
 
 !map_bounds_x                   0692

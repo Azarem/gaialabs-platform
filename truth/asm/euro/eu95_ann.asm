@@ -1,5 +1,5 @@
-?INCLUDE 'hidden_red_jewel'
 
+?INCLUDE 'hidden_red_jewel'
 
 ---------------------------------------------
 

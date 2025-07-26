@@ -1,5 +1,5 @@
-?INCLUDE 'wa7B_competitor_right'
 
+?INCLUDE 'wa7B_competitor_right'
 
 ---------------------------------------------
 

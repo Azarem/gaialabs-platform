@@ -113,7 +113,7 @@ export class CopCommandProcessor {
     type: AddressType
   ): unknown {
     if (bank === null && offset === 0) {
-      return offset;
+      return createWord(offset);
     }
 
     const addr = new Address(bank ?? (this._romDataReader.position >> 16), offset);

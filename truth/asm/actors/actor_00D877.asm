@@ -1,3 +1,4 @@
+
 ?INCLUDE 'func_00DB8A'
 ?INCLUDE 'player_character'
 ?INCLUDE 'table_01B086'

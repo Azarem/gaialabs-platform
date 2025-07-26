@@ -1,3 +1,4 @@
+
 ?INCLUDE 'func_0AA41C'
 
 !player_x_pos                   09A2

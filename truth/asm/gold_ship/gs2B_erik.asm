@@ -1,3 +1,4 @@
+
 ?INCLUDE 'func_00CFAE'
 
 !joypad_mask_std                065A

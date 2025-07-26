@@ -1,3 +1,4 @@
+
 ?INCLUDE 'player_character'
 ?INCLUDE 'actor_00EAED'
 ?INCLUDE 'chunk_00E683'
@@ -597,7 +598,6 @@
 ?INCLUDE 'sFE_actor_03A2F1'
 ?INCLUDE 'inventory_menu'
 ?INCLUDE 'actor_00CF29'
-
 
 ---------------------------------------------
 

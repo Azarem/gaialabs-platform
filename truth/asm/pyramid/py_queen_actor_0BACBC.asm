@@ -1,6 +1,6 @@
 ?BANK 0B
-?INCLUDE 'py_queen_actor_0BAD6B'
 
+?INCLUDE 'py_queen_actor_0BAD6B'
 
 ---------------------------------------------
 

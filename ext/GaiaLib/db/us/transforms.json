@@ -358,5 +358,19 @@
         "value": "$2\r\n\r\n$1"
       }
     ]
+  },
+  {
+    "block": "system_strings",
+    "transforms": [
+      { "key": "█", "value": " "},
+      { "key": "\\| Will \\|", "value": "| Will|"},
+      { "key": "(?<=asciistring_01EADC \\|[^|]*) (?=[^|]*\\|)", "value": "█"}
+    ]
+  },
+  {
+    "block": "itemcomp_table_01EB0F",
+    "transforms": [
+      { "key": "█", "value": " "}
+    ]
   }
 ]

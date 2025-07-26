@@ -1,4 +1,5 @@
 ?BANK 02
+
 ?INCLUDE 'player_character'
 ?INCLUDE 'chunk_028000'
 ?INCLUDE 'chunk_03BAE1'

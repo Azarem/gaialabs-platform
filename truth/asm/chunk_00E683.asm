@@ -1,4 +1,5 @@
 ?BANK 00
+
 ?INCLUDE 'chunk_028000'
 ?INCLUDE 'table_01A95E'
 ?INCLUDE 'dir_sprite_01ABDE'

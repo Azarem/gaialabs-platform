@@ -1,3 +1,4 @@
+
 ?INCLUDE 'thinker_00B7F4'
 ?INCLUDE 'func_00C6E4'
 

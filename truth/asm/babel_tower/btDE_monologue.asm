@@ -1,3 +1,4 @@
+
 ?INCLUDE 'func_00C6E4'
 
 !scene_current                  0644

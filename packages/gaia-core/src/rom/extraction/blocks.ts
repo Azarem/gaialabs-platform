@@ -104,13 +104,13 @@ export class BlockReader {
     for (const over of Object.values(this._root.overrides)) {
       switch (over.register) {
         case RegisterType.M:
-          this._stateManager.setAccumulatorFlag(over.location, over.value.value !== 0);
+          this._stateManager.setAccumulatorFlag(over.location, over.value === 1);
           break;
         case RegisterType.X:
-          this._stateManager.setIndexFlag(over.location, over.value.value !== 0);
+          this._stateManager.setIndexFlag(over.location, over.value === 1);
           break;
         case RegisterType.B:
-          this._stateManager.setBankNote(over.location, over.value.value);
+          this._stateManager.setBankNote(over.location, over.value);
           break;
       }
     }
@@ -135,6 +135,10 @@ export class BlockReader {
     }
 
     let offset = addr.offset;
+    if(offset === 0x6D6){
+      console.log(this._root.mnemonics[offset]);
+    }
+    
     const label = this._root.mnemonics[offset];
     if (!label) {
       return;
@@ -142,10 +146,12 @@ export class BlockReader {
 
     const ix = this.indexOfAny(label, RomProcessingConstants.OPERATORS);
     if (ix >= 0) {
-      const opnd = parseInt(label.substring(ix + 1), 16);
+      let opnd = parseInt(label.substring(ix + 1), 16);
       const op = label[ix];
+      if(op === '-')
+        opnd = -opnd;
       
-      offset -= op === '-' ? opnd : -opnd;
+      offset -= opnd;
     }
 
     // Add to current block's mnemonics
@@ -298,7 +304,7 @@ export class BlockReader {
     let current = part.struct || BlockReaderConstants.BINARY_TYPE;
     const chunks: TableEntry[] = [];
     const reg = new Registers();
-    const bank = part.bank?.value;
+    const bank = part.bank;
     let last: TableEntry | null = null;
 
     while (this._romDataReader.position < this._partEnd) {

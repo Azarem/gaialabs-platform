@@ -1,4 +1,5 @@
 ?BANK 0C
+
 ?INCLUDE 'thinker_00BF89'
 ?INCLUDE 'thinker_00B520'
 ?INCLUDE 'thinker_00B5DF'
@@ -44,7 +45,6 @@
 ?INCLUDE 'thinker_00B5FE'
 ?INCLUDE 'sFE_proc_03A940'
 ?INCLUDE 'thinker_00BB8E'
-
 
 ---------------------------------------------
 

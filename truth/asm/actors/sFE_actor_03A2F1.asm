@@ -1,4 +1,5 @@
 ?BANK 03
+
 ?INCLUDE 'chunk_008000'
 ?INCLUDE 'overworld_options'
 ?INCLUDE 'pr_proc_03A83E'

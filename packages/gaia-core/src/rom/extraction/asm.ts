@@ -62,13 +62,6 @@ export class AsmReader {
     return op;
   }
 
-  /**
-   * PascalCase wrapper for parseAsm (for C# compatibility)
-   */
-  public ParseAsm(reg: Registers): Op {
-    return this.parseAsm(reg);
-  }
-
   public clearDestinationRegister(code: OpCode, reg: Registers): void {
     switch (code.mnem) {
       case 'LDA':

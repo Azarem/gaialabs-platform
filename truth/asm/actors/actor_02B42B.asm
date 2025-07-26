@@ -1,4 +1,5 @@
 ?BANK 02
+
 ?INCLUDE 'chunk_02CFD0'
 
 !player_x_pos                   09A2

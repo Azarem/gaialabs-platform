@@ -12,7 +12,6 @@ export * from './assembly';
 export * from './bitstream';
 export * from './constants';
 export * from './files';
-export * from './hex';
 export * from './location';
 export * from './strings';
 export * from './structs';

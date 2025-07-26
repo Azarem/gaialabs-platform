@@ -1,3 +1,4 @@
+
 ?INCLUDE 'btE1_comet_soon'
 
 !joypad_mask_std                065A

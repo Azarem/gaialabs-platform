@@ -1,3 +1,4 @@
+
 ?INCLUDE 'f_inventory_full'
 
 !camera_bounds_y                06DC

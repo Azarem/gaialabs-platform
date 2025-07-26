@@ -95,15 +95,16 @@ export class BlockWriter {
     // Write includes - these should be from the block's include list
     const includes = DbBlockUtils.getIncludes(block);
     if (includes && includes.length > 0) {
+      lines.push('');
       for (const inc of includes) {
         lines.push(`?INCLUDE '${inc.name}'`);
       }
-      lines.push(''); // Empty line after includes
     }
 
     // Write mnemonics - these should be from the root mnemonics that are referenced in this block
     const mnemonics = this.getMnemonicsForBlock(block);
     if (mnemonics && mnemonics.length > 0) {
+      lines.push('');
       for (const [name, address] of mnemonics) {
         const paddedName = name.padEnd(30, ' ');
         lines.push(`!${paddedName} ${address.toString(16).toUpperCase().padStart(4, '0')}`);
@@ -202,27 +203,32 @@ export class BlockWriter {
   }
 
   private resolveOperand(op: Op, obj: any, isBranch: boolean = false): any {
+
+    const opType = this.getObjectType(obj);
     if (typeof obj === 'number') {
+      if(op.size === 3){
+
+      }
       if (op.code.mode === AddressingMode.Immediate) {
         return obj;
       }
 
-      // Direct page and stack operations should not resolve to labels
-      switch (op.code.mode) {
-        case AddressingMode.DirectPage:
-        case AddressingMode.DirectPageIndexedX:
-        case AddressingMode.DirectPageIndexedY:
-        case AddressingMode.DirectPageIndexedIndirectX:
-        case AddressingMode.DirectPageIndirect:
-        case AddressingMode.DirectPageIndirectLong:
-        case AddressingMode.DirectPageIndirectLongIndexedY:
-        case AddressingMode.DirectPageIndirectIndexedY:
-        case AddressingMode.StackRelative:
-        case AddressingMode.StackRelativeIndirectIndexedY:
-        case AddressingMode.Stack:
-        case AddressingMode.StackInterrupt:
-          return obj;
-      }
+      // // Direct page and stack operations should not resolve to labels
+      // switch (op.code.mode) {
+      //   case AddressingMode.DirectPage:
+      //   case AddressingMode.DirectPageIndexedX:
+      //   case AddressingMode.DirectPageIndexedY:
+      //   case AddressingMode.DirectPageIndexedIndirectX:
+      //   case AddressingMode.DirectPageIndirect:
+      //   case AddressingMode.DirectPageIndirectLong:
+      //   case AddressingMode.DirectPageIndirectLongIndexedY:
+      //   case AddressingMode.DirectPageIndirectIndexedY:
+      //   case AddressingMode.StackRelative:
+      //   case AddressingMode.StackRelativeIndirectIndexedY:
+      //   case AddressingMode.Stack:
+      //   case AddressingMode.StackInterrupt:
+      //     return obj;
+      // }
 
       return this._blockReader.resolveName(obj, AddressType.Address, isBranch);
     }
@@ -401,7 +407,7 @@ export class BlockWriter {
   private writeTableEntryArray(tGroup: TableEntry[], depth: number): string[] {
     const lines: string[] = [];
     const isInline = this._isInline;
-    this._isInline = true;
+    //this._isInline = true;
 
     for (const t of tGroup) {
       const nameResult = this._referenceManager.tryGetName(t.location);
@@ -421,19 +427,21 @@ export class BlockWriter {
 
   private writeStructDef(structObj: StructDef, depth: number): string[] {
     const parts: string[] = [];
+    const isInline = this._isInline;
     this._isInline = true;
     for (const part of structObj.parts) {
       const partLines = this.writeObject(part, depth);
-      parts.push(partLines.join(', '));
+      parts.push(partLines.join('\r\n'));
     }
     const line = `${structObj.name} < ${parts.join(', ')} >`;
-    this._isInline = false; // match C# spacing behaviour
+    this._isInline = isInline; // match C# spacing behaviour
     return [line];
   }
 
   private writeOpArray(opList: Op[], depth: number): string[] {
     const lines: string[] = [];
     lines.push('{');
+    const isInline = this._isInline;
     this._isInline = true; // instructions follow immediately
     
     let first = true;
@@ -450,25 +458,21 @@ export class BlockWriter {
       }
 
       let opLine = `    ${op.code.mnem} `;
-      
+
       if (op.copDef) {
         // Handle COP instructions specially
         opLine += `[${op.copDef.mnem}]`;
         if (op.operands && op.operands.length > 1) {
           const operandStrings: string[] = [];
           for (let i = 1; i < op.operands.length; i++) {
-            // Resolve operand names similar to regular instructions
-            const resolved = this.resolveOperand(op, op.operands[i]);
-            const operandLines = this.writeObject(resolved, depth + 1, false);
+            // Resolve operand names similar to regular instructions (who decided this?)
+            //const resolved = this.resolveOperand(op, op.operands[i]);
+            const operandLines = this.writeObject(op.operands[i], depth + 1, false);
             operandStrings.push(operandLines[0]);
           }
           opLine += ` ( ${operandStrings.join(', ')} )`;
         }
       } else if (op.operands && op.operands.length > 0) {
-        const isBr = op.code.mnem[0] === 'J' || 
-                    op.code.mode === AddressingMode.PCRelative ||
-                    op.code.mode === AddressingMode.PCRelativeLong;
-
         // Special handling for different instruction types
         if (op.code.mnem === 'COP') {
           // COP instructions without copDef - handle as simple operand
@@ -479,6 +483,10 @@ export class BlockWriter {
             opLine += `[${operand}]`;
           }
         } else {
+          const isBr = op.code.mnem[0] === 'J' || 
+                      op.code.mode === AddressingMode.PCRelative ||
+                      op.code.mode === AddressingMode.PCRelativeLong;
+  
           // Regular instruction formatting
           const resolvedOperand = this.resolveOperand(op, op.operands[0], isBr);
           const format = this._root.config.asmFormats?.[op.code.mode];
@@ -488,7 +496,7 @@ export class BlockWriter {
             if (op.code.mode === AddressingMode.Immediate && op.size === 3) {
               actualFormat = format.replace('X2', 'X4');
             }
-            opLine += this.formatOperand(actualFormat, [resolvedOperand]);
+            opLine += this.formatOperand(actualFormat, [resolvedOperand, ...op.operands.slice(1)]);
           } else {
             // Default formatting based on operand type
             opLine += this.formatDefaultOperand(resolvedOperand, op.size);
@@ -500,7 +508,7 @@ export class BlockWriter {
     }
     
     lines.push('}');
-    this._isInline = false; // ensure following object is separated by blank line
+    this._isInline = isInline; // ensure following object is separated by blank line
     return lines;
   }
 
@@ -604,13 +612,13 @@ export class BlockWriter {
     const lines: string[] = [];
     const indent = '  '.repeat(depth);
     const isInline = this._isInline;
-    lines.push(indent + '[');
+    lines.push('[');
     this._isInline = false; // start elements on their own lines
 
     for (let i = 0; i < arr.length; i++) {
       const objLines = this.writeObject(arr[i], depth + 1);
       for(const line of objLines) {
-        lines.push(`${indent}  ${line}`);
+        lines.push(indent + '  ' + line);
       }
       lines[lines.length - 1] += `   ;${i.toString(16).toUpperCase().padStart(2, '0')}`;
     }

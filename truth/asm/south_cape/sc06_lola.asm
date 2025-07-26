@@ -1,3 +1,4 @@
+
 ?INCLUDE 'f_inventory_full'
 
 !joypad_mask_std                065A

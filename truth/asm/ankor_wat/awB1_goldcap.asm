@@ -1,8 +1,8 @@
 ?BANK 0B
+
 ?INCLUDE 'func_0AFD69'
 ?INCLUDE 'func_00F432'
 ?INCLUDE 'aw_actor_0BBEE9'
-
 
 ---------------------------------------------
 

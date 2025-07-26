@@ -1,3 +1,4 @@
+
 ?INCLUDE 'actor_00D877'
 
 !joypad_mask_std                065A

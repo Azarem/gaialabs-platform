@@ -28,8 +28,10 @@ export class TransformProcessor {
    */
   public getTransform(): string | null {
     const transform = this._labelLookup[this._romDataReader.position];
-    if (!transform || transform === '') {
-      return transform || null;
+    if (transform === '') {
+      return transform;
+    } else if (!transform) {
+      return null;
     }
 
     const transformName = this.cleanTransformName(transform);
@@ -51,7 +53,7 @@ export class TransformProcessor {
   }
 
   private applyTransform(transform: string | null, operandIndex: number, operands: unknown[]): void {
-    if (transform === null || operandIndex >= operands.length) {
+    if (transform === null || transform === undefined || operandIndex >= operands.length) {
       return;
     }
 
@@ -64,8 +66,15 @@ export class TransformProcessor {
   }
 
   private applyDefaultTransform(operandIndex: number, operands: unknown[]): void {
-    const value = (this._romDataReader.position & 0xFF0000) | (operands[operandIndex] as number);
     
+    let value = (this._romDataReader.position & 0xFF0000);
+    const opnd = operands[operandIndex] as any;
+    if(opnd && 'value' in opnd) {
+      value |= opnd['value'];
+    } else {
+      value |= opnd as number;
+    }
+
     const nameResult = this._referenceManager.tryGetName(value);
     let referenceName: string;
     

@@ -1,3 +1,4 @@
+
 ?INCLUDE 'sE6_gaia'
 
 !joypad_mask_std                065A

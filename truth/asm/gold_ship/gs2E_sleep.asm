@@ -1,3 +1,4 @@
+
 ?INCLUDE 'entry_points_00C418'
 
 !joypad_mask_std                065A

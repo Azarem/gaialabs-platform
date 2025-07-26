@@ -1,3 +1,4 @@
+
 ?INCLUDE 'sFE_proc_03A940'
 
 !joypad_mask_std                065A

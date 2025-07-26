@@ -1,3 +1,4 @@
+
 ?INCLUDE 'hidden_red_jewel'
 
 !player_y_pos                   09A4

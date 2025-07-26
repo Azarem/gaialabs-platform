@@ -1,4 +1,5 @@
 ?BANK 02
+
 ?INCLUDE 'inventory_spritemap'
 ?INCLUDE 'system_strings'
 ?INCLUDE 'chunk_008000'

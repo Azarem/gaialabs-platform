@@ -1,4 +1,5 @@
 ?BANK 02
+
 ?INCLUDE 'death_message'
 ?INCLUDE 'actor_02B7B3'
 ?INCLUDE 'actor_02B29E'
@@ -1117,6 +1118,9 @@ code_02CA58 {
 
   code_02CA68:
     COP [8B]
+}
+
+code_02CA6A {
     LDA $08
     STZ $08
     INC 

@@ -1,6 +1,8 @@
 ?BANK 02
+
 ?INCLUDE 'chunk_008000'
 ?INCLUDE 'table_018000'
+?INCLUDE 'player_character'
 ?INCLUDE 'binary_01C384'
 ?INCLUDE 'chunk_03BAE1'
 ?INCLUDE 'dictionary_01EBA8'
@@ -1994,46 +1996,44 @@ code_028B88 {
 }
 
 code_028B91 {
-    LDA #$1A
-    JSL $@func_0281C9
+    LDA #$221A
+    CMP #$8281
     LDA $0D72
     BEQ code_028BA7
-    LDA #$F2
-    STA $APUIO0
-    LDA #$20
-    JSL $@func_0281C9
+    LDA #$8DF2
+    RTI 
+    AND ($A9, X)
+    JSR $&sub_02C922
+    STA ($82, X)
 }
 
 code_028BA7 {
-    LDA #$F0
-    STA $APUIO0
-
-  code_028BAC:
-    LDA $APUIO0
-    BNE code_028BAC
-    LDA #$02
-    JSL $@func_0281C9
-    LDA #$FF
-    STA $APUIO0
-    LDA #$02
-    JSL $@func_0281C9
-    LDX $3E
+    LDA #$8DF0
+    RTI 
+    AND ($AD, X)
+    RTI 
+    AND ($D0, X)
+    XCE 
+    LDA #$2202
+    CMP #$8281
+    LDA #$8DFF
+    RTI 
+    AND ($A9, X)
+    COP [22] ( #C9, #81 )
+    BRL code_02CA6A
     STX $46
     LDX $40
     STX $48
     JSL $@func_02909B
-    LDA #$01
-    STA $0D72
-    LDA #$03
-    JSL $@func_0281C9
+    LDA #$8D01
+    ADC ($0D)
+    LDA #$2203
+    CMP #$8281
     LDA $06F2
     BEQ code_028BE0
-    LDA #$01
-}
-
-code_028BE0 {
-    STA $APUIO0
-    RTS 
+    LDA #$8D01
+    RTI 
+    AND ($60, X)
 }
 
 ---------------------------------------------

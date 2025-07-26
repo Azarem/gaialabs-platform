@@ -1,3 +1,4 @@
+
 ?INCLUDE 'hidden_red_jewel'
 
 !joypad_mask_std                065A

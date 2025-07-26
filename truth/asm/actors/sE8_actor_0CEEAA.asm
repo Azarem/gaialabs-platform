@@ -1,4 +1,5 @@
 ?BANK 0C
+
 ?INCLUDE 'sE8_thinker_0CEB74'
 ?INCLUDE 'stats_01ABF0'
 ?INCLUDE 'thinker_00B7CC'

@@ -1,3 +1,4 @@
+
 ?INCLUDE 'sc02_card'
 
 !joypad_mask_std                065A

@@ -42,7 +42,8 @@ export enum AddressType {
   Bank = 'Bank',
   Offset = 'Offset',
   Address = 'Address',
-  WBank = 'WBank'
+  WBank = 'WBank',
+  Relative = 'Relative'
 }
 
 /**

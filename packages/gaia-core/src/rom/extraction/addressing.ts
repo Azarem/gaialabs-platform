@@ -186,13 +186,13 @@ export class AddressingModeHandler {
   }
 
   private handleBlockMoveMode(operands: unknown[], context: OperationContext): void {
-    operands.push(this._dataReader.readByte());
+    operands.push(createByte(this._dataReader.readByte()));
     context.xForm2 = this._transformProcessor.getTransform();
-    operands.push(this._dataReader.readByte());
+    operands.push(createByte(this._dataReader.readByte()));
   }
 
   private handleDirectPageMode(operands: unknown[]): void {
-    operands.push(this._dataReader.readByte());
+    operands.push(createByte(this._dataReader.readByte()));
   }
 
   private handlePCRelativeMode(operands: unknown[], nextAddress: number, reg: Registers, isLong: boolean): void {
@@ -201,11 +201,11 @@ export class AddressingModeHandler {
       : nextAddress + this._dataReader.readSByte();
 
     this._blockReader.noteType(relative, 'Code', undefined, reg);
-    operands.push(relative);
+    operands.push(new LocationWrapper(relative, AddressType.Relative));
   }
 
   private handleStackRelativeMode(operands: unknown[]): void {
-    operands.push(this._dataReader.readByte());
+    operands.push(createByte(this._dataReader.readByte()));
   }
 
   private handleStackInterruptMode(mnemonic: string, operands: unknown[], context: OperationContext): void {

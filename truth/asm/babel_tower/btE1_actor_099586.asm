@@ -1,3 +1,4 @@
+
 ?INCLUDE 'py_actor_08B6F4'
 
 !joypad_mask_std                065A

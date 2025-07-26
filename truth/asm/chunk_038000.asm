@@ -1,4 +1,5 @@
 ?BANK 03
+
 ?INCLUDE 'chunk_028000'
 ?INCLUDE 'func_02ED02'
 ?INCLUDE 'system_strings'

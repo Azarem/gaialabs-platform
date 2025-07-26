@@ -93,7 +93,7 @@ export class ReferenceManager {
   }
 
   public resolveName(location: number, type: AddressType, isBranch: boolean): string {
-    const prefix = isBranch ? '' : (Address.codeFromType(type) || '');
+    const prefix = Address.codeFromType(type);
     let name: string;
     let label: string | null = null;
     let resolvedLocation = location;
@@ -116,7 +116,7 @@ export class ReferenceManager {
         this.findClosestReference(resolvedLocation) || this.createFallbackName(resolvedLocation);
     }
 
-    return `${prefix}${name}${label || ''}`;
+    return `${prefix || ''}${name}${label || ''}`;
   }
 
   public findClosestReference(location: number): string | null {

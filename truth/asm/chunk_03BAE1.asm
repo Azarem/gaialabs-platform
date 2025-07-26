@@ -1,4 +1,5 @@
 ?BANK 03
+
 ?INCLUDE 'func_00D62F'
 ?INCLUDE 'func_00F3B3'
 ?INCLUDE 'func_00DB8A'
