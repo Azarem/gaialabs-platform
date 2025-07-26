@@ -46,12 +46,11 @@ export class SfxReader {
       outPath = `${outPath}/${res.folder}`;
     }
 
-    // Create directory (in browser environment, this would be handled differently)
-    if (typeof window === 'undefined') {
-      // Node.js environment
-      const path = await import('path');
-      const fs = await import('fs');
-      fs.mkdirSync(outPath, { recursive: true });
+    const isNode = typeof window === 'undefined';
+    const fs = isNode ? await import('fs') : null;
+
+    if (isNode) {
+      fs!.mkdirSync(outPath, { recursive: true });
     }
 
     for (let i = 0; i < this._count; i++) {
@@ -63,26 +62,17 @@ export class SfxReader {
 
       // For browser environment, we'll collect the data and return it
       // For Node.js, we'll write to file
-      if (typeof window === 'undefined') {
-        // Node.js environment
-        const fs = await import('fs');
-        
-        // If the file exists, skip it
-        if (fs.existsSync(filePath)) {
-          // Advance the read position to the next sfx
+      if (isNode) {
+        if (fs!.existsSync(filePath)) {
           this._location += size;
         } else {
-          // Read sfx data into temporary buffer
           const sfxData = new Uint8Array(size);
           for (let x = 0; x < size; x++) {
             sfxData[x] = this.readByte();
           }
-
-          // Create the file and write the sfx data to it
-          fs.writeFileSync(filePath, sfxData);
+          fs!.writeFileSync(filePath, sfxData);
         }
       } else {
-        // Browser environment - just advance the location
         this._location += size;
       }
     }

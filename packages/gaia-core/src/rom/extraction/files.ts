@@ -23,6 +23,9 @@ export class FileReader {
    * Extracts all files from the ROM to the given output path
    */
   public async extract(outPath: string): Promise<void> {
+    const isNode = typeof window === 'undefined';
+    const fs = isNode ? await import('fs') : null;
+
     // Process each file in the repository
     for (const file of this._dbRoot.files) {
       let start = file.start;
@@ -35,11 +38,8 @@ export class FileReader {
       // If resource has a folder, append it to the output path and create the directory
       if (res.folder) {
         filePath = `${outPath}/${res.folder}`;
-        
-        // Create directory (in browser environment, this would be handled differently)
-        if (typeof window === 'undefined') {
-          const fs = await import('fs');
-          fs.mkdirSync(filePath, { recursive: true });
+        if (isNode) {
+          fs!.mkdirSync(filePath, { recursive: true });
         }
       }
 
@@ -47,11 +47,8 @@ export class FileReader {
       filePath = `${filePath}/${file.name}.${res.extension}`;
 
       // If the file already exists, skip it
-      if (typeof window === 'undefined') {
-        const fs = await import('fs');
-        if (fs.existsSync(filePath)) {
-          continue;
-        }
+      if (isNode && fs!.existsSync(filePath)) {
+        continue;
       }
 
       // Store file header information for post-processing
@@ -92,9 +89,8 @@ export class FileReader {
       }
 
       // Write the file (in Node.js environment)
-      if (typeof window === 'undefined') {
-        const fs = await import('fs');
-        fs.writeFileSync(filePath, fileData);
+      if (isNode) {
+        fs!.writeFileSync(filePath, fileData);
       }
     }
   }
