@@ -1,4 +1,4 @@
-import { BinType } from 'gaia-shared';
+import { BinType, DbRootUtils } from 'gaia-shared';
 import type { DbRoot } from 'gaia-shared';
 import { readFileAsBinary } from 'gaia-shared';
 import { SpriteMap } from '../sprites';
@@ -61,8 +61,8 @@ export class RomState {
     
     // Helper function to get resource file
     const getResource = (name: string, type: BinType): string => {
-      const path = root.paths[type] || root.paths[BinType.Unknown];
-      return `${baseDir}/${path.folder}/${RomState.stripName(name)}.${path.extension}`;
+      const res = DbRootUtils.getPath(root, type);
+      return `${baseDir}/${res.folder}/${RomState.stripName(name)}.${res.extension}`;
     };
 
     // TODO: Parse assembly file and process commands

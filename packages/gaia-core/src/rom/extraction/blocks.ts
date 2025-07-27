@@ -136,9 +136,6 @@ export class BlockReader {
     }
 
     let offset = addr.offset;
-    if(offset === 0x6D6){
-      console.log(this._root.mnemonics[offset]);
-    }
     
     const label = this._root.mnemonics[offset];
     if (!label) {
@@ -172,23 +169,10 @@ export class BlockReader {
    * Resolves include for a location
    */
   public resolveInclude(loc: number, isBranch: boolean): void {
-    if (DbBlockUtils.isOutside(this._currentBlock, loc) && this._currentPart) {
-      // Find the part that contains this location
-      let foundPart: DbPart | null = null;
-      for (const block of this._root.blocks) {
-        for (const part of block.parts) {
-          if (loc >= part.start && loc < part.end) {
-            foundPart = part;
-            break;
-          }
-        }
-        if (foundPart) break;
-      }
-      
-      if (foundPart) {
-        this._currentPart.includes = this._currentPart.includes || new Set();
-        this._currentPart.includes.add(foundPart);
-      }
+    const [outside, foundPart] = DbBlockUtils.isOutsideWithPart(this._currentBlock, loc);
+    if (outside && foundPart && this._currentPart) {
+      this._currentPart.includes = this._currentPart.includes || new Set();
+      this._currentPart.includes.add(foundPart);
     } else if (isBranch && !this._referenceManager.tryGetName(loc).found) {
       const name = `loc_${loc.toString(16).toUpperCase().padStart(6, '0')}`;
       this._referenceManager.tryAddName(loc, name);
