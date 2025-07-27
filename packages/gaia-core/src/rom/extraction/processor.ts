@@ -1,3 +1,5 @@
+import { Registers } from '../../assembly';
+
 /**
  * Manages CPU processor state during ROM analysis
  * Converted from GaiaLib/Rom/Extraction/ProcessorStateManager.cs
@@ -12,20 +14,20 @@ export class ProcessorStateManager {
    * Hydrate processor registers with stored state
    * Uses Registers from gaia-core/assembly for processor state management
    */
-  public hydrateRegisters(position: number, reg: any): void {
+  public hydrateRegisters(position: number, reg: Registers): void {
     const acc = this.accumulatorFlags.get(position);
     if (acc !== undefined) {
-      reg.accumulatorFlag = acc;
+      reg.accumulatorFlag = acc ?? undefined;
     }
 
     const ind = this.indexFlags.get(position);
     if (ind !== undefined) {
-      reg.indexFlag = ind;
+      reg.indexFlag = ind ?? undefined;
     }
 
     const bnk = this.bankNotes.get(position);
     if (bnk !== undefined) {
-      reg.dataBank = bnk;
+      reg.dataBank = bnk ?? undefined;
     }
 
     const stack = this.stackPositions.get(position);
