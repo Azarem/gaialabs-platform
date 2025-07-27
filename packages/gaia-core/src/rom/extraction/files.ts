@@ -1,5 +1,5 @@
 import { ICompressionProvider } from '../../compression';
-import { BinType } from 'gaia-shared';
+import { BinType, DbRootUtils } from 'gaia-shared';
 import type { DbRoot } from 'gaia-shared';
 
 /**
@@ -31,7 +31,7 @@ export class FileReader {
       let start = file.start;
 
       // Get the path options for the resource type from DbRoot configuration
-      const res = this.getPath(file.type);
+      const res = DbRootUtils.getPath(this._dbRoot, file.type);
 
       let filePath = outPath;
 
@@ -145,16 +145,4 @@ export class FileReader {
     return result;
   }
 
-  /**
-   * Gets the path information for a binary type from DbRoot configuration
-   */
-  private getPath(binType: BinType): { folder?: string; extension: string } {
-    // Use the paths from DbRoot configuration (loaded from project.json)
-    const pathConfig = this._dbRoot.paths[binType] || this._dbRoot.paths[BinType.Unknown];
-    
-    return {
-      folder: pathConfig.folder,
-      extension: pathConfig.extension
-    };
-  }
-} 
+}

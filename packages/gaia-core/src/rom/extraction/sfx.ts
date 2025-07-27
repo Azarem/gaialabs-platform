@@ -1,4 +1,4 @@
-import { Address, BinType } from 'gaia-shared';
+import { Address, BinType, DbRootUtils } from 'gaia-shared';
 import type { DbRoot } from 'gaia-shared';
 
 /**
@@ -41,8 +41,8 @@ export class SfxReader {
    * Extracts the sfx from the rom data to the given output path
    */
   public async extract(outPath: string): Promise<void> {
-    const res = this.getPath(BinType.Sound);
-    if (res?.folder) {
+    const res = DbRootUtils.getPath(this._dbRoot, BinType.Sound);
+    if (res.folder) {
       outPath = `${outPath}/${res.folder}`;
     }
 
@@ -58,7 +58,7 @@ export class SfxReader {
       const size = this.readShort();
 
       // Generate the full file path
-      const filePath = `${outPath}/sfx${i.toString(16).padStart(2, '0').toUpperCase()}.${res?.extension || 'bin'}`;
+      const filePath = `${outPath}/sfx${i.toString(16).padStart(2, '0').toUpperCase()}.${res.extension}`;
 
       // For browser environment, we'll collect the data and return it
       // For Node.js, we'll write to file
@@ -78,17 +78,4 @@ export class SfxReader {
     }
   }
 
-  /**
-   * Gets the path information for a binary type
-   * TODO: This should be implemented in DbRoot
-   */
-  private getPath(binType: BinType): { folder?: string; extension?: string } | null {
-    // Placeholder implementation - this should be implemented in DbRoot
-    switch (binType) {
-      case BinType.Sound:
-        return { folder: 'sound', extension: 'sfc' };
-      default:
-        return null;
-    }
-  }
-} 
+}
