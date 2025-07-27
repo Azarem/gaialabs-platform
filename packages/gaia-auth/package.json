@@ -13,7 +13,8 @@
     "dev": "tsup --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
