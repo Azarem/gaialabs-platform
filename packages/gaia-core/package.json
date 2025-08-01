@@ -1,5 +1,5 @@
 {
-  "name": "gaia-core",
+  "name": "@gaialabs/core",
   "version": "0.1.0",
   "description": "GaiaLabs TypeScript Core Library - Universal ROM processing engine",
   "main": "dist/index.js",
@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "publish": "tsup && npm publish --access public"
   },
   "dependencies": {
     "gaia-shared": "workspace:*",

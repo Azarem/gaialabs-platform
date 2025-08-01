@@ -1,5 +1,5 @@
 {
-  "name": "gaia-git",
+  "name": "@gaialabs/git",
   "version": "0.1.0",
   "description": "Git integration utilities for GaiaLabs platform",
   "main": "dist/index.js",
@@ -22,7 +22,7 @@
     "@octokit/auth-app": "^6.0.1",
     "simple-git": "^3.21.0",
     "zod": "^3.25.76",
-    "gaia-shared": "workspace:*"
+    "@gaialabs/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",

@@ -1,5 +1,5 @@
 {
-  "name": "gaia-auth",
+  "name": "@gaialabs/auth",
   "version": "0.1.0",
   "description": "Authentication utilities for GaiaLabs platform with React 19",
   "main": "dist/index.js",
@@ -23,7 +23,7 @@
     "react-dom": "^19.1.0",
     "next-auth": "^4.24.11",
     "zod": "^3.25.76",
-    "gaia-shared": "workspace:*"
+    "@gaialabs/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.1.0",

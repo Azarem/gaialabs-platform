@@ -1,5 +1,5 @@
 {
-  "name": "gaia-shared",
+  "name": "@gaialabs/shared",
   "version": "0.1.0",
   "description": "Shared TypeScript types and utilities for GaiaLabs platform",
   "main": "dist/index.js",
