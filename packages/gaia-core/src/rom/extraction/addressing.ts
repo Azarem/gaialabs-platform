@@ -13,7 +13,7 @@ import { RomDataReader } from './reader';
 import { StackOperations } from './stack';
 import { TransformProcessor } from './transforms';
 import { CopCommandProcessor } from './cop';
-import type { DbRoot } from 'gaia-shared';
+import type { DbRoot, CopDef } from 'gaia-shared';
 import type { BlockReader } from './blocks';
 
 /**
@@ -25,7 +25,7 @@ export class OperationContext {
   public nextAddress: number = 0;
   public xForm1: string | null = null;
   public xForm2: string | null = null;
-  public copDef: any = null;
+  public copDef: CopDef | null = null;
 }
 
 /**
