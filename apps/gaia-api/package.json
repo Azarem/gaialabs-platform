@@ -31,9 +31,9 @@
     "bcryptjs": "^3.0.2",
     "fastify": "^5.4.0",
     "@supabase/supabase-js": "^2.39.0",
-    "gaia-core": "workspace:*",
-    "gaia-git": "workspace:*",
-    "gaia-shared": "workspace:*",
+    "@gaialabs/core": "workspace:*",
+    "@gaialabs/git": "workspace:*",
+    "@gaialabs/shared": "workspace:*",
     "zod": "^4.0.0"
   },
   "devDependencies": {

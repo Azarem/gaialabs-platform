@@ -22,7 +22,7 @@
     "publish": "tsup && npm publish --access public"
   },
   "dependencies": {
-    "gaia-shared": "workspace:*",
+    "@gaialabs/shared": "workspace:*",
     "unzipper": "^0.12.3",
     "zod": "^3.25.76"
   },

@@ -1,0 +1,210 @@
+@import "tailwindcss";
+
+/* Import fonts */
+@import "@fontsource/cinzel/400.css";
+@import "@fontsource/cinzel/600.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/jetbrains-mono/400.css";
+
+@theme {
+  /* Typography */
+  --font-display: "Cinzel", serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Breakpoints */
+  --breakpoint-3xl: 1920px;
+
+  /* Border radius */
+  --radius: 0.5rem;
+
+  /* Light theme colors */
+  --color-background: oklch(0.98 0.02 220);
+  --color-foreground: oklch(0.2 0.05 220);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.2 0.05 220);
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.2 0.05 220);
+  --color-primary: oklch(0.5 0.15 220);
+  --color-primary-foreground: oklch(1 0 0);
+  --color-secondary: oklch(0.65 0.1 270);
+  --color-secondary-foreground: oklch(1 0 0);
+  --color-muted: oklch(0.96 0.02 210);
+  --color-muted-foreground: oklch(0.47 0.03 215);
+  --color-accent: oklch(0.55 0.15 43);
+  --color-accent-foreground: oklch(0.2 0.05 220);
+  --color-destructive: oklch(0.51 0.15 0);
+  --color-destructive-foreground: oklch(0.98 0 0);
+  --color-border: oklch(0.91 0.02 214);
+  --color-input: oklch(0.91 0.02 214);
+  --color-ring: oklch(0.5 0.15 220);
+
+  /* Custom Gaia colors */
+  --color-gaia-cosmos: oklch(0.18 0.08 235);
+  --color-gaia-stardust: oklch(0.88 0.12 45);
+  --color-gaia-mystic: oklch(0.75 0.08 280);
+  --color-gaia-coral: oklch(0.7 0.1 350);
+  --color-gaia-teal: oklch(0.45 0.08 180);
+
+  /* Custom animations */
+  --animate-shimmer: shimmer 2s infinite;
+  --animate-glow: glow 2s ease-in-out infinite;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    /* Dark theme colors */
+    --color-background: oklch(0.12 0.08 235);
+    --color-foreground: oklch(0.98 0.02 210);
+    --color-card: oklch(0.15 0.06 235);
+    --color-card-foreground: oklch(0.98 0.02 210);
+    --color-popover: oklch(0.15 0.06 235);
+    --color-popover-foreground: oklch(0.98 0.02 210);
+    --color-primary: oklch(0.6 0.18 220);
+    --color-primary-foreground: oklch(0.98 0 0);
+    --color-secondary: oklch(0.7 0.12 270);
+    --color-secondary-foreground: oklch(0.98 0 0);
+    --color-muted: oklch(0.2 0.05 235);
+    --color-muted-foreground: oklch(0.65 0.03 215);
+    --color-accent: oklch(0.65 0.18 43);
+    --color-accent-foreground: oklch(0.1 0.05 220);
+    --color-destructive: oklch(0.6 0.15 0);
+    --color-destructive-foreground: oklch(0.98 0 0);
+    --color-border: oklch(0.25 0.05 235);
+    --color-input: oklch(0.25 0.05 235);
+    --color-ring: oklch(0.6 0.18 220);
+
+    /* Custom Gaia colors - dark mode */
+    --color-gaia-cosmos: oklch(0.08 0.1 235);
+    --color-gaia-stardust: oklch(0.75 0.15 45);
+    --color-gaia-mystic: oklch(0.8 0.1 280);
+    --color-gaia-coral: oklch(0.75 0.12 350);
+    --color-gaia-teal: oklch(0.5 0.1 180);
+  }
+}
+
+/* Custom utilities */
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  max-width: 1400px;
+}
+
+/* Custom keyframes */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes glow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px color-mix(in oklab, var(--color-primary) 50%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 30px color-mix(in oklab, var(--color-primary) 80%, transparent),
+                0 0 50px color-mix(in oklab, var(--color-primary) 50%, transparent);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+  code, pre {
+    @apply font-mono;
+  }
+}
+
+/* Custom Gaia utility classes */
+@utility text-gaia-cosmos { color: var(--color-gaia-cosmos); }
+@utility text-gaia-stardust { color: var(--color-gaia-stardust); }
+@utility text-gaia-mystic { color: var(--color-gaia-mystic); }
+@utility text-gaia-coral { color: var(--color-gaia-coral); }
+@utility text-gaia-teal { color: var(--color-gaia-teal); }
+
+@utility bg-gaia-cosmos { background-color: var(--color-gaia-cosmos); }
+@utility bg-gaia-stardust { background-color: var(--color-gaia-stardust); }
+@utility bg-gaia-mystic { background-color: var(--color-gaia-mystic); }
+@utility bg-gaia-coral { background-color: var(--color-gaia-coral); }
+@utility bg-gaia-teal { background-color: var(--color-gaia-teal); }
+
+@utility border-gaia-cosmos { border-color: var(--color-gaia-cosmos); }
+@utility border-gaia-stardust { border-color: var(--color-gaia-stardust); }
+@utility border-gaia-mystic { border-color: var(--color-gaia-mystic); }
+@utility border-gaia-coral { border-color: var(--color-gaia-coral); }
+@utility border-gaia-teal { border-color: var(--color-gaia-teal); }
+
+/* Gradient utilities using modern color-mix */
+@utility gradient-gaia-cosmos {
+  background: linear-gradient(to bottom right,
+    var(--color-primary),
+    var(--color-gaia-cosmos),
+    var(--color-gaia-mystic)
+  );
+}
+
+@utility gradient-gaia-sunset {
+  background: linear-gradient(to right,
+    var(--color-gaia-coral),
+    var(--color-accent),
+    var(--color-gaia-stardust)
+  );
+}
+
+@utility gradient-gaia-ocean {
+  background: linear-gradient(to bottom,
+    var(--color-gaia-teal),
+    var(--color-primary),
+    var(--color-gaia-cosmos)
+  );
+}
+
+@utility gradient-gaia-mystic {
+  background: linear-gradient(to top right,
+    var(--color-secondary),
+    var(--color-gaia-mystic),
+    var(--color-gaia-coral)
+  );
+}
+
+/* Glow effects using modern color-mix */
+@utility gaia-glow {
+  box-shadow:
+    0 0 20px color-mix(in oklab, var(--color-primary) 30%, transparent),
+    0 0 40px color-mix(in oklab, var(--color-primary) 20%, transparent),
+    0 0 60px color-mix(in oklab, var(--color-primary) 10%, transparent);
+}
+
+@utility gaia-glow-accent {
+  box-shadow:
+    0 0 20px color-mix(in oklab, var(--color-accent) 40%, transparent),
+    0 0 40px color-mix(in oklab, var(--color-accent) 30%, transparent),
+    0 0 60px color-mix(in oklab, var(--color-accent) 20%, transparent);
+}

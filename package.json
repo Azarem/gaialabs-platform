@@ -33,6 +33,8 @@
     "community:build": "turbo run build --filter=gaia-community",
     "api:dev": "turbo run dev --filter=gaia-api",
     "api:build": "turbo run build --filter=gaia-api",
+    "translator:dev": "turbo run dev --filter=gaia-translator",
+    "translator:build": "turbo run build --filter=gaia-translator",
     "shared:build": "turbo run build --filter=gaia-shared",
     "ui:build": "turbo run build --filter=gaia-ui",
     "packages:build": "turbo run build --filter=./packages/*",
@@ -56,6 +58,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
+    "basic-ftp": "^5.0.5",
     "turbo": "^2.5.4",
     "typescript": "^5.8.3"
   },

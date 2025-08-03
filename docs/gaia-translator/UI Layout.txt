@@ -1,0 +1,50 @@
+#Toolbar is on the very top. 
+#On the left is the text region. Changing this will change the region text in the list and left side of preview.
+
+[  NA-English  v]  ( Search bar: within selected region for group/scene/file/string name or string text )
+
+
+#Filter selection is next. Chapter should be dropdown. 
+#To the right is a collection of groups, scenes, and files all related to the chapter.
+#This collection is generated on chapter selection by first grabbing all strings related to the chapter and grouping them in a hierarchy.
+
+
+  (Chapter 1 [v])  ( South Cape   Tim's House    sc06_bill          )  #Or they could be on different lines
+                                                 sc06_lola
+                                  Seth's House   sc05_seths_father
+                                                 sc05_seths_mother
+                                  Lance's House  sc03_lances_mother
+
+
+
+#Below the filters will be a string list. Clicking on any of the items above will filter this list
+#The string list shows one item on a line, removing linebreaks
+#Scroll the whole list vertically, anchor the names on the left
+#Make the content summary scroll horizontally.
+
+widestring_049193 | `[TPL:B]Seth's father:[N][LU1:64]wrong with[N]having a [LU1:A7]fun with[N]my hard-earned money!![END]`
+
+widestring_04941D | `[TPL:B][TPL:4][LU1:6]Coming home[N]at [LU1:D6]hour probably[N]means you had to stay[N]after school again.[FIN]Ha ha. Excellent! Even[N]if a boy [LU1:78]study,[N]he [LU1:CA]show a[N][LU1:A7]initiative.[PAL:0][END]`
+
+widestring_0494B1 | `[TPL:B][TPL:4][LU1:6][N]Oh, my! I haven't sung [N][LU1:A5][LU1:D6]in a [LU1:A6]time.[FIN][LU1:68]grandmother Lola[N][LU2:BB]to be a singer.[FIN]I fell in love [LU1:F0]her[N]voice. That's why I[N]married her.[PAL:0][END]`
+
+
+#On the bottom is the region preview. Text has formatting applied and displayed in a readable format
+#The user can select multiple text versions and view them side by side
+#The dropdown on the left has the same effect as the dropdown in the toolbar
+
+
+[     NA-English (core)   v][    JP-JAP   v] [      NA-GaiaLabs      v]
+---------------------------------------------------------------------
+[TPL:B]Seth's father:[N]    
+[LU1:64]wrong with[N]            ETC                     ETC
+having a [LU1:A7]fun with[N]
+my hard-earned money!![END] 
+------------------------------------------------------------------------------
+|Seth's father:            |モリスの父：       |Morris's father: Hmph.	
+|Nothing wrong with        |けっ。おれがかせいだ金|What's wrong with drinking
+|having a little fund with |で酒を飲んで何が    |alcohol with the money I 
+|my hard-earned money!!    |悪いってんだ！      |earned!?
+-------------------------------------------------------------------------------
+
+

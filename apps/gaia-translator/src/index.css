@@ -1,0 +1,4 @@
+/* Import the complete GaiaLabs theme system from gaia-ui */
+@import "@gaialabs/ui/globals.css";
+
+/* App-specific styles can be added here */

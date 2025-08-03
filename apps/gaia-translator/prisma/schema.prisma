@@ -1,0 +1,212 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("VITE_DATABASE_URL")
+}
+
+// Simplified enum for basic user roles
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// Essential User model for Supabase authentication
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String?  @unique
+  fullName  String?
+  avatarUrl String?
+  githubId  String?
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations for audit fields
+  textRegionsCreated  TextRegion[] @relation("TextRegionCreatedBy")
+  textRegionsUpdated  TextRegion[] @relation("TextRegionUpdatedBy")
+  textRegionsDeleted  TextRegion[] @relation("TextRegionDeletedBy")
+
+  stringTextsCreated  StringText[] @relation("StringTextCreatedBy")
+  stringTextsUpdated  StringText[] @relation("StringTextUpdatedBy")
+  stringTextsDeleted  StringText[] @relation("StringTextDeletedBy")
+
+  textFeedback        TextFeedback[]
+  textFeedbackCreated TextFeedback[] @relation("TextFeedbackCreatedBy")
+  textFeedbackUpdated TextFeedback[] @relation("TextFeedbackUpdatedBy")
+  textFeedbackDeleted TextFeedback[] @relation("TextFeedbackDeletedBy")
+
+  @@map("users")
+}
+
+// Core scene group definition (seed from truth)
+model SceneGroup {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+
+  // Relations
+  scenes      Scene[]
+  files       File[]
+}
+
+// Core scene definition (seed from truth)
+model Scene {
+  id      String   @id @default(cuid())
+  code    String   @unique
+  name    String   @unique
+  group   SceneGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId String
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  chapterId String?
+
+  // Relations
+  files   File[]
+  strings GameString[]
+
+  @@index([groupId])
+  @@index([chapterId])
+}
+
+// Core chapter definition (seed from truth)
+model Chapter {
+  id          String   @id @default(cuid())
+  name        String?  @unique
+  description String?
+
+  // Relations
+  scenes  Scene[]
+  strings GameString[]
+}
+
+// Core asm file definition (seed from truth)
+model File {
+  id          String   @id @default(cuid())
+  name        String @unique
+  description String?
+  scene       Scene?   @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  sceneId     String?
+  group       SceneGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId     String?
+
+  strings     GameString[]
+
+  @@index([sceneId])
+}
+
+// Core string type definition (seed from truth)
+model StringType {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+
+  // Relations
+  gameStrings GameString[]
+}
+
+// Core string definition that exists in asm file (seed from truth)
+model GameString {
+  id          String     @id @default(cuid())
+  name        String
+  stringType  StringType @relation(fields: [typeId], references: [id])
+  typeId      String
+  scene       Scene?      @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  sceneId     String?
+  chapter     Chapter?   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  chapterId   String?
+  file        File       @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId      String
+
+  texts       StringText[]
+
+  @@index([sceneId])
+  @@index([chapterId])
+  @@index([fileId])
+  @@index([typeId])
+}
+
+// Definition of a country/region to which a string belongs
+model TextRegion {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String  @unique
+  language    String
+  description String?
+  website     String?
+  isCore      Boolean @default(false)
+
+  // Relations
+  stringTexts StringText[]
+
+  // Audit fields
+  createdOn   DateTime @default(now())
+  createdBy   User    @relation("TextRegionCreatedBy", fields: [createdById], references: [id])
+  createdById String
+  updatedOn   DateTime? @updatedAt
+  updatedBy   User?    @relation("TextRegionUpdatedBy", fields: [updatedById], references: [id])
+  updatedById String?
+  deletedOn   DateTime?
+  deletedBy   User?    @relation("TextRegionDeletedBy", fields: [deletedById], references: [id])
+  deletedById String?
+
+  @@map("text_regions")
+}
+
+// Different regions will have different text (seed from truth & chapter files)
+model StringText {
+  id          String  @id @default(cuid())
+  string      GameString  @relation(fields: [stringId], references: [id], onDelete: Cascade)
+  stringId    String
+  region      TextRegion  @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  regionId    String
+  text        String
+
+  // Relations
+  feedback    TextFeedback[]
+
+  // Audit fields
+  createdOn   DateTime @default(now())
+  createdBy   User    @relation("StringTextCreatedBy", fields: [createdById], references: [id])
+  createdById String
+  updatedOn   DateTime? @updatedAt
+  updatedBy   User?    @relation("StringTextUpdatedBy", fields: [updatedById], references: [id])
+  updatedById String?
+  deletedOn   DateTime?
+  deletedBy   User?    @relation("StringTextDeletedBy", fields: [deletedById], references: [id])
+  deletedById String?
+
+  @@index([stringId])
+  @@index([regionId])
+  @@unique([stringId, regionId])
+}
+
+model TextFeedback {
+  id           String   @id @default(cuid())
+  text         StringText  @relation(fields: [textId], references: [id], onDelete: Cascade)
+  textId       String
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  feedback     String
+  isPositive   Boolean
+
+  // Audit fields
+  createdOn   DateTime @default(now())
+  createdBy   User    @relation("TextFeedbackCreatedBy", fields: [createdById], references: [id])
+  createdById String
+  updatedOn   DateTime? @updatedAt
+  updatedBy   User?    @relation("TextFeedbackUpdatedBy", fields: [updatedById], references: [id])
+  updatedById String?
+  deletedOn   DateTime?
+  deletedBy   User?    @relation("TextFeedbackDeletedBy", fields: [deletedById], references: [id])
+  deletedById String?
+
+  @@index([textId])
+  @@index([userId])
+}

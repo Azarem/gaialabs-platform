@@ -1,0 +1,5 @@
+---
+type: "always_apply"
+---
+
+Implement features completely, do not create stubs. Do not create todo comments, instead add new items to your task list and finish implementation of all code and features.

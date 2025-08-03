@@ -1,0 +1,229 @@
+/* GaiaLabs Theme Configuration - Inspired by Illusion of Gaia */
+/* Tailwind CSS v4 Configuration - Add this to your globals.css or app.css file */
+
+@import "tailwindcss";
+
+@theme {
+  /* Typography */
+  --font-display: "Cinzel", serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Breakpoints */
+  --breakpoint-3xl: 1920px;
+
+  /* Border radius */
+  --radius: 0.5rem;
+
+  /* Light Theme - Inspired by Gaia's mystical daytime */
+  /* Using OKLCH color space for better perceptual uniformity */
+  --color-background: oklch(0.98 0.02 201); /* Soft sky blue */
+  --color-foreground: oklch(0.2 0.05 220); /* Deep blue-gray */
+
+  --color-card: oklch(1 0 0); /* Pure white */
+  --color-card-foreground: oklch(0.2 0.05 220); /* Deep blue-gray */
+
+  --color-popover: oklch(1 0 0); /* Pure white */
+  --color-popover-foreground: oklch(0.2 0.05 220); /* Deep blue-gray */
+
+  --color-primary: oklch(0.5 0.15 220); /* Cosmic blue */
+  --color-primary-foreground: oklch(1 0 0); /* White */
+
+  --color-secondary: oklch(0.65 0.1 270); /* Mystical purple */
+  --color-secondary-foreground: oklch(1 0 0); /* White */
+
+  --color-muted: oklch(0.96 0.02 210); /* Very light blue */
+  --color-muted-foreground: oklch(0.47 0.03 215); /* Muted blue-gray */
+
+  --color-accent: oklch(0.55 0.15 43); /* Golden amber - from game title */
+  --color-accent-foreground: oklch(0.2 0.05 220); /* Deep blue-gray */
+
+  --color-destructive: oklch(0.51 0.15 0); /* Soft red */
+  --color-destructive-foreground: oklch(0.98 0 0); /* Off-white */
+
+  --color-border: oklch(0.91 0.02 214); /* Light blue-gray */
+  --color-input: oklch(0.91 0.02 214); /* Light blue-gray */
+  --color-ring: oklch(0.5 0.15 220); /* Cosmic blue */
+
+  /* Custom Gaia colors */
+  --color-gaia-cosmos: oklch(0.18 0.08 235); /* Deep night blue */
+  --color-gaia-stardust: oklch(0.88 0.12 45); /* Pale gold */
+  --color-gaia-mystic: oklch(0.75 0.08 280); /* Soft purple */
+  --color-gaia-coral: oklch(0.7 0.1 350); /* Soft pink-coral */
+  --color-gaia-teal: oklch(0.45 0.08 180); /* Ocean teal */
+
+  /* Custom animations */
+  --animate-shimmer: shimmer 2s infinite;
+  --animate-glow: glow 2s ease-in-out infinite;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    /* Dark Theme - Inspired by Gaia's cosmic night */
+    --color-background: oklch(0.12 0.08 235); /* Deep cosmic blue */
+    --color-foreground: oklch(0.98 0.02 210); /* Soft white */
+
+    --color-card: oklch(0.15 0.06 235); /* Dark blue card */
+    --color-card-foreground: oklch(0.98 0.02 210); /* Soft white */
+
+    --color-popover: oklch(0.15 0.06 235); /* Dark blue popover */
+    --color-popover-foreground: oklch(0.98 0.02 210); /* Soft white */
+
+    --color-primary: oklch(0.6 0.18 220); /* Bright cosmic blue */
+    --color-primary-foreground: oklch(0.98 0 0); /* Off-white */
+
+    --color-secondary: oklch(0.7 0.12 270); /* Bright mystical purple */
+    --color-secondary-foreground: oklch(0.98 0 0); /* Off-white */
+
+    --color-muted: oklch(0.2 0.05 235); /* Dark muted blue */
+    --color-muted-foreground: oklch(0.65 0.03 215); /* Light gray-blue */
+
+    --color-accent: oklch(0.65 0.18 43); /* Bright golden amber */
+    --color-accent-foreground: oklch(0.1 0.05 220); /* Very dark blue */
+
+    --color-destructive: oklch(0.6 0.15 0); /* Bright red */
+    --color-destructive-foreground: oklch(0.98 0 0); /* Off-white */
+
+    --color-border: oklch(0.25 0.05 235); /* Dark blue border */
+    --color-input: oklch(0.25 0.05 235); /* Dark blue input */
+    --color-ring: oklch(0.6 0.18 220); /* Bright cosmic blue */
+
+    /* Custom Gaia colors - dark mode */
+    --color-gaia-cosmos: oklch(0.08 0.1 235); /* Very deep blue */
+    --color-gaia-stardust: oklch(0.75 0.15 45); /* Bright gold */
+    --color-gaia-mystic: oklch(0.8 0.1 280); /* Bright purple */
+    --color-gaia-coral: oklch(0.75 0.12 350); /* Bright coral */
+    --color-gaia-teal: oklch(0.5 0.1 180); /* Bright teal */
+  }
+}
+
+/* Custom utilities */
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  max-width: 1400px;
+}
+
+/* Custom keyframes for animations */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes glow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px color-mix(in oklab, var(--color-primary) 50%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 30px color-mix(in oklab, var(--color-primary) 80%, transparent),
+                0 0 50px color-mix(in oklab, var(--color-primary) 50%, transparent);
+  }
+}
+
+/* Custom utility classes using modern CSS features */
+@utility text-gaia-cosmos { color: var(--color-gaia-cosmos); }
+@utility text-gaia-stardust { color: var(--color-gaia-stardust); }
+@utility text-gaia-mystic { color: var(--color-gaia-mystic); }
+@utility text-gaia-coral { color: var(--color-gaia-coral); }
+@utility text-gaia-teal { color: var(--color-gaia-teal); }
+
+@utility bg-gaia-cosmos { background-color: var(--color-gaia-cosmos); }
+@utility bg-gaia-stardust { background-color: var(--color-gaia-stardust); }
+@utility bg-gaia-mystic { background-color: var(--color-gaia-mystic); }
+@utility bg-gaia-coral { background-color: var(--color-gaia-coral); }
+@utility bg-gaia-teal { background-color: var(--color-gaia-teal); }
+
+@utility border-gaia-cosmos { border-color: var(--color-gaia-cosmos); }
+@utility border-gaia-stardust { border-color: var(--color-gaia-stardust); }
+@utility border-gaia-mystic { border-color: var(--color-gaia-mystic); }
+@utility border-gaia-coral { border-color: var(--color-gaia-coral); }
+@utility border-gaia-teal { border-color: var(--color-gaia-teal); }
+
+/* Gradient utilities using modern color-mix */
+@utility gradient-gaia-cosmos {
+  background: linear-gradient(to bottom right,
+    var(--color-primary),
+    var(--color-gaia-cosmos),
+    var(--color-gaia-mystic)
+  );
+}
+
+@utility gradient-gaia-sunset {
+  background: linear-gradient(to right,
+    var(--color-gaia-coral),
+    var(--color-accent),
+    var(--color-gaia-stardust)
+  );
+}
+
+@utility gradient-gaia-ocean {
+  background: linear-gradient(to bottom,
+    var(--color-gaia-teal),
+    var(--color-primary),
+    var(--color-gaia-cosmos)
+  );
+}
+
+@utility gradient-gaia-mystic {
+  background: linear-gradient(to top right,
+    var(--color-secondary),
+    var(--color-gaia-mystic),
+    var(--color-gaia-coral)
+  );
+}
+
+/* Animation utilities */
+@utility animate-shimmer {
+  position: relative;
+  overflow: hidden;
+  animation: var(--animate-shimmer);
+}
+
+@utility animate-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    color-mix(in oklab, var(--color-gaia-stardust) 40%, transparent) 50%,
+    transparent 60%
+  );
+  animation: shimmer 2s infinite;
+}
+
+/* Glow effects using modern color-mix */
+@utility gaia-glow {
+  box-shadow:
+    0 0 20px color-mix(in oklab, var(--color-primary) 30%, transparent),
+    0 0 40px color-mix(in oklab, var(--color-primary) 20%, transparent),
+    0 0 60px color-mix(in oklab, var(--color-primary) 10%, transparent);
+}
+
+@utility gaia-glow-accent {
+  box-shadow:
+    0 0 20px color-mix(in oklab, var(--color-accent) 40%, transparent),
+    0 0 40px color-mix(in oklab, var(--color-accent) 30%, transparent),
+    0 0 60px color-mix(in oklab, var(--color-accent) 20%, transparent);
+}
