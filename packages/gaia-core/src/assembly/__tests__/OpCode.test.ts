@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { OpCode, ALL_OPCODES, GROUPED_OPCODES, OpCodeUtils } from '../OpCode';
-import { AddressingMode } from 'gaia-shared';
+import { AddressingMode } from '@gaialabs/shared';
 
 describe('OpCode', () => {
   describe('OpCode class', () => {

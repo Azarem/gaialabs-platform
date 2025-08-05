@@ -1,6 +1,6 @@
 import { RomDataReader } from './reader';
 import { ReferenceManager } from './references';
-import { RomProcessingConstants } from 'gaia-shared';
+import { RomProcessingConstants } from '@gaialabs/shared';
 import type { BlockReader } from './blocks';
 
 /**

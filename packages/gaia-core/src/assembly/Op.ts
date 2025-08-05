@@ -1,4 +1,4 @@
-import { CopDef } from 'gaia-shared';
+import { CopDef } from '@gaialabs/shared';
 import { OpCode } from './OpCode';
 
 /**

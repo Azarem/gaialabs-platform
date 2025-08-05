@@ -1,4 +1,4 @@
-import { BitStream } from 'gaia-shared';
+import { BitStream } from '@gaialabs/shared';
 import { ICompressionProvider } from './ICompressionProvider';
 
 /**

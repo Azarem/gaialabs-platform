@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { createReadStream } from 'fs';
 import unzipper from 'unzipper';
-import { readFileAsText } from 'gaia-shared';
-import { DbRootUtils } from 'gaia-shared';
+import { readFileAsText } from '@gaialabs/shared';
+import { DbRootUtils } from '@gaialabs/shared';
 import { BlockReader } from '../blocks';
 import { BlockWriter } from '../writer';
 

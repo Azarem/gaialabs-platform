@@ -1,7 +1,7 @@
 import { RomDataReader } from './reader';
-import { Address, AddressSpace, AddressType, MemberType, RomProcessingConstants, DbBlockUtils } from 'gaia-shared';
-import type { DbStringType, DbStringCommand } from 'gaia-shared';
-import type { StringWrapper } from 'gaia-shared';
+import { Address, AddressSpace, AddressType, MemberType, RomProcessingConstants, DbBlockUtils } from '@gaialabs/shared';
+import type { DbStringType, DbStringCommand } from '@gaialabs/shared';
+import type { StringWrapper } from '@gaialabs/shared';
 import type { BlockReader } from './blocks';
 import { indexOfAny } from '../../utils';
 

@@ -1,5 +1,5 @@
 import { Registers } from '../../assembly';
-import { StatusFlags } from 'gaia-shared';
+import { StatusFlags } from '@gaialabs/shared';
 import { RomDataReader } from './reader';
 import type { BlockReader } from './blocks';
 

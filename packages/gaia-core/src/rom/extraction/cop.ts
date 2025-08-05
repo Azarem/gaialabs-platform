@@ -7,9 +7,9 @@ import {
   MemberType,
   createByte,
   createWord,
-} from 'gaia-shared';
-import type { CopDef } from 'gaia-shared';
-import type { DbRoot } from 'gaia-shared';
+} from '@gaialabs/shared';
+import type { CopDef } from '@gaialabs/shared';
+import type { DbRoot } from '@gaialabs/shared';
 import type { BlockReader } from './blocks';
 
 /**
