@@ -1,13 +1,13 @@
 import { promises as fs } from 'fs';
 import { join, dirname } from 'path';
 import { Op } from '../../assembly/Op';
-import { AddressingMode, TypedNumber } from 'gaia-shared';
+import { AddressingMode, TypedNumber } from '@gaialabs/shared';
 import { 
   DbRoot, 
   DbPart, 
   DbBlock,
   DbBlockUtils
-} from 'gaia-shared';
+} from '@gaialabs/shared';
 import { 
   BinType, 
   AddressType, 
@@ -20,8 +20,8 @@ import {
   StringWrapper,
   LocationWrapper,
   Address
-} from 'gaia-shared';
-import { DbRootUtils } from 'gaia-shared';
+} from '@gaialabs/shared';
+import { DbRootUtils } from '@gaialabs/shared';
 import { BlockReader } from './blocks';
 import { ReferenceManager } from './references';
 import { PostProcessor } from './postprocessor';

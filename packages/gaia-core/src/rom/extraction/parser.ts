@@ -12,10 +12,10 @@ import {
   StructDef,
   createByte,
   createWord,
-} from 'gaia-shared';
-import type { DbRoot, DbBlock, DbPart } from 'gaia-shared';
-import type { DbStruct } from 'gaia-shared';
-import type { DbStringType } from 'gaia-shared';
+} from '@gaialabs/shared';
+import type { DbRoot, DbBlock, DbPart } from '@gaialabs/shared';
+import type { DbStruct } from '@gaialabs/shared';
+import type { DbStringType } from '@gaialabs/shared';
 import { AsmReader } from './asm';
 import type { BlockReader } from './blocks';
 

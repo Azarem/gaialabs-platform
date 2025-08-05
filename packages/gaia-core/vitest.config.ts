@@ -1,6 +1,12 @@
 import { defineConfig } from 'vitest/config';
+import { resolve } from 'path';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@gaialabs/shared': resolve(__dirname, '../gaia-shared/src'),
+    },
+  },
   test: {
     chaiConfig: {
       truncateThreshold: 500,
@@ -11,4 +17,4 @@ export default defineConfig({
     },
     setupFiles: ['dotenv/config'],
   },
-}); 
+});

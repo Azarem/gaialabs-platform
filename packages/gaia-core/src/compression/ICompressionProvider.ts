@@ -1,6 +1,3 @@
-// Default page size constant
-const DEFAULT_PAGE_SIZE = 0x8000;
-
 /**
  * Interface for compression providers
  */

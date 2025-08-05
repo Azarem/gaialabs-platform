@@ -1,4 +1,4 @@
-import { AddressingMode } from 'gaia-shared';
+import { AddressingMode } from '@gaialabs/shared';
 
 /**
  * Represents a 65816 processor opcode

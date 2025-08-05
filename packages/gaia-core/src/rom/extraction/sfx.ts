@@ -1,5 +1,5 @@
-import { Address, BinType, DbRootUtils } from 'gaia-shared';
-import type { DbRoot } from 'gaia-shared';
+import { Address, BinType, DbRootUtils } from '@gaialabs/shared';
+import type { DbRoot } from '@gaialabs/shared';
 
 /**
  * Reads and extracts SFX data from ROM

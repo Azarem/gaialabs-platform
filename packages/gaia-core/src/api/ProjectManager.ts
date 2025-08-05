@@ -1,6 +1,6 @@
 import { RomProcessor } from './RomProcessor';
-import { ProjectRoot, type ProjectConfig } from '../rom/project';
-import type { DbRoot } from 'gaia-shared';
+import { type ProjectConfig } from '../rom/project';
+import type { DbRoot } from '@gaialabs/shared';
 import { RomState } from '../rom/state';
 
 /**

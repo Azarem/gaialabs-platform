@@ -1,8 +1,6 @@
 // Universal ROM processing engine for GaiaLabs
 // This is the main entry point for gaia-core
 
-// Unified high-level APIs
-export * from './api';
 
 // Core modules
 export * from './rom';
