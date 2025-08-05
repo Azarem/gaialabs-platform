@@ -11,6 +11,7 @@ out/
 .next/
 lib/
 !/packages/gaia-ui/src/lib/
+!/apps/gaia-translator/src/lib/
 
 # Development
 .env.local
