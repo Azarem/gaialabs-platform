@@ -16,12 +16,12 @@ import {
   RomProcessingConstants,
   TableEntry,
   createTableEntry
-} from 'gaia-shared';
-import type { StringWrapper } from 'gaia-shared';
-import type { DbRoot } from 'gaia-shared';
-import type { DbBlock } from 'gaia-shared';
-import type { DbPart } from 'gaia-shared';
-import { DbBlockUtils } from 'gaia-shared';
+} from '@gaialabs/shared';
+import type { StringWrapper } from '@gaialabs/shared';
+import type { DbRoot } from '@gaialabs/shared';
+import type { DbBlock } from '@gaialabs/shared';
+import type { DbPart } from '@gaialabs/shared';
+import { DbBlockUtils } from '@gaialabs/shared';
 import { indexOfAny } from '../../utils';
 
 /**

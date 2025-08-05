@@ -1,6 +1,6 @@
-import { DbBlock } from 'gaia-shared';
-import { TableEntry } from 'gaia-shared';
-import { StructDef, createWord } from 'gaia-shared';
+import { DbBlock } from '@gaialabs/shared';
+import { TableEntry } from '@gaialabs/shared';
+import { StructDef, createWord } from '@gaialabs/shared';
 import { BlockReader } from './blocks';
 import { ReferenceManager } from './references';
 

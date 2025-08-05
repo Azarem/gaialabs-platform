@@ -1,6 +1,6 @@
-import { AddressType, Address } from 'gaia-shared';
-import { BlockReaderConstants } from 'gaia-shared';
-import type { DbRoot } from 'gaia-shared';
+import { AddressType, Address } from '@gaialabs/shared';
+import { BlockReaderConstants } from '@gaialabs/shared';
+import type { DbRoot } from '@gaialabs/shared';
 
 /**
  * Manages references, chunks, and markers during ROM analysis

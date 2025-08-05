@@ -1,6 +1,6 @@
 import { ICompressionProvider } from '../../compression';
-import { BinType, DbRootUtils } from 'gaia-shared';
-import type { DbRoot } from 'gaia-shared';
+import { BinType, DbRootUtils } from '@gaialabs/shared';
+import type { DbRoot } from '@gaialabs/shared';
 
 /**
  * Reads and extracts files from ROM

@@ -8,7 +8,7 @@ export * from './ProjectManager';
 
 // Re-export commonly used types
 export type { ProjectConfig } from '../rom/project';
-export type { DbRoot } from 'gaia-shared';
+export type { DbRoot } from '@gaialabs/shared';
 export { RomState } from '../rom/state';
 export { QuintetLZ } from '../compression/QuintetLZ';
 export { SpriteMap } from '../sprites/SpriteMap';

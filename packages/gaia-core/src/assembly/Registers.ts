@@ -1,4 +1,4 @@
-import { StatusFlags } from 'gaia-shared';
+import { StatusFlags } from '@gaialabs/shared';
 import { Stack } from './Stack';
 
 /**

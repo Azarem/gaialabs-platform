@@ -1,10 +1,8 @@
-import { BinType } from 'gaia-shared';
-import type { DbRoot } from 'gaia-shared';
-import { readFileAsBinary } from 'gaia-shared';
+import type { DbRoot } from '@gaialabs/shared';
+import { readFileAsBinary } from '@gaialabs/shared';
 import { RomState } from '../rom/state';
 import { ProjectRoot, type ProjectConfig } from '../rom/project';
 import { QuintetLZ } from '../compression/QuintetLZ';
-import { SpriteMap } from '../sprites/SpriteMap';
 import { OpCodeUtils } from '../assembly/OpCode';
 
 /**
@@ -75,7 +73,6 @@ export class RomProcessor {
       fileCount: this.dbRoot.files.length,
       blockCount: this.dbRoot.blocks.length,
       compressionUsed: this.detectCompression(),
-      spriteMapFound: RomState.spriteMap !== null,
       opcodeStats: this.analyzeOpcodes()
     };
 
@@ -85,7 +82,7 @@ export class RomProcessor {
   /**
    * Extract files from ROM data
    */
-  public async extract(outputDir: string): Promise<ExtractionResult> {
+  public async extract(_outputDir: string): Promise<ExtractionResult> {
     if (!this.dbRoot || !this.romData) {
       throw new Error('ROM processor not initialized. Call initialize() first.');
     }
@@ -227,7 +224,6 @@ export interface RomAnalysisResult {
   fileCount: number;
   blockCount: number;
   compressionUsed: boolean;
-  spriteMapFound: boolean;
   opcodeStats: OpcodeStats;
 }
 

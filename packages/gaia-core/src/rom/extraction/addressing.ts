@@ -8,12 +8,12 @@ import {
   StatusFlags,
   createByte,
   createWord,
-} from 'gaia-shared';
+} from '@gaialabs/shared';
 import { RomDataReader } from './reader';
 import { StackOperations } from './stack';
 import { TransformProcessor } from './transforms';
 import { CopCommandProcessor } from './cop';
-import type { DbRoot, CopDef } from 'gaia-shared';
+import type { DbRoot, CopDef } from '@gaialabs/shared';
 import type { BlockReader } from './blocks';
 
 /**

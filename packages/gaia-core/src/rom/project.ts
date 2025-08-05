@@ -1,8 +1,8 @@
-import { BinType } from 'gaia-shared';
-import type { DbRoot } from 'gaia-shared';
-import { DbRootUtils } from 'gaia-shared';
-import type { DbPath } from 'gaia-shared';
-import { readJsonFile, readFileAsBinary, getDirectory } from 'gaia-shared';
+import { BinType } from '@gaialabs/shared';
+import type { DbRoot } from '@gaialabs/shared';
+import { DbRootUtils } from '@gaialabs/shared';
+import type { DbPath } from '@gaialabs/shared';
+import { readJsonFile, readFileAsBinary, getDirectory } from '@gaialabs/shared';
 import { QuintetLZ, type ICompressionProvider } from '../compression';
 import { FileReader, SfxReader, BlockReader, BlockWriter } from './extraction';
 
