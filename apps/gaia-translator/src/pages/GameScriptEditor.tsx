@@ -121,7 +121,7 @@ const GameScriptEditor = () => {
 
         // Set default region if available
         if (textRegionsData.length > 0) {
-          const coreRegion = textRegionsData.find(r => r.isCore);
+          const coreRegion = textRegionsData.find((r: TextRegion) => r.isCore);
           if (coreRegion && selectedRegion === 'NA-English') {
             setSelectedRegion(coreRegion.code);
           }
