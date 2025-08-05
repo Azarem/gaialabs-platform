@@ -10,6 +10,7 @@ build/
 out/
 .next/
 lib/
+!/packages/gaia-ui/src/lib/
 
 # Development
 .env.local
