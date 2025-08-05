@@ -21,7 +21,7 @@ jobs:
           node-version: 20
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter gaia-translator deploy
+      - run: pnpm --filter gaia-translator run deploy
         env:
           SFTP_HOST: ${{ secrets.SFTP_HOST }}
           SFTP_PORT: ${{ secrets.SFTP_PORT }}
