@@ -358,7 +358,7 @@ const GameScriptEditor = () => {
             <Globe className="w-4 h-4 text-muted-foreground" />
             <Select value={selectedRegion} onValueChange={setSelectedRegion}>
               <SelectTrigger className="w-48 bg-background border-input">
-                <SelectValue />
+                <SelectValue/>
               </SelectTrigger>
               <SelectContent className="bg-popover border-border max-h-60 overflow-y-auto">
                 {textRegions.map(region => (
