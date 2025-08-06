@@ -1,19 +1,13 @@
 @import "tailwindcss";
 
-/* Import fonts */
-@import "@fontsource/cinzel/400.css";
-@import "@fontsource/cinzel/600.css";
-@import "@fontsource/inter/400.css";
-@import "@fontsource/inter/500.css";
-@import "@fontsource/inter/600.css";
-@import "@fontsource/inter/700.css";
-@import "@fontsource/jetbrains-mono/400.css";
+/* Import fonts from Google Fonts CDN */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap');
 
 @theme {
   /* Typography */
-  --font-display: "Cinzel", serif;
-  --font-body: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-display: "Cinzel", "Times New Roman", "Georgia", serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", "Roboto", "Helvetica", sans-serif;
+  --font-mono: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
 
   /* Breakpoints */
   --breakpoint-3xl: 1920px;
