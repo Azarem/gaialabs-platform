@@ -44,9 +44,102 @@ export interface GameStringFilter {
   searchQuery?: string;
 }
 
-export async function fetchGameStrings(_filter: GameStringFilter = {}): Promise<UIGameString[]> {
-  const { data } = await supabase.from('GameString').select('*');
-  return (data as UIGameString[]) || [];
+export async function fetchGameStrings(filter: GameStringFilter = {}): Promise<UIGameString[]> {
+  const { 
+    selectedChapter, 
+    selectedGroup, 
+    selectedScene, 
+    selectedFile, 
+    searchQuery 
+  } = filter;
+
+  // Build the query with proper joins to get StringText data
+  let query = supabase
+    .from('GameString')
+    .select(`
+      id,
+      name,
+      sceneId,
+      chapterId,
+      fileId,
+      scene:Scene(id, name, groupId, group:SceneGroup(id, name)),
+      chapter:Chapter(id, name),
+      file:File(id, name),
+      texts:StringText(
+        id,
+        text,
+        region:TextRegion(code, name, isCore)
+      )
+    `)
+    .limit(200); // Add reasonable limit
+
+  // Apply filters
+  if (selectedChapter) {
+    query = query.eq('chapter.name', selectedChapter);
+  }
+  
+  if (selectedGroup) {
+    query = query.eq('scene.group.name', selectedGroup);
+  }
+  
+  if (selectedScene) {
+    query = query.eq('scene.name', selectedScene);
+  }
+  
+  if (selectedFile) {
+    query = query.eq('file.name', selectedFile);
+  }
+
+  if (searchQuery) {
+    query = query.or(`name.ilike.%${searchQuery}%, texts.text.ilike.%${searchQuery}%`);
+  }
+
+  const { data, error } = await query;
+  
+  if (error) {
+    console.error('Error fetching game strings:', error);
+    return [];
+  }
+
+  if (!data) return [];
+
+  // Transform to UIGameString format
+  return data.map(gameString => {
+    // Build texts mapping from region code to text
+    const texts: Record<string, string> = {};
+    if (gameString.texts) {
+      gameString.texts.forEach((stringText: any) => {
+        if (stringText.region) {
+          texts[stringText.region.code] = stringText.text;
+        }
+      });
+    }
+
+    // Handle records without scenes - group them as "Multiple"
+    // Note: Supabase returns joined data as arrays, so we take the first element
+    const scene = Array.isArray(gameString.scene) ? gameString.scene[0] : gameString.scene;
+    const file = Array.isArray(gameString.file) ? gameString.file[0] : gameString.file;
+    
+    let groupName = 'Multiple';
+    if (scene) {
+      const group = Array.isArray(scene.group) ? scene.group[0] : scene.group;
+      groupName = group?.name || 'Multiple';
+    }
+    
+    const sceneName = scene?.name || 'Multiple';
+    const fileName = file?.name || 'Unknown';
+
+    return {
+      id: gameString.id,
+      group: groupName,
+      scene: sceneName, 
+      file: fileName,
+      texts,
+      quality: 'pending' as const, // Default quality
+      contributors: 1, // Default contributors
+      lastEdit: 'Recently' // Default last edit
+    };
+  });
 }
 
 export async function fetchTextRegions(): Promise<TextRegion[]> {

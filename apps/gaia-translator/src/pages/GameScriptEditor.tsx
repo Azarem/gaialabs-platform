@@ -533,7 +533,7 @@ const GameScriptEditor = () => {
               <div className={`w-2 h-2 rounded-full ${str.quality === 'verified' ? 'bg-teal' : 'bg-accent'}`} />
             </div>
             <div className="text-sm text-foreground">
-              {(str.texts as any)[selectedRegion] || '<No translation>'}
+              {str.texts?.[selectedRegion] || '<No translation>'}
             </div>
             <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
               <span>{str.scene}</span>
@@ -555,7 +555,7 @@ const GameScriptEditor = () => {
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedString(str);
-                setEditingText({ [selectedRegion]: (str.texts as any)[selectedRegion] });
+                setEditingText({ [selectedRegion]: str.texts?.[selectedRegion] || '' });
               }}
             >
               <Edit3 className="w-4 h-4 text-muted-foreground hover:text-foreground" />
@@ -610,7 +610,7 @@ const GameScriptEditor = () => {
           <div className="w-full">
             {(() => {
               const region = textRegions.find(r => r.code === selectedRegion);
-              const text = selectedString.texts[selectedRegion] || '';
+              const text = selectedString.texts?.[selectedRegion] || '';
               const isEditing = editingText[selectedRegion] !== undefined;
 
               return (
@@ -760,17 +760,17 @@ const GameScriptEditor = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className={`${isMobile ? 'h-dvh' : 'h-screen'} flex flex-col bg-background overflow-hidden`}>
       <Header />
 
       {!isMobile && <FilterBar />}
 
-      <div className={`flex-1 flex ${isMobile ? 'flex-col' : ''} overflow-hidden`}>
-        <div className={`${isMobile ? 'flex-1' : 'w-1/2'} flex flex-col bg-card ${isMobile && selectedString ? 'hidden' : ''}`}>
+      <div className={`flex-1 flex ${isMobile ? 'flex-col' : ''} ${isMobile ? 'min-h-0' : 'overflow-hidden'}`}>
+        <div className={`${isMobile ? 'flex-1 min-h-0' : 'w-1/2'} flex flex-col bg-card ${isMobile && selectedString ? 'hidden' : ''}`}>
           <SearchBar />
           {isMobile && <FilterBar />}
 
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto touch-pan-y">
             {filteredStrings.length === 0 ? (
               <div className="flex items-center justify-center h-full text-muted-foreground">
                 <div className="text-center">
@@ -803,14 +803,14 @@ const GameScriptEditor = () => {
         )}
 
         {isMobile && selectedString && (
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0">
             <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3">
               <Button variant="ghost" size="icon" onClick={() => setSelectedString(null)}>
                 <ChevronLeft className="w-6 h-6" />
               </Button>
               <h2 className="font-semibold text-foreground">Preview</h2>
             </div>
-            <div className="flex-1 overflow-auto">
+            <div className="flex-1 overflow-auto touch-pan-y">
               <PreviewPanel />
             </div>
           </div>

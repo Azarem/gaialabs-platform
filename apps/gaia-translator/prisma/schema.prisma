@@ -155,8 +155,6 @@ model TextRegion {
   deletedOn   DateTime?
   deletedBy   User?    @relation("TextRegionDeletedBy", fields: [deletedById], references: [id])
   deletedById String?
-
-  @@map("text_regions")
 }
 
 // Different regions will have different text (seed from truth & chapter files)
