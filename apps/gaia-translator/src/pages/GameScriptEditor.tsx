@@ -236,14 +236,18 @@ const GameScriptEditor = () => {
   // Get available scenes for the selected group
   const availableScenes = useMemo(() => {
     if (!selectedGroup) return [];
-    return scenes.filter(scene => scene.group?.name === selectedGroup);
-  }, [scenes, selectedGroup]);
+    const group = sceneGroups.find(g => g.name === selectedGroup);
+    if (!group) return [];
+    return scenes.filter(scene => scene.groupId === group.id);
+  }, [scenes, selectedGroup, sceneGroups]);
 
   // Get available files for the selected scene
   const availableFiles = useMemo(() => {
     if (!selectedScene) return [];
-    return files.filter(file => file.scene?.name === selectedScene);
-  }, [files, selectedScene]);
+    const scene = scenes.find(s => s.name === selectedScene);
+    if (!scene) return [];
+    return files.filter(file => file.sceneId === scene.id);
+  }, [files, selectedScene, scenes]);
 
   // Reset dependent selections when parent selection changes
   useEffect(() => {

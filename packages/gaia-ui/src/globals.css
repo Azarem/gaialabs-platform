@@ -22,7 +22,7 @@
   --radius: 0.5rem;
 
   /* Light theme colors */
-  --color-background: oklch(0.98 0.02 220);
+  --color-background: oklch(0.98 0.02 201);
   --color-foreground: oklch(0.2 0.05 220);
   --color-card: oklch(1 0 0);
   --color-card-foreground: oklch(0.2 0.05 220);
@@ -129,16 +129,92 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: hsl(var(--border));
+    outline-color: hsl(var(--ring) / 0.5);
   }
+
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Enhanced base styles */
+  html {
+    scroll-behavior: smooth;
+  }
+
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display;
+    font-family: var(--font-display);
+    font-weight: 600;
   }
+
   code, pre {
-    @apply font-mono;
+    font-family: var(--font-mono);
+  }
+
+  h1 {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+
+  h4 {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+
+  h5 {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  h6 {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  @media (min-width: 1024px) {
+    h1 {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+    }
+
+    h2 {
+      font-size: 1.875rem;
+      line-height: 2.25rem;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 2rem;
+    }
+
+    h4 {
+      font-size: 1.25rem;
+      line-height: 1.75rem;
+    }
+
+    h5 {
+      font-size: 1.125rem;
+      line-height: 1.75rem;
+    }
+
+    h6 {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
   }
 }
 
@@ -207,4 +283,65 @@
     0 0 20px color-mix(in oklab, var(--color-accent) 40%, transparent),
     0 0 40px color-mix(in oklab, var(--color-accent) 30%, transparent),
     0 0 60px color-mix(in oklab, var(--color-accent) 20%, transparent);
+}
+
+/* Select component styles for proper dropdown behavior */
+/* FOCUS: Make corners actually ROUNDED first, then handle connections */
+
+/* Select trigger - make it properly rounded */
+[data-slot="select-trigger"] {
+  border-radius: 0.5rem !important;
+  background-color: hsl(var(--background));
+}
+
+/* Select trigger - only remove bottom corners when open */
+[data-slot="select-trigger"][data-state="open"] {
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+/* Select content - FORCE rounded corners */
+[data-slot="select-content"] {
+  background-color: hsl(var(--popover)) !important;
+  border-color: hsl(var(--border)) !important;
+  width: var(--radix-popper-anchor-width) !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+/* When dropdown opens below trigger - keep bottom corners rounded, remove top */
+[data-slot="select-content"][data-side="bottom"] {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  /* Keep these rounded */
+  border-bottom-left-radius: 0.5rem !important;
+  border-bottom-right-radius: 0.5rem !important;
+}
+
+/* When dropdown opens above trigger - keep top corners rounded, remove bottom */  
+[data-slot="select-content"][data-side="top"] {
+  /* Keep these rounded */
+  border-top-left-radius: 0.5rem !important;
+  border-top-right-radius: 0.5rem !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+/* Side dropdowns keep all corners rounded */
+[data-slot="select-content"][data-side="left"],
+[data-slot="select-content"][data-side="right"] {
+  border-radius: 0.5rem !important;
+}
+
+/* Select items - more x-padding */
+[data-slot="select-item"] {
+  padding-left: 1rem !important;
+  padding-right: 2.5rem !important;
+  background-color: transparent;
+}
+
+[data-slot="select-item"]:hover,
+[data-slot="select-item"][data-highlighted] {
+  background-color: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
 }

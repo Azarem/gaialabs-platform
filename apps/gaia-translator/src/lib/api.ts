@@ -53,7 +53,56 @@ export async function fetchGameStrings(filter: GameStringFilter = {}): Promise<U
     searchQuery 
   } = filter;
 
-  // Build the query with proper joins to get StringText data
+  // First, get the IDs we need for filtering
+  let chapterId: string | undefined;
+  let sceneIds: string[] = [];
+  let fileId: string | undefined;
+
+  // Get chapter ID if filtering by chapter
+  if (selectedChapter) {
+    const { data: chapters } = await supabase
+      .from('Chapter')
+      .select('id')
+      .eq('name', selectedChapter)
+      .single();
+    chapterId = chapters?.id;
+  }
+
+  // Get scene IDs if filtering by group or scene
+  if (selectedGroup || selectedScene) {
+    let sceneQuery = supabase.from('Scene').select('id, name, groupId');
+    
+    if (selectedGroup) {
+      // Get group ID first
+      const { data: groups } = await supabase
+        .from('SceneGroup')
+        .select('id')
+        .eq('name', selectedGroup)
+        .single();
+      if (groups) {
+        sceneQuery = sceneQuery.eq('groupId', groups.id);
+      }
+    }
+    
+    if (selectedScene) {
+      sceneQuery = sceneQuery.eq('name', selectedScene);
+    }
+    
+    const { data: scenes } = await sceneQuery;
+    sceneIds = scenes?.map(s => s.id) || [];
+  }
+
+  // Get file ID if filtering by file
+  if (selectedFile) {
+    const { data: files } = await supabase
+      .from('File')
+      .select('id')
+      .eq('name', selectedFile)
+      .single();
+    fileId = files?.id;
+  }
+
+  // Build the main query with proper joins
   let query = supabase
     .from('GameString')
     .select(`
@@ -62,7 +111,7 @@ export async function fetchGameStrings(filter: GameStringFilter = {}): Promise<U
       sceneId,
       chapterId,
       fileId,
-      scene:Scene(id, name, groupId, group:SceneGroup(id, name)),
+      scene:Scene(id, name, groupId),
       chapter:Chapter(id, name),
       file:File(id, name),
       texts:StringText(
@@ -73,25 +122,22 @@ export async function fetchGameStrings(filter: GameStringFilter = {}): Promise<U
     `)
     .limit(200); // Add reasonable limit
 
-  // Apply filters
-  if (selectedChapter) {
-    query = query.eq('chapter.name', selectedChapter);
+  // Apply direct ID-based filters
+  if (chapterId) {
+    query = query.eq('chapterId', chapterId);
   }
   
-  if (selectedGroup) {
-    query = query.eq('scene.group.name', selectedGroup);
+  if (sceneIds.length > 0) {
+    query = query.in('sceneId', sceneIds);
   }
   
-  if (selectedScene) {
-    query = query.eq('scene.name', selectedScene);
-  }
-  
-  if (selectedFile) {
-    query = query.eq('file.name', selectedFile);
+  if (fileId) {
+    query = query.eq('fileId', fileId);
   }
 
   if (searchQuery) {
-    query = query.or(`name.ilike.%${searchQuery}%, texts.text.ilike.%${searchQuery}%`);
+    // Search in game string name (text search in joined data is complex, start with name only)
+    query = query.ilike('name', `%${searchQuery}%`);
   }
 
   const { data, error } = await query;
@@ -116,16 +162,12 @@ export async function fetchGameStrings(filter: GameStringFilter = {}): Promise<U
     }
 
     // Handle records without scenes - group them as "Multiple"
-    // Note: Supabase returns joined data as arrays, so we take the first element
     const scene = Array.isArray(gameString.scene) ? gameString.scene[0] : gameString.scene;
     const file = Array.isArray(gameString.file) ? gameString.file[0] : gameString.file;
     
-    let groupName = 'Multiple';
-    if (scene) {
-      const group = Array.isArray(scene.group) ? scene.group[0] : scene.group;
-      groupName = group?.name || 'Multiple';
-    }
-    
+    // For group name, we'll need to get it from scene groups since we don't have it joined anymore
+    // For now, use 'Multiple' as default - we could enhance this later
+    const groupName = selectedGroup || 'Multiple';
     const sceneName = scene?.name || 'Multiple';
     const fileName = file?.name || 'Unknown';
 

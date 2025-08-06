@@ -125,7 +125,7 @@ document.documentElement.classList.toggle('dark');
 ### components.json
 - **Tailwind v4 Compatible**: Empty config path for v4
 - **CSS Variables Enabled**: `cssVariables: true`
-- **Correct Paths**: Updated to point to `src/styles/globals.css`
+- **Correct Paths**: Updated to point to `src/globals.css`
 
 ## Validation
 
