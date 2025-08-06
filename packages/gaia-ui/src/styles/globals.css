@@ -1,126 +1,80 @@
 @import "tailwindcss";
 
-/* Import fonts */
-/* Import fonts from Google Fonts CDN */
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap');
 
 @theme {
-  /* Typography */
-  --font-display: "Cinzel", "Times New Roman", "Georgia", serif;
-  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", "Roboto", "Helvetica", sans-serif;
-  --font-mono: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
+    --font-display: "Cinzel", "Times New Roman", "Georgia", serif;
+    --font-body: "Inter", system-ui, -apple-system, "Segoe UI", "Roboto", "Helvetica", sans-serif;
+    --font-mono: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;  
+}
 
-  /* Breakpoints */
-  --breakpoint-3xl: 1920px;
+:root {
+  /* GaiaLabs Theme System - Light Mode (Default) */
+  /* Inspired by the mystical world of Illusion of Gaia */
 
-  /* Border radius */
+  /* Primary - Deep cosmic blue */
+  --background: 210 40% 98%;
+  --foreground: 220 30% 20%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 30% 20%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 30% 20%;
+  --primary: 220 70% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 270 50% 65%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 43 85% 55%;
+  --accent-foreground: 220 30% 20%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 220 70% 50%;
   --radius: 0.5rem;
 
-  /* Light theme colors */
-  --color-background: oklch(0.98 0.02 201);
-  --color-foreground: oklch(0.2 0.05 220);
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.2 0.05 220);
-  --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.2 0.05 220);
-  --color-primary: oklch(0.5 0.15 220);
-  --color-primary-foreground: oklch(1 0 0);
-  --color-secondary: oklch(0.65 0.1 270);
-  --color-secondary-foreground: oklch(1 0 0);
-  --color-muted: oklch(0.96 0.02 210);
-  --color-muted-foreground: oklch(0.47 0.03 215);
-  --color-accent: oklch(0.55 0.15 43);
-  --color-accent-foreground: oklch(0.2 0.05 220);
-  --color-destructive: oklch(0.51 0.15 0);
-  --color-destructive-foreground: oklch(0.98 0 0);
-  --color-border: oklch(0.91 0.02 214);
-  --color-input: oklch(0.91 0.02 214);
-  --color-ring: oklch(0.5 0.15 220);
-
-  /* Custom Gaia colors */
-  --color-gaia-cosmos: oklch(0.18 0.08 235);
-  --color-gaia-stardust: oklch(0.88 0.12 45);
-  --color-gaia-mystic: oklch(0.75 0.08 280);
-  --color-gaia-coral: oklch(0.7 0.1 350);
-  --color-gaia-teal: oklch(0.45 0.08 180);
-
-  /* Custom animations */
-  --animate-shimmer: shimmer 2s infinite;
-  --animate-glow: glow 2s ease-in-out infinite;
-  --animate-float: float 3s ease-in-out infinite;
-  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+  /* Additional Gaia-inspired colors */
+  --cosmos: 235 60% 18%;
+  --stardust: 45 90% 88%;
+  --mystic: 280 45% 75%;
+  --coral: 350 60% 70%;
+  --teal: 180 50% 45%;
 }
 
-@media (prefers-color-scheme: dark) {
-  @theme {
-    /* Dark theme colors */
-    --color-background: oklch(0.12 0.08 235);
-    --color-foreground: oklch(0.98 0.02 210);
-    --color-card: oklch(0.15 0.06 235);
-    --color-card-foreground: oklch(0.98 0.02 210);
-    --color-popover: oklch(0.15 0.06 235);
-    --color-popover-foreground: oklch(0.98 0.02 210);
-    --color-primary: oklch(0.6 0.18 220);
-    --color-primary-foreground: oklch(0.98 0 0);
-    --color-secondary: oklch(0.7 0.12 270);
-    --color-secondary-foreground: oklch(0.98 0 0);
-    --color-muted: oklch(0.2 0.05 235);
-    --color-muted-foreground: oklch(0.65 0.03 215);
-    --color-accent: oklch(0.65 0.18 43);
-    --color-accent-foreground: oklch(0.1 0.05 220);
-    --color-destructive: oklch(0.6 0.15 0);
-    --color-destructive-foreground: oklch(0.98 0 0);
-    --color-border: oklch(0.25 0.05 235);
-    --color-input: oklch(0.25 0.05 235);
-    --color-ring: oklch(0.6 0.18 220);
+.dark {
+  /* GaiaLabs Theme System - Dark Mode */
 
-    /* Custom Gaia colors - dark mode */
-    --color-gaia-cosmos: oklch(0.08 0.1 235);
-    --color-gaia-stardust: oklch(0.75 0.15 45);
-    --color-gaia-mystic: oklch(0.8 0.1 280);
-    --color-gaia-coral: oklch(0.75 0.12 350);
-    --color-gaia-teal: oklch(0.5 0.1 180);
-  }
+  /* Primary - Bright cosmic blue */
+  --background: 235 60% 12%;
+  --foreground: 210 40% 98%;
+  --card: 235 50% 15%;
+  --card-foreground: 210 40% 98%;
+  --popover: 235 50% 15%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 220 90% 60%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 270 60% 70%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 235 40% 20%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 43 90% 65%;
+  --accent-foreground: 220 30% 10%;
+  --destructive: 0 63% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 235 40% 25%;
+  --input: 235 40% 25%;
+  --ring: 220 90% 60%;
+
+  /* Additional Gaia-inspired colors - Dark variants */
+  --cosmos: 235 70% 8%;
+  --stardust: 45 80% 75%;
+  --mystic: 280 55% 80%;
+  --coral: 350 70% 75%;
+  --teal: 180 60% 50%;
 }
 
-/* Custom utilities */
-@utility container {
-  margin-inline: auto;
-  padding-inline: 2rem;
-  max-width: 1400px;
-}
-
-/* Custom keyframes */
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-@keyframes glow {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px color-mix(in oklab, var(--color-primary) 50%, transparent);
-  }
-  50% {
-    box-shadow: 0 0 30px color-mix(in oklab, var(--color-primary) 80%, transparent),
-                0 0 50px color-mix(in oklab, var(--color-primary) 50%, transparent);
-  }
-}
+/* Remove @theme inline for now - using traditional approach */
 
 @layer base {
   * {
@@ -142,12 +96,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-display);
     font-weight: 600;
-  }
-
-  code, pre {
-    font-family: var(--font-mono);
   }
 
   h1 {
@@ -210,6 +159,66 @@
       font-size: 1rem;
       line-height: 1.5rem;
     }
+  }
+}
+
+@layer components {
+  /* Remove legacy @apply classes that don't work in Tailwind v4 */
+  /* Using shadcn components instead */
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+
+/* Custom utilities */
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  max-width: 1400px;
+}
+
+/* Custom keyframes */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes glow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px color-mix(in oklab, var(--color-primary) 50%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 30px color-mix(in oklab, var(--color-primary) 80%, transparent),
+                0 0 50px color-mix(in oklab, var(--color-primary) 50%, transparent);
   }
 }
 

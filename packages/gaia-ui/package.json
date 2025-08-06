@@ -87,7 +87,7 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
-    "./globals.css": "./src/globals.css",
+    "./globals.css": "./src/styles/globals.css",
     "./components": {
       "types": "./dist/components/index.d.ts",
       "import": "./dist/components/index.mjs",
