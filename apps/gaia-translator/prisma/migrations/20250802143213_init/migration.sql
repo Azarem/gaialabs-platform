@@ -69,7 +69,7 @@ CREATE TABLE "GameString" (
 );
 
 -- CreateTable
-CREATE TABLE "text_regions" (
+CREATE TABLE "TextRegion" (
     "id" TEXT NOT NULL,
     "code" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -84,7 +84,7 @@ CREATE TABLE "text_regions" (
     "deletedOn" TIMESTAMP(3),
     "deletedById" TEXT,
 
-    CONSTRAINT "text_regions_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "TextRegion_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -163,10 +163,10 @@ CREATE INDEX "GameString_chapterId_idx" ON "GameString"("chapterId");
 CREATE INDEX "GameString_fileId_idx" ON "GameString"("fileId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "text_regions_code_key" ON "text_regions"("code");
+CREATE UNIQUE INDEX "TextRegion_code_key" ON "TextRegion"("code");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "text_regions_name_key" ON "text_regions"("name");
+CREATE UNIQUE INDEX "TextRegion_name_key" ON "TextRegion"("name");
 
 -- CreateIndex
 CREATE INDEX "StringText_stringId_idx" ON "StringText"("stringId");
@@ -202,19 +202,19 @@ ALTER TABLE "GameString" ADD CONSTRAINT "GameString_chapterId_fkey" FOREIGN KEY 
 ALTER TABLE "GameString" ADD CONSTRAINT "GameString_fileId_fkey" FOREIGN KEY ("fileId") REFERENCES "File"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "text_regions" ADD CONSTRAINT "text_regions_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TextRegion" ADD CONSTRAINT "TextRegion_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "text_regions" ADD CONSTRAINT "text_regions_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "TextRegion" ADD CONSTRAINT "TextRegion_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "text_regions" ADD CONSTRAINT "text_regions_deletedById_fkey" FOREIGN KEY ("deletedById") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "TextRegion" ADD CONSTRAINT "TextRegion_deletedById_fkey" FOREIGN KEY ("deletedById") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "StringText" ADD CONSTRAINT "StringText_stringId_fkey" FOREIGN KEY ("stringId") REFERENCES "GameString"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StringText" ADD CONSTRAINT "StringText_regionId_fkey" FOREIGN KEY ("regionId") REFERENCES "text_regions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "StringText" ADD CONSTRAINT "StringText_regionId_fkey" FOREIGN KEY ("regionId") REFERENCES "TextRegion"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "StringText" ADD CONSTRAINT "StringText_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -37,6 +37,24 @@ interface FileInfo {
   content: string;
   strings: ParsedString[];
 }
+// Resolve patches directory relative to current working directory in common monorepo layouts
+const ASM_CANDIDATE_PATHS = [
+  path.resolve(process.cwd(), 'truth/asm'),
+  path.resolve(process.cwd(), '../../truth/asm'),
+  path.resolve(process.cwd(), '../../../truth/asm'),
+]
+
+async function resolveAsmDirectory(): Promise<string> {
+  for (const candidate of ASM_CANDIDATE_PATHS) {
+    try {
+      const stat = await fs.promises.stat(candidate)
+      if (stat.isDirectory()) return candidate
+    } catch {
+      // try next candidate
+    }
+  }
+  throw new Error(`Could not locate asm directory. Tried: ${ASM_CANDIDATE_PATHS.join(', ')}`)
+}
 
 /**
  * Recursively scan directory for .asm files
@@ -494,9 +512,11 @@ async function main() {
     const textRegionId = await ensureDefaultTextRegion(adminUser.id);
     console.log(`✅ Created string types and default text region`);
 
+    const asmDirectory = await resolveAsmDirectory();
+
     // Step 4: Scan directory for .asm files
-    console.log(`📂 Scanning directory: ${ASM_DIRECTORY}`);
-    const asmFiles = await scanDirectory(ASM_DIRECTORY);
+    console.log(`📂 Scanning directory: ${asmDirectory}`);
+    const asmFiles = await scanDirectory(asmDirectory);
     stats.filesScanned = asmFiles.length;
     console.log(`✅ Found ${asmFiles.length} .asm files`);
 
