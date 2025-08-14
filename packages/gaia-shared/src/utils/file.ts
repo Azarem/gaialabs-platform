@@ -138,10 +138,10 @@ export async function fileExists(path: string): Promise<boolean> {
  * @param filePath File path
  * @returns string
  */
-export function getDirectory(filePath: string): string {
+export async function getDirectory(filePath: string): Promise<string> {
   if (isNode) {
     // Node.js environment
-    const path = require('path');
+    const path = await import('path');
     return path.dirname(path.resolve(filePath));
   } else {
     // Browser environment

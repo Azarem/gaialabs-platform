@@ -11,6 +11,7 @@ export interface DbConfig {
   sfxLocation: number;
   sfxCount: number;
   accentMap: string[];
+  compression: string;
   asmFormats: Record<AddressingMode, string>;
   entryPoints: DbEntryPoint[];
   paths: Record<BinType, DbPath>;

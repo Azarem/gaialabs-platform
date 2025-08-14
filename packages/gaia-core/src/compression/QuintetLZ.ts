@@ -1,5 +1,4 @@
-import { BitStream } from '@gaialabs/shared';
-import { ICompressionProvider } from './ICompressionProvider';
+import { BitStream, type ICompressionProvider } from '@gaialabs/shared';
 
 /**
  * QuintetLZ compression algorithm implementation

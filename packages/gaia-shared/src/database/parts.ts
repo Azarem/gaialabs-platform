@@ -6,32 +6,14 @@
 export interface DbPart {
   name: string;
   start: number;
-  end: number;
+  //end: number;
   struct: string;
   bank?: number;
   block: string;
+  size: number;
   
   // Internal references (handled by database root)
-  _block?: any; // DbBlock reference
-  includes?: Set<DbPart>;
-  objectRoot?: unknown;
+  //_block?: any; // DbBlock reference
+  //includes?: Set<DbPart>;
+  //objectRoot?: unknown;
 }
-
-/**
- * Database part utilities
- */
-export class DbPartUtils {
-  /**
-   * Check if a location is inside this part
-   */
-  static isInside(part: DbPart, location: number): boolean {
-    return location >= part.start && location < part.end;
-  }
-
-  /**
-   * Check if a location is outside this part
-   */
-  static isOutside(part: DbPart, location: number): boolean {
-    return location < part.start || location >= part.end;
-  }
-} 

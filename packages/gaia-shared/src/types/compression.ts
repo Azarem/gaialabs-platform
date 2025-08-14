@@ -17,4 +17,4 @@ export interface ICompressionProvider {
    * @returns Compressed data
    */
   compact(srcData: Uint8Array): Uint8Array;
-} 
+}

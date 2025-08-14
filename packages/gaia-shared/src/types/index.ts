@@ -10,6 +10,8 @@ export * from './assembly';
 
 // Core type exports
 export * from './bitstream';
+export * from './compression';
+export * from './compression-registry';
 export * from './constants';
 export * from './files';
 export * from './location';

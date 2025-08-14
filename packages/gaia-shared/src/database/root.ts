@@ -1,5 +1,7 @@
 import { BinType } from '../types/resources';
 import { readJsonFile } from '../utils';
+import type { ICompressionProvider } from '../types/compression';
+import { CompressionRegistry } from '../types/compression-registry';
 import type { DbBlock } from './blocks';
 import type { DbConfig } from './config';
 import type { DbEntryPoint } from './entrypoints';
@@ -37,6 +39,7 @@ export interface DbRoot {
   entryPoints: DbEntryPoint[];
   opCodes: Record<number, any>; // OpCode type (from gaia-core/assembly)
   opLookup: Record<string, any[]>; // OpCode[] type (from gaia-core/assembly)
+  compression: ICompressionProvider;
 }
 
 /**
@@ -120,6 +123,8 @@ export class DbRootUtils {
       strType.layers = stringLayers.filter(x => x.type === strType.name);
     }
 
+    const compression = CompressionRegistry.get(cfg.compression || 'QuintetLZ');
+
     // Build the database root
     const root: DbRoot = {
       mnemonics: mnemonics.reduce((acc, x) => {
@@ -172,16 +177,9 @@ export class DbRootUtils {
       stringCharLookup: stringTypes.reduce((acc, x) => {
         acc[x.delimiter] = x;
         return acc;
-      }, {} as Record<string, DbStringType>)
+      }, {} as Record<string, DbStringType>),
+      compression
     };
-
-    // Set root references in blocks and initialize per-block mnemonic maps
-    for (const block of blocks) {
-      block.root = root;
-      if (!block.mnemonics) {
-        block.mnemonics = {};
-      }
-    }
 
     return root;
   }

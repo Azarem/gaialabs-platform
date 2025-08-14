@@ -1,10 +1,10 @@
 import { BinType } from '@gaialabs/shared';
-import type { DbRoot } from '@gaialabs/shared';
 import { DbRootUtils } from '@gaialabs/shared';
 import type { DbPath } from '@gaialabs/shared';
 import { readJsonFile, readFileAsBinary, getDirectory } from '@gaialabs/shared';
-import { QuintetLZ, type ICompressionProvider } from '../compression';
-import { FileReader, SfxReader, BlockReader, BlockWriter } from './extraction';
+import { createChunkFile, type ChunkFile } from '@gaialabs/shared';
+import '../compression'; // Import to ensure compression providers are registered
+import { BlockReader, BlockWriter } from './extraction';
 
 /**
  * Main project management class
@@ -54,19 +54,6 @@ export class ProjectRoot {
   }
 
   /**
-   * Get compression provider
-   */
-  public getCompression(): ICompressionProvider {
-    const compressionType = this.compression || 'QuintetLZ';
-    
-    switch (compressionType) {
-      case 'QuintetLZ':
-      default:
-        return new QuintetLZ();
-    }
-  }
-
-  /**
    * Load project from file or directory
    */
   public static async load(path?: string): Promise<ProjectRoot> {
@@ -78,7 +65,7 @@ export class ProjectRoot {
       
       // Set default values
       if (!config.baseDir) {
-        config.baseDir = getDirectory(path);
+        config.baseDir = await getDirectory(path);
       }
       
       //if (!config.database) {
@@ -112,39 +99,29 @@ export class ProjectRoot {
   /**
    * Build the ROM (simplified)
    */
-  public async build(): Promise<void> {
-    // TODO: Implement ROM building when RomWriter is available
-    throw new Error('ROM building not yet implemented');
+  public async build(files: ChunkFile[]): Promise<void> {
+    // Build ROM using rebuild writer
+    const root = await DbRootUtils.fromFolder(this.databasePath!, this.systemPath!);
+    const { RomWriter } = await import('./rebuild');
+    const writer = new RomWriter(this, root);
+    await writer.repack(files);
   }
 
   /**
-   * Dump database and extract ROM data
+   * Dump database and extract ROM data with comprehensive assembly processing
    */
-  public async dumpDatabase(): Promise<DbRoot> {
-    // Load database from folder structure
+  public async dumpDatabase(): Promise<ChunkFile[]> {
+    // Load database and ROM data
     const root = await DbRootUtils.fromFolder(this.databasePath!, this.systemPath!);
-    
-    // Load ROM data using shared utility
-    const data = await readFileAsBinary(this.romPath);
-    
+    const rom = await readFileAsBinary(this.romPath);
     root.paths = this.resources;
 
-    // Extract files from ROM data
-    const fileReader = new FileReader(data, root, this.getCompression());
-    await fileReader.extract(this.baseDir);
+    const chunkReader = new BlockReader(rom, root);
+    const chunkFiles = chunkReader.analyzeAndResolve();
 
-    // Extract sound effects
-    const sfxReader = new SfxReader(data, root);
-    await sfxReader.extract(this.baseDir);
+    const blockWriter = new BlockWriter(chunkReader);
+    const writtenFiles = blockWriter.generateAllAsm(chunkFiles);
 
-    // Process blocks - analyze and resolve ROM structure
-    const blockReader = new BlockReader(data, root);
-    blockReader.analyzeAndResolve();
-    
-    // Write processed blocks to assembly files
-    const blockWriter = new BlockWriter(blockReader);
-    await blockWriter.writeBlocks(this.baseDir);
-
-    return root;
+    return chunkFiles;
   }
 } 

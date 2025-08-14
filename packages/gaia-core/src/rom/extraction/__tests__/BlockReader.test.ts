@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { createReadStream } from 'fs';
 import unzipper from 'unzipper';
-import { readFileAsText } from '@gaialabs/shared';
+import { readFileAsText, ChunkFile, BinType } from '@gaialabs/shared';
 import { DbRootUtils } from '@gaialabs/shared';
 import { BlockReader } from '../blocks';
 import { BlockWriter } from '../writer';
@@ -9,6 +9,8 @@ import { BlockWriter } from '../writer';
 describe('BlockReader', () => {
   let reader: BlockReader;
   let writer: BlockWriter;
+  let chunkFiles: ChunkFile[];
+  let asmFiles: ChunkFile[];
 
   beforeAll(async () => {
     const data = await new Promise<Buffer>((resolve, reject) => {
@@ -46,25 +48,26 @@ describe('BlockReader', () => {
 
   describe('BlockReader.analyzeAndResolve', () => {
     it('should analyze and resolve the blocks', () => {
-      reader.analyzeAndResolve();
+      chunkFiles = reader.analyzeAndResolve();
     });
 
     it('should have a valid blocks list', () => {
-      expect(reader._root.blocks).toBeDefined();
-      expect(reader._root.blocks.length).toBeGreaterThan(0);
+      expect(chunkFiles).toBeDefined();
+      expect(chunkFiles.length).toBeGreaterThan(0);
     });
 
     it('should be filled with arrays that have at least one element', () => {
-      expect(reader._root.blocks.filter(b => Array.isArray(b.parts) && b.parts.length > 0 &&
-        b.parts.filter(p => Array.isArray(p.objectRoot) && p.objectRoot.length > 0
-          && p.objectRoot.every(o => o.location > 0 && !!o.object)).length == b.parts.length
-      ).length).toEqual(reader._root.blocks.length);
+      asmFiles = chunkFiles.filter(b => b.type === BinType.Assembly);
+      expect(asmFiles.filter(b => Array.isArray(b.parts) && b.parts.length > 0 &&
+        b.parts.filter(p => Array.isArray(p.objList) && p.objList.length > 0
+          && p.objList.every(o => o.location > 0 && !!o.object)).length == b.parts.length
+      ).length).toEqual(asmFiles.length);
     });
   });
 
   describe('BlockReader ASM content', () => {
     it('should pass multiple sources of truth', async () => {
-      for(const block of reader._root.blocks) {
+      for(const block of asmFiles) {
         const asm = writer.generateAsm(block);
         const truthPath = `../../truth/asm/${block.group ? (block.group + '/') : ''}${block.name}.asm`;
         console.log(`Validating content of "${truthPath}" vs "${truthPath.replace('truth', 'working')}"`);

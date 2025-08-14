@@ -6,7 +6,7 @@ import {
   Address,
   AddressSpace,
   AddressType,
-  DbBlockUtils,
+  ChunkFileUtils,
   LocationWrapper,
   MemberType,
   StructDef,
@@ -121,7 +121,7 @@ export class TypeParser {
 
         // Parse each member of the struct
         for (let i = 0; i < memberCount; i++) {
-          parts[i] = this.parseType(types[i], null, depth + 1);
+          parts[i] = this.parseType(types[i], null, depth + 1, bank);
         }
 
         // Advance (hide) discriminator if it is the last member
@@ -218,12 +218,12 @@ export class TypeParser {
 
     // If the location is inside the current block and there is no rewrite for it...
     if (
-      this._blockReader._currentBlock &&
-      DbBlockUtils.isInside(this._blockReader._currentBlock, loc) &&
+      this._blockReader._currentChunk &&
+      ChunkFileUtils.isInside(this._blockReader._currentChunk, loc) &&
       !this._blockReader._root.rewrites[loc]
     ) {
       // Normalize the type name to default to current part definition
-      const resolvedTypeName = typeName ?? this._blockReader._currentPart?.struct ?? 'Binary';
+      const resolvedTypeName = typeName ?? this._blockReader._currentAsmBlock!.structName ?? 'Binary';
 
       // Add the struct type to our chunk table if it is not already present
       this._referenceManager.tryAddStruct(loc, resolvedTypeName);
@@ -251,7 +251,7 @@ export class TypeParser {
 
       // Process register adjustments before parse
       if (reg) {
-        this._blockReader.HydrateRegisters(reg);
+        this._blockReader.hydrateRegisters(reg);
       }
 
       // Parse instruction

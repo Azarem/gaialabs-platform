@@ -1,27 +1,16 @@
-import { promises as fs } from 'fs';
-import { join, dirname } from 'path';
 import { Op } from '../../assembly/Op';
-import { AddressingMode, TypedNumber } from '@gaialabs/shared';
+import { AddressingMode, AsmBlock, ChunkFile, ChunkFileUtils, TypedNumber } from '@gaialabs/shared';
 import { 
-  DbRoot, 
-  DbPart, 
-  DbBlock,
-  DbBlockUtils
-} from '@gaialabs/shared';
-import { 
-  BinType, 
+  DbRoot,
   AddressType, 
   MemberType,
   AddressSpace,
-  XformDef,
-  XformType,
   TableEntry,
   StructDef,
   StringWrapper,
   LocationWrapper,
   Address
 } from '@gaialabs/shared';
-import { DbRootUtils } from '@gaialabs/shared';
 import { BlockReader } from './blocks';
 import { ReferenceManager } from './references';
 import { PostProcessor } from './postprocessor';
@@ -49,7 +38,7 @@ export class BlockWriter {
   private _referenceManager: ReferenceManager;
   private _postProcessor: PostProcessor;
   private _isInline: boolean = false;
-  private _currentPart: DbPart | null = null;
+  private _currentPart: AsmBlock | null = null;
 
   constructor(reader: BlockReader) {
     this._blockReader = reader;
@@ -58,44 +47,60 @@ export class BlockWriter {
     this._postProcessor = new PostProcessor(reader);
   }
 
-  async writeBlocks(outPath: string): Promise<void> {
-    const res = DbRootUtils.getPath(this._root, BinType.Assembly);
+  // async writeBlocks(outPath: string): Promise<void> {
+  //   const res = DbRootUtils.getPath(this._root, BinType.Assembly);
 
-    const folderPath = join(outPath, res.folder);
+  //   const folderPath = join(outPath, res.folder);
 
-    for (const block of this._root.blocks) {
-      const groupedFolderPath = block.group 
-        ? join(folderPath, block.group)
-        : folderPath;
+  //   for (const block of this._root.blocks) {
+  //     const groupedFolderPath = block.group 
+  //       ? join(folderPath, block.group)
+  //       : folderPath;
       
-      await fs.mkdir(groupedFolderPath, { recursive: true });
+  //     await fs.mkdir(groupedFolderPath, { recursive: true });
 
-      const outFile = join(groupedFolderPath, `${block.name}.${res.extension}`);
+  //     const outFile = join(groupedFolderPath, `${block.name}.${res.extension}`);
       
-      // Check if file exists, skip if it does
-      try {
-        await fs.access(outFile);
-        continue;
-      } catch {
-        // File doesn't exist, continue with creation
-      }
+  //     // Check if file exists, skip if it does
+  //     try {
+  //       await fs.access(outFile);
+  //       continue;
+  //     } catch {
+  //       // File doesn't exist, continue with creation
+  //     }
 
-      const content = this.generateAsm(block);
+  //     const content = this.generateAsm(block);
       
-      await fs.writeFile(outFile, content);
+  //     await fs.writeFile(outFile, content);
+  //   }
+  // }
+
+  generateAllAsm(chunkFiles: ChunkFile[]): any[] {
+    const lines: any[] = [];
+    for (const block of chunkFiles) {
+      lines.push({
+        name: block.name,
+        group: block.group,
+        text: this.generateAsm(block)
+      });
     }
+    return lines;
   }
 
-  generateAsm(block: DbBlock): string{
+  generateAsm(block: ChunkFile): string{
+    if(!block.parts) {
+      throw new Error('Invalid block structure for generateAsm');
+    }
+
     const lines: string[] = [];
 
     // Write bank information if not movable
-    if (!block.movable && block.parts.length > 0) {
-      lines.push(`?BANK ${(block.parts[0].start >> 16).toString(16).toUpperCase().padStart(2, '0')}`);
+    if (block.bank !== undefined) {
+      lines.push(`?BANK ${block.bank.toString(16).toUpperCase().padStart(2, '0')}`);
     }
 
     // Write includes - these should be from the block's include list
-    const includes = DbBlockUtils.getIncludes(block);
+    const includes = ChunkFileUtils.getIncludes(block);
     if (includes && includes.length > 0) {
       lines.push('');
       for (const inc of includes) {
@@ -117,14 +122,14 @@ export class BlockWriter {
     this._postProcessor.process(block);
 
     // Process each part
-    for (const part of block.parts) {
+    for (const part of block.parts || []) {
       this._currentPart = part;
       this._isInline = true;
 
       lines.push('');
       lines.push('---------------------------------------------');
 
-      const objectLines = this.writeObject(part.objectRoot, -1);
+      const objectLines = this.writeObject(part.objList, -1);
       lines.push(...objectLines);
     }
 
@@ -147,7 +152,7 @@ export class BlockWriter {
     return content;
   };
 
-  private getMnemonicsForBlock(block: DbBlock): [string, number][] {
+  private getMnemonicsForBlock(block: ChunkFile): [string, number][] {
     if (!block.mnemonics) {
       return [];
     }
@@ -565,7 +570,7 @@ export class BlockWriter {
 
   private writeArray(arr: any[], depth: number): string[] {
     const lines: string[] = [];
-    const indent = '  '.repeat(depth);
+    const indent = '  '.repeat(Math.max(0, depth));
     const isInline = this._isInline;
     lines.push('[');
     this._isInline = false; // start elements on their own lines

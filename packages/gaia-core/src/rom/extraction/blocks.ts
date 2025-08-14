@@ -15,14 +15,21 @@ import {
   BlockReaderConstants,
   RomProcessingConstants,
   TableEntry,
-  createTableEntry
+  createTableEntry,
+  BinType,
+  AsmBlock,
+  createChunkFileFromDbFile,
+  createChunkFileFromDbBlock,
 } from '@gaialabs/shared';
-import type { StringWrapper } from '@gaialabs/shared';
+import type { DbFile, StringWrapper } from '@gaialabs/shared';
 import type { DbRoot } from '@gaialabs/shared';
 import type { DbBlock } from '@gaialabs/shared';
 import type { DbPart } from '@gaialabs/shared';
-import { DbBlockUtils } from '@gaialabs/shared';
+import { ChunkFile, createChunkFile, ChunkFileUtils } from '@gaialabs/shared';
 import { indexOfAny } from '../../utils';
+import { registerCompressionProviders } from '../../compression/registry'
+
+registerCompressionProviders();
 
 /**
  * Central class for reading and analyzing ROM blocks
@@ -79,10 +86,15 @@ export class BlockReader {
     return this._referenceManager.nameTable;
   }
 
-  // Current Processing State
-  public _currentBlock!: DbBlock;
-  public _currentPart: DbPart | null = null;
+  // Current Processing State (Database)
+  //public _currentBlock!: DbBlock;
+  //public _currentPart: DbPart | null = null;
   public _partEnd: number = 0;
+  
+  // ChunkFile Processing State
+  public _currentChunk: ChunkFile | null = null;
+  public _currentAsmBlock: AsmBlock | null = null;
+  public _enrichedChunks: ChunkFile[] = [];
 
   constructor(romData: Uint8Array, root: DbRoot) {
     this._romDataReader = new RomDataReader(romData);
@@ -153,9 +165,7 @@ export class BlockReader {
     }
 
     // Add to current block's mnemonics
-    if (this._currentBlock.mnemonics) {
-      this._currentBlock.mnemonics[offset] = label.substring(0, ix >= 0 ? ix : label.length);
-    }
+    this._currentChunk!.mnemonics[offset] = label.substring(0, ix >= 0 ? ix : label.length);
   }
 
   /**
@@ -169,10 +179,9 @@ export class BlockReader {
    * Resolves include for a location
    */
   public resolveInclude(loc: number, isBranch: boolean): void {
-    const [outside, foundPart] = DbBlockUtils.isOutsideWithPart(this._currentBlock, loc);
-    if (outside && foundPart && this._currentPart) {
-      this._currentPart.includes = this._currentPart.includes || new Set();
-      this._currentPart.includes.add(foundPart);
+    const [outside, foundBlock, foundPart] = ChunkFileUtils.isOutsideWithPart(this._enrichedChunks, this._currentChunk!, loc);
+    if (outside && foundBlock && foundPart) {
+      this._currentAsmBlock!.includes!.add({block: foundBlock, part: foundPart});
     } else if (isBranch && !this._referenceManager.tryGetName(loc).found) {
       const name = `loc_${loc.toString(16).toUpperCase().padStart(6, '0')}`;
       this._referenceManager.tryAddName(loc, name);
@@ -243,37 +252,41 @@ export class BlockReader {
            !this._referenceManager.containsStruct(this._romDataReader.position);
   }
 
-  /**
-   * Main analysis entry point
-   */
-  public analyzeAndResolve(): void {
-    this.analyzeBlocks();
+  public analyzeAndResolve(): ChunkFile[] {
+    this.createChunkFilesFromDatabase();
+    this.initializeBlocksAndParts();
+    this.analyzeChunkFiles();
     this.resolveReferences();
+    
+    return this._enrichedChunks;
   }
 
   /**
    * Analyzes all blocks in the ROM
    */
-  private analyzeBlocks(): void {
-    this.initializeBlocksAndParts();
+  // private analyzeBlocks(): void {
+  //   this.initializeBlocksAndParts();
 
-    for (const block of this._root.blocks) {
-      this._currentBlock = block;
-      for (const part of block.parts) {
-        this.processPart(part);
-      }
-    }
-  }
+  //   for (const chunk of this._enrichedChunks) {
+  //     this._currentChunk = chunk;
+  //     for (const part of chunk.parts || []) {
+  //       this.processPart(part);
+  //     }
+  //   }
+  // }
 
   /**
    * Initializes blocks and parts with base references
    */
   private initializeBlocksAndParts(): void {
-    for (const block of this._root.blocks) {
-      for (const part of block.parts) {
-        part.includes = new Set();
-        this._referenceManager.tryAddStruct(part.start, part.struct);
-        this._referenceManager.tryAddName(part.start, part.name);
+    for (const block of this._enrichedChunks) {
+      for (const part of block.parts || []) {
+        if(part.structName) {
+          this._referenceManager.tryAddStruct(part.location, part.structName);
+        }
+        if(part.label) {
+          this._referenceManager.tryAddName(part.location, part.label);
+        }
       }
     }
   }
@@ -281,12 +294,12 @@ export class BlockReader {
   /**
    * Processes a single part
    */
-  private processPart(part: DbPart): void {
-    this._currentPart = part;
-    this._romDataReader.position = part.start;
-    this._partEnd = part.end;
+  private processPart(part: AsmBlock): void {
+    this._currentAsmBlock = part;
+    this._romDataReader.position = part.location;
+    this._partEnd = part.location + part.size;
 
-    let current = part.struct || BlockReaderConstants.BINARY_TYPE;
+    let current = part.structName || BlockReaderConstants.BINARY_TYPE;
     const chunks: TableEntry[] = [];
     const reg = new Registers();
     const bank = part.bank;
@@ -306,7 +319,7 @@ export class BlockReader {
       this.processNewEntry(current, reg, bank, last);
     }
 
-    part.objectRoot = chunks;
+    part.objList = chunks;
   }
 
   /**
@@ -332,14 +345,92 @@ export class BlockReader {
   }
 
   /**
-   * Resolves all references after analysis
+   * Creates ChunkFile objects from database structure
+   */
+  private createChunkFilesFromDatabase(): void {
+    // Clear any previous results
+    this._enrichedChunks = [];
+    // Convert DbFiles to binary ChunkFiles with rawData
+    this.createChunkFilesFromDbFiles();
+    // Convert DbBlocks to assembly ChunkFiles with parts
+    this.createChunkFilesFromDbBlocks();
+  }
+
+  /**
+   * Creates binary ChunkFiles from DbFiles (enriched with rawData)
+   */
+  private createChunkFilesFromDbFiles(): void {
+    for (const dbFile of this._root.files) {
+      const chunkFile = createChunkFileFromDbFile(this._romDataReader.romData, this._root.compression, dbFile);
+      this._enrichedChunks.push(chunkFile);
+    }
+  }
+
+  /**
+   * Creates assembly ChunkFiles from DbBlocks (enriched with parts)
+   */
+  private createChunkFilesFromDbBlocks(): void {
+    for (const block of this._root.blocks) {
+      const chunkFile = createChunkFileFromDbBlock(block);
+      this._enrichedChunks.push(chunkFile);
+    }
+  }
+  /**
+   * Analyzes only assembly ChunkFiles (those with parts from DbBlocks)
+   */
+  private analyzeChunkFiles(): void {
+    // Only process assembly ChunkFiles, skip binary ones
+    const assemblyChunks = this._enrichedChunks.filter(chunk => chunk.type === BinType.Assembly);
+    
+    for (const chunkFile of assemblyChunks) {
+      this._currentChunk = chunkFile;
+      for (const asmBlock of chunkFile.parts || []) {
+        this._currentAsmBlock = asmBlock;
+        this.processAsmBlock(asmBlock);
+      }
+    }
+  }
+
+  /**
+   * Processes a single AsmBlock (similar to processPart)
+   */
+  private processAsmBlock(asmBlock: AsmBlock): void {
+    this._romDataReader.position = asmBlock.location;
+    this._partEnd = asmBlock.location + asmBlock.size;
+
+    let current = asmBlock.structName || BlockReaderConstants.BINARY_TYPE;
+    const chunks: TableEntry[] = [];
+    const reg = new Registers();
+    const bank = this._currentAsmBlock?.bank;
+    let last: TableEntry | null = null;
+
+    while (this._romDataReader.position < this._partEnd) {
+      const structResult = this._referenceManager.tryGetStruct(this._romDataReader.position);
+      if (structResult.found) {
+        current = structResult.chunkType!;
+      } else if (last !== null) {
+        this.processContinuousEntry(current, reg, bank, last);
+        continue;
+      }
+
+      last = createTableEntry(this._romDataReader.position);
+      chunks.push(last);
+      this.processNewEntry(current, reg, bank, last);
+    }
+
+    asmBlock.objList = chunks;
+  }
+
+  /**
+   * Resolves references in assembly ChunkFiles only
    */
   private resolveReferences(): void {
-    for (const block of this._root.blocks) {
-      this._currentBlock = block;
-      for (const part of block.parts) {
-        this._currentPart = part;
-        this.resolveObject(part.objectRoot, false);
+    for (const chunkFile of this._enrichedChunks) {
+      this._currentChunk = chunkFile;
+      
+      for (const asmBlock of chunkFile.parts || []) {
+        this._currentAsmBlock = asmBlock;
+        this.resolveObject(asmBlock.objList, false);
       }
     }
   }
@@ -426,13 +517,6 @@ export class BlockReader {
    */
   public hydrateRegisters(reg: Registers): void {
     this._stateManager.hydrateRegisters(this._romDataReader.position, reg);
-  }
-
-  /**
-   * PascalCase wrapper for hydrateRegisters (for C# compatibility)
-   */
-  public HydrateRegisters(reg: Registers): void {
-    this.hydrateRegisters(reg);
   }
 
 }

@@ -1,4 +1,4 @@
-import { DbBlock } from '@gaialabs/shared';
+import { ChunkFile, DbBlock } from '@gaialabs/shared';
 import { TableEntry } from '@gaialabs/shared';
 import { StructDef, createWord } from '@gaialabs/shared';
 import { BlockReader } from './blocks';
@@ -18,7 +18,7 @@ export class PostProcessor {
   /**
    * Execute post process directive on a block if present.
    */
-  public process(block: DbBlock): void {
+  public process(block: ChunkFile): void {
     if (!block.postProcess || block.postProcess.trim() === '') {
       return;
     }
@@ -52,11 +52,15 @@ export class PostProcessor {
    * Builds a lookup table from struct entries.
    * Equivalent to PostProcessor.Lookup in C# implementation.
    */
-  public Lookup(block: DbBlock, keyIx: string, valueIx: string): void {
+  public Lookup(block: ChunkFile, keyIx: string, valueIx: string): void {
     const kix = parseInt(keyIx.trim());
     const vix = parseInt(valueIx.trim());
 
-    const table = block.parts[0].objectRoot as TableEntry[] | undefined;
+    if(!block.parts || block.parts.length === 0) {
+      throw new Error('Invalid block structure for Lookup post process');
+    }
+
+    const table = block.parts[0]?.objList;
     const tableEntry = table && table[0];
     const entries = tableEntry?.object as unknown[] | undefined;
 
@@ -112,7 +116,7 @@ export class PostProcessor {
       eIx++;
     }
 
-    block.parts[0].objectRoot = newParts;
+    block.parts[0].objList = newParts;
   }
 }
 

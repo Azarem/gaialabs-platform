@@ -1,2 +1,2 @@
-export * from './ICompressionProvider';
 export * from './QuintetLZ';
+export * from './registry';

@@ -1,5 +1,4 @@
-import { ICompressionProvider } from '../../compression';
-import { BinType, DbRootUtils } from '@gaialabs/shared';
+import { BinType, DbRootUtils, type ICompressionProvider } from '@gaialabs/shared';
 import type { DbRoot } from '@gaialabs/shared';
 
 /**

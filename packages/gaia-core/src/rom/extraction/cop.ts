@@ -35,7 +35,7 @@ export class CopCommandProcessor {
       const isPtr = addrType !== AddressType.Unknown;
       
       // Reference type is the target of a pointer from partStr, or the struct type if not a pointer
-      const referenceType = isPtr ? partStr.substring(1) : this._blockReader._currentPart?.struct ?? 'Binary';
+      const referenceType = isPtr ? partStr.substring(1) : this._blockReader._currentAsmBlock!.structName ?? 'Binary';
       
       // Member type resolves to the underlying pointer type, or partStr
       const memberTypeName = isPtr ? addrType.toString() : partStr;
