@@ -1118,9 +1118,6 @@ code_02CA58 {
 
   code_02CA68:
     COP [8B]
-}
-
-code_02CA6A {
     LDA $08
     STZ $08
     INC 

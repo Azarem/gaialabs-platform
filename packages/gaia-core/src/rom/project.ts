@@ -1,10 +1,16 @@
-import { BinType } from '@gaialabs/shared';
-import { DbRootUtils } from '@gaialabs/shared';
-import type { DbPath } from '@gaialabs/shared';
-import { readJsonFile, readFileAsBinary, getDirectory } from '@gaialabs/shared';
-import { createChunkFile, type ChunkFile } from '@gaialabs/shared';
+import { 
+  BinType, 
+  DbRootUtils, 
+  DbEntryPoint, 
+  type DbPath, 
+  readJsonFile, 
+  readFileAsBinary, 
+  getDirectory, 
+  type ChunkFile 
+} from '@gaialabs/shared';
 import '../compression'; // Import to ensure compression providers are registered
 import { BlockReader, BlockWriter } from './extraction';
+import { RomWriter } from './rebuild';
 
 /**
  * Main project management class
@@ -99,11 +105,9 @@ export class ProjectRoot {
   /**
    * Build the ROM (simplified)
    */
-  public async build(files: ChunkFile[]): Promise<void> {
+  public async build(files: ChunkFile[], entryPoints: DbEntryPoint[]): Promise<void> {
     // Build ROM using rebuild writer
-    const root = await DbRootUtils.fromFolder(this.databasePath!, this.systemPath!);
-    const { RomWriter } = await import('./rebuild');
-    const writer = new RomWriter(this, root);
+    const writer = new RomWriter(entryPoints);
     await writer.repack(files);
   }
 

@@ -350,10 +350,47 @@ export class BlockReader {
   private createChunkFilesFromDatabase(): void {
     // Clear any previous results
     this._enrichedChunks = [];
+    this.createChunkFilesFromSfx();
     // Convert DbFiles to binary ChunkFiles with rawData
     this.createChunkFilesFromDbFiles();
     // Convert DbBlocks to assembly ChunkFiles with parts
     this.createChunkFilesFromDbBlocks();
+  }
+
+  /**
+   * Creates binary ChunkFiles from DbFiles (enriched with rawData)
+   */
+  private createChunkFilesFromSfx(): void {
+    let pos = this._root.config.sfxLocation;
+    const count = this._root.config.sfxCount;
+    const romData = this._romDataReader.romData;
+
+    const getSize = () => romData[pos++] | (romData[pos++] << 8);
+
+    for (let i = 0; i < count; i++) {
+      const size = getSize();
+      const startPos = pos;
+      let remaining = size;
+
+      let end = pos + remaining;
+      let data: Uint8Array;
+      if (end & RomProcessingConstants.PAGE_SIZE) {
+        const endLen = end & 0x7FFF;
+        remaining -= endLen;
+        data = romData.slice(pos, pos + remaining);
+        pos += remaining + RomProcessingConstants.PAGE_SIZE;
+        end = pos + endLen;
+        const data2 = romData.slice(pos, end);
+        data = new Uint8Array([...data, ...data2]);
+      } else {
+        data = romData.slice(pos, end);
+      }
+      pos = end;
+
+      const chunk = createChunkFile(`sfx${i.toString(16).toUpperCase().padStart(2, '0')}`, size + 2, startPos, BinType.Sound);
+      chunk.rawData = data;
+      this._enrichedChunks.push(chunk);
+    }
   }
 
   /**

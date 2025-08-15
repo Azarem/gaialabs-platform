@@ -58,9 +58,11 @@ export class RomLayout {
       for (let i = 0; i < this.bestDepth;) {
         const file = this.unmatchedFiles[this.bestResult[i++]];
         file.location = position;
+        console.log(`  ${position.toString(16).toUpperCase().padStart(6, '0')}: ${file.name}`);
         position += file.size || 0;
       }
 
+      console.log(`Page ${start.toString(16).toUpperCase().padStart(2, '0')} matched with ${this.bestDepth} files ${this.bestRemain} remaining`);
       // Commit: remove placed files from queue
       this.commitPage();
     }
