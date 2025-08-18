@@ -1,0 +1,237 @@
+{
+  "description": "Shift and rotate operations",
+  "instructions": {
+    "ASL": {
+      "mnemonic": "ASL",
+      "description": "Arithmetic Shift Left",
+      "affectsFlags": ["N", "Z", "C"],
+      "variants": [
+        {
+          "addressingMode": "Accumulator",
+          "opcode": 10,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        },
+        {
+          "addressingMode": "Absolute",
+          "opcode": 14,
+          "size": 3,
+          "cycles": {
+            "base": 8,
+            "m_double_penalty": -2,
+            "description": "6 cycles (16-bit), 8 cycles (8-bit)"
+          }
+        },
+        {
+          "addressingMode": "DirectPage",
+          "opcode": 6,
+          "size": 2,
+          "cycles": {
+            "base": 7,
+            "m_double_penalty": -2,
+            "direct_page_penalty": 1,
+            "description": "5-6 cycles (16-bit), 7-8 cycles (8-bit), +1 if DP≠0"
+          }
+        },
+        {
+          "addressingMode": "AbsoluteIndexedX",
+          "opcode": 30,
+          "size": 3,
+          "cycles": {
+            "base": 9,
+            "m_double_penalty": -2,
+            "description": "7 cycles (16-bit), 9 cycles (8-bit)"
+          }
+        },
+        {
+          "addressingMode": "DirectPageIndexedX",
+          "opcode": 22,
+          "size": 2,
+          "cycles": {
+            "base": 8,
+            "m_double_penalty": -2,
+            "direct_page_penalty": 1,
+            "description": "6-7 cycles (16-bit), 8-9 cycles (8-bit), +1 if DP≠0"
+          }
+        }
+      ]
+    },
+    "LSR": {
+      "mnemonic": "LSR",
+      "description": "Logical Shift Right",
+      "affectsFlags": ["N", "Z", "C"],
+      "variants": [
+        {
+          "addressingMode": "Accumulator",
+          "opcode": 74,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        },
+        {
+          "addressingMode": "Absolute",
+          "opcode": 78,
+          "size": 3,
+          "cycles": {
+            "base": 8,
+            "m_double_penalty": -2,
+            "description": "6 cycles (16-bit), 8 cycles (8-bit)"
+          }
+        },
+        {
+          "addressingMode": "DirectPage",
+          "opcode": 70,
+          "size": 2,
+          "cycles": {
+            "base": 7,
+            "m_double_penalty": -2,
+            "direct_page_penalty": 1,
+            "description": "5-6 cycles (16-bit), 7-8 cycles (8-bit), +1 if DP≠0"
+          }
+        },
+        {
+          "addressingMode": "AbsoluteIndexedX",
+          "opcode": 94,
+          "size": 3,
+          "cycles": {
+            "base": 9,
+            "m_double_penalty": -2,
+            "description": "7 cycles (16-bit), 9 cycles (8-bit)"
+          }
+        },
+        {
+          "addressingMode": "DirectPageIndexedX",
+          "opcode": 86,
+          "size": 2,
+          "cycles": {
+            "base": 8,
+            "m_double_penalty": -2,
+            "direct_page_penalty": 1,
+            "description": "6-7 cycles (16-bit), 8-9 cycles (8-bit), +1 if DP≠0"
+          }
+        }
+      ]
+    },
+    "ROL": {
+      "mnemonic": "ROL",
+      "description": "Rotate Left",
+      "affectsFlags": ["N", "Z", "C"],
+      "variants": [
+        {
+          "addressingMode": "Accumulator",
+          "opcode": 42,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        },
+        {
+          "addressingMode": "Absolute",
+          "opcode": 46,
+          "size": 3,
+          "cycles": {
+            "base": 8,
+            "m_double_penalty": -2,
+            "description": "6 cycles (16-bit), 8 cycles (8-bit)"
+          }
+        },
+        {
+          "addressingMode": "DirectPage",
+          "opcode": 38,
+          "size": 2,
+          "cycles": {
+            "base": 7,
+            "m_double_penalty": -2,
+            "direct_page_penalty": 1,
+            "description": "5-6 cycles (16-bit), 7-8 cycles (8-bit), +1 if DP≠0"
+          }
+        },
+        {
+          "addressingMode": "AbsoluteIndexedX",
+          "opcode": 62,
+          "size": 3,
+          "cycles": {
+            "base": 9,
+            "m_double_penalty": -2,
+            "description": "7 cycles (16-bit), 9 cycles (8-bit)"
+          }
+        },
+        {
+          "addressingMode": "DirectPageIndexedX",
+          "opcode": 54,
+          "size": 2,
+          "cycles": {
+            "base": 8,
+            "m_double_penalty": -2,
+            "direct_page_penalty": 1,
+            "description": "6-7 cycles (16-bit), 8-9 cycles (8-bit), +1 if DP≠0"
+          }
+        }
+      ]
+    },
+    "ROR": {
+      "mnemonic": "ROR",
+      "description": "Rotate Right",
+      "affectsFlags": ["N", "Z", "C"],
+      "variants": [
+        {
+          "addressingMode": "Accumulator",
+          "opcode": 106,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        },
+        {
+          "addressingMode": "Absolute",
+          "opcode": 110,
+          "size": 3,
+          "cycles": {
+            "base": 8,
+            "m_double_penalty": -2,
+            "description": "6 cycles (16-bit), 8 cycles (8-bit)"
+          }
+        },
+        {
+          "addressingMode": "DirectPage",
+          "opcode": 102,
+          "size": 2,
+          "cycles": {
+            "base": 7,
+            "m_double_penalty": -2,
+            "direct_page_penalty": 1,
+            "description": "5-6 cycles (16-bit), 7-8 cycles (8-bit), +1 if DP≠0"
+          }
+        },
+        {
+          "addressingMode": "AbsoluteIndexedX",
+          "opcode": 126,
+          "size": 3,
+          "cycles": {
+            "base": 9,
+            "m_double_penalty": -2,
+            "description": "7 cycles (16-bit), 9 cycles (8-bit)"
+          }
+        },
+        {
+          "addressingMode": "DirectPageIndexedX",
+          "opcode": 118,
+          "size": 2,
+          "cycles": {
+            "base": 8,
+            "m_double_penalty": -2,
+            "direct_page_penalty": 1,
+            "description": "6-7 cycles (16-bit), 8-9 cycles (8-bit), +1 if DP≠0"
+          }
+        }
+      ]
+    }
+  }
+} 

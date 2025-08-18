@@ -17,7 +17,7 @@
     "clean": "rimraf --glob ./dist ./tsconfig.tsbuildinfo"
   },
   "prisma": {
-    "seed": "ts-node prisma/scripts/seed.ts ../../ext/GaiaLib/db/us"
+    "seed": "ts-node prisma/scripts/seed.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.0.1",

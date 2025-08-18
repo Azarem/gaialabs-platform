@@ -1,0 +1,85 @@
+{
+  "description": "Flag manipulation instructions",
+  "instructions": {
+    "CLC": {
+      "mnemonic": "CLC",
+      "description": "Clear Carry Flag",
+      "affectsFlags": ["C"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 24,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "CLD": {
+      "mnemonic": "CLD",
+      "description": "Clear Decimal Flag",
+      "affectsFlags": ["D"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 216,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "CLV": {
+      "mnemonic": "CLV",
+      "description": "Clear Overflow Flag",
+      "affectsFlags": ["V"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 184,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "SEC": {
+      "mnemonic": "SEC",
+      "description": "Set Carry Flag",
+      "affectsFlags": ["C"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 56,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "SED": {
+      "mnemonic": "SED",
+      "description": "Set Decimal Flag",
+      "affectsFlags": ["D"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 248,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    }
+  }
+} 

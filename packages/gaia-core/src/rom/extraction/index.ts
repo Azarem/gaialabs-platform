@@ -17,4 +17,3 @@ export * from './postprocessor';
 
 // TODO: Add more extraction modules as they are converted:
 // BlockWriter remains to be ported from the original C# code
-

@@ -7,7 +7,9 @@ import {
   type DbEntryPoint, 
   type ChunkFile, 
   type AsmBlock, 
-  type StringMarker
+  type StringMarker,
+  type TableEntry,
+  LocationWrapper
 } from '@gaialabs/shared';
 import { RomProcessor as RebuildProcessor } from './processor';
 import { Op } from '../../assembly/Op';
@@ -220,7 +222,15 @@ export class RomWriter {
         let currentObj = obj;
 
         while (true) { // Top: label equivalent
-          if (currentObj instanceof Op) {
+          if (Array.isArray(currentObj)) {
+            for (const obj of currentObj) {
+              processObject(obj, parentOp);
+            }
+            break;
+          } else if (this.isTableEntry(currentObj)) {
+            currentObj = (currentObj as TableEntry).object;
+            continue;
+          } else if (currentObj instanceof Op) {
             const op = currentObj as Op;
             buf[position] = op.code.code & 0xFF;
             position++;
@@ -388,6 +398,7 @@ export class RomWriter {
           } else if (this.isStringMarker(currentObj)) {
             // StringMarker - no operation needed
             break;
+          } else if (this.isLocationWrapper(currentObj)) {
           } else {
             throw new Error(`Unable to process '${currentObj}'`);
           }
@@ -424,6 +435,13 @@ export class RomWriter {
     return typeof obj === 'object' && obj !== null && 'offset' in obj;
   }
 
+  private isTableEntry(obj: unknown): obj is TableEntry {
+    return typeof obj === 'object' && obj !== null && 'location' in obj && 'object' in obj;
+  }
+
+  private isLocationWrapper(obj: unknown): obj is LocationWrapper {
+    return typeof obj === 'object' && obj !== null && 'location' in obj && 'type' in obj;
+  }
 }
 
 

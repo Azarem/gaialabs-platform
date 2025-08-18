@@ -1,0 +1,65 @@
+{
+  "name": "@gaialabs/65c816-instruction-set",
+  "version": "1.0.0",
+  "description": "Complete 65c816 instruction set with TypeScript validation metadata",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "node -e \"console.log('Testing import...'); const pkg = require('./index.js'); console.log('✓ Package loaded successfully'); console.log('✓ Stats:', pkg.getInstructionStats());\"",
+    "validate": "tsc --noEmit"
+  },
+  "keywords": [
+    "65c816",
+    "assembly",
+    "processor",
+    "instruction-set",
+    "snes",
+    "super-nintendo",
+    "opcodes",
+    "typescript",
+    "gaia-labs"
+  ],
+  "author": "GaiaLabs",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^18.19.115",
+    "typescript": "^5.8.3"
+  },
+  "files": [
+    "*.json",
+    "*.js",
+    "*.d.ts",
+    "README.md",
+    "types.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GaiaLabs/GaiaLabs.git",
+    "directory": "65c816"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "require": "./index.js",
+      "import": "./index.js"
+    },
+    "./types": {
+      "types": "./types.d.ts",
+      "require": "./types.js",
+      "import": "./types.js"
+    },
+    "./metadata.json": "./metadata.json",
+    "./validation-rules.json": "./validation-rules.json",
+    "./load-store.json": "./load-store.json",
+    "./arithmetic.json": "./arithmetic.json",
+    "./block-move.json": "./block-move.json",
+    "./special.json": "./special.json",
+    "./flags.json": "./flags.json"
+  }
+}

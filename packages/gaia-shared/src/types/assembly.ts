@@ -9,7 +9,7 @@ export class AsmBlock {
   public location: number;
   public size: number;
   public isString: boolean;
-  public objList: TableEntry[];
+  public objList: any[];
   public structName?: string;
   public bank?: number;
   public includes?: Set<{block: ChunkFile, part: AsmBlock}>;

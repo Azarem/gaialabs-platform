@@ -1,0 +1,37 @@
+{
+  "description": "Block move instructions",
+  "instructions": {
+    "MVN": {
+      "mnemonic": "MVN",
+      "description": "Move Memory Negative",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "BlockMove",
+          "opcode": 84,
+          "size": 3,
+          "cycles": {
+            "base": 7,
+            "description": "7 cycles"
+          }
+        }
+      ]
+    },
+    "MVP": {
+      "mnemonic": "MVP",
+      "description": "Move Memory Positive",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "BlockMove",
+          "opcode": 68,
+          "size": 3,
+          "cycles": {
+            "base": 7,
+            "description": "7 cycles"
+          }
+        }
+      ]
+    }
+  }
+} 

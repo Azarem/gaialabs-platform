@@ -1,0 +1,197 @@
+{
+  "description": "Register transfer instructions",
+  "instructions": {
+    "TAX": {
+      "mnemonic": "TAX",
+      "description": "Transfer Accumulator to X",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 170,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "TAY": {
+      "mnemonic": "TAY",
+      "description": "Transfer Accumulator to Y",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 168,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "TXA": {
+      "mnemonic": "TXA",
+      "description": "Transfer X to Accumulator",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 138,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "TYA": {
+      "mnemonic": "TYA",
+      "description": "Transfer Y to Accumulator",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 152,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "TSX": {
+      "mnemonic": "TSX",
+      "description": "Transfer Stack Pointer to X",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 186,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "TXS": {
+      "mnemonic": "TXS",
+      "description": "Transfer X to Stack Pointer",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 154,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "TXY": {
+      "mnemonic": "TXY",
+      "description": "Transfer X to Y",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 155,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "TYX": {
+      "mnemonic": "TYX",
+      "description": "Transfer Y to X",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 187,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "TCD": {
+      "mnemonic": "TCD",
+      "description": "Transfer Accumulator to Direct Register",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 91,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "TCS": {
+      "mnemonic": "TCS",
+      "description": "Transfer Accumulator to Stack Pointer",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 27,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "TDC": {
+      "mnemonic": "TDC",
+      "description": "Transfer Direct Register to Accumulator",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 123,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "TSC": {
+      "mnemonic": "TSC",
+      "description": "Transfer Stack Pointer to Accumulator",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 59,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    }
+  }
+} 

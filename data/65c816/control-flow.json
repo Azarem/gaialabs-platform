@@ -1,0 +1,154 @@
+{
+  "description": "Control flow instructions",
+  "instructions": {
+    "JMP": {
+      "mnemonic": "JMP",
+      "description": "Jump",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Absolute",
+          "opcode": 76,
+          "size": 3,
+          "cycles": {
+            "base": 3,
+            "description": "3 cycles"
+          }
+        },
+        {
+          "addressingMode": "AbsoluteIndirect",
+          "opcode": 108,
+          "size": 3,
+          "cycles": {
+            "base": 5,
+            "description": "5 cycles"
+          }
+        },
+        {
+          "addressingMode": "AbsoluteIndexedIndirect",
+          "opcode": 124,
+          "size": 3,
+          "cycles": {
+            "base": 6,
+            "description": "6 cycles"
+          }
+        }
+      ]
+    },
+    "JML": {
+      "mnemonic": "JML",
+      "description": "Jump Long",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "AbsoluteLong",
+          "opcode": 92,
+          "size": 4,
+          "cycles": {
+            "base": 4,
+            "description": "4 cycles"
+          }
+        },
+        {
+          "addressingMode": "AbsoluteIndirectLong",
+          "opcode": 220,
+          "size": 3,
+          "cycles": {
+            "base": 6,
+            "description": "6 cycles"
+          }
+        }
+      ]
+    },
+    "JSR": {
+      "mnemonic": "JSR",
+      "description": "Jump to Subroutine",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Absolute",
+          "opcode": 32,
+          "size": 3,
+          "cycles": {
+            "base": 6,
+            "description": "6 cycles"
+          }
+        },
+        {
+          "addressingMode": "AbsoluteIndexedIndirect",
+          "opcode": 252,
+          "size": 3,
+          "cycles": {
+            "base": 8,
+            "description": "8 cycles"
+          }
+        }
+      ]
+    },
+    "JSL": {
+      "mnemonic": "JSL",
+      "description": "Jump to Subroutine Long",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "AbsoluteLong",
+          "opcode": 34,
+          "size": 4,
+          "cycles": {
+            "base": 8,
+            "description": "8 cycles"
+          }
+        }
+      ]
+    },
+    "RTS": {
+      "mnemonic": "RTS",
+      "description": "Return from Subroutine",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 96,
+          "size": 1,
+          "cycles": {
+            "base": 6,
+            "description": "6 cycles"
+          }
+        }
+      ]
+    },
+    "RTL": {
+      "mnemonic": "RTL",
+      "description": "Return from Subroutine Long",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 107,
+          "size": 1,
+          "cycles": {
+            "base": 6,
+            "description": "6 cycles"
+          }
+        }
+      ]
+    },
+    "RTI": {
+      "mnemonic": "RTI",
+      "description": "Return from Interrupt",
+      "affectsFlags": ["*"],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 64,
+          "size": 1,
+          "cycles": {
+            "base": 7,
+            "description": "7-e",
+            "note": "Formula not fully parsed"
+          }
+        }
+      ]
+    }
+  }
+} 

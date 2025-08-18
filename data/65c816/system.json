@@ -1,0 +1,103 @@
+{
+  "description": "System control instructions",
+  "instructions": {
+    "NOP": {
+      "mnemonic": "NOP",
+      "description": "No Operation",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 234,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    },
+    "BRK": {
+      "mnemonic": "BRK",
+      "description": "Break",
+      "affectsFlags": ["B", "I"],
+      "variants": [
+        {
+          "addressingMode": "StackInterrupt",
+          "opcode": 0,
+          "size": 2,
+          "cycles": {
+            "base": 8,
+            "description": "8-e",
+            "note": "Formula not fully parsed"
+          }
+        }
+      ]
+    },
+    "COP": {
+      "mnemonic": "COP",
+      "description": "Coprocessor",
+      "affectsFlags": ["I"],
+      "variants": [
+        {
+          "addressingMode": "StackInterrupt",
+          "opcode": 2,
+          "size": 2,
+          "cycles": {
+            "base": 8,
+            "description": "8-e",
+            "note": "Formula not fully parsed"
+          }
+        }
+      ]
+    },
+    "SEP": {
+      "mnemonic": "SEP",
+      "description": "Set Processor Status Bits",
+      "affectsFlags": ["*"],
+      "variants": [
+        {
+          "addressingMode": "Immediate",
+          "opcode": 226,
+          "size": 2,
+          "cycles": {
+            "base": 3,
+            "description": "3 cycles"
+          }
+        }
+      ]
+    },
+    "REP": {
+      "mnemonic": "REP",
+      "description": "Reset Processor Status Bits",
+      "affectsFlags": ["*"],
+      "variants": [
+        {
+          "addressingMode": "Immediate",
+          "opcode": 194,
+          "size": 2,
+          "cycles": {
+            "base": 3,
+            "description": "3 cycles"
+          }
+        }
+      ]
+    },
+    "WDM": {
+      "mnemonic": "WDM",
+      "description": "William D. Mensch (Reserved)",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 66,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    }
+  }
+} 

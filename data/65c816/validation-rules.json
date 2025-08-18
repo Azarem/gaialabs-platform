@@ -1,0 +1,27 @@
+{
+  "operandSizeValidation": {
+    "immediate": {
+      "8bit": "operand >= 0 && operand <= 255",
+      "16bit": "operand >= 0 && operand <= 65535"
+    },
+    "absolute": {
+      "16bit": "address >= 0 && address <= 65535",
+      "24bit": "address >= 0 && address <= 16777215"
+    },
+    "relative": {
+      "8bit": "offset >= -128 && offset <= 127",
+      "16bit": "offset >= -32768 && offset <= 32767"
+    }
+  },
+  "instructionValidation": {
+    "flagDependentSize": {
+      "condition": "instruction.size === 'flag-dependent'",
+      "8bitMode": "instruction.size = 2",
+      "16bitMode": "instruction.size = 3"
+    },
+    "cycleValidation": {
+      "baseCycles": "typeof cycles === 'number' ? cycles : parseInt(cycles)",
+      "conditionalCycles": "cycles.includes('+') ? 'variable' : 'fixed'"
+    }
+  }
+} 

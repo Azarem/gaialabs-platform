@@ -22,6 +22,18 @@ export class RomProcessingConstants {
   public static readonly OBJECT_SPACE = ['<', '['];
   public static readonly COP_SPLIT_CHARS = [' ', '\t', ',', '(', ')', '[', ']', '$', '#'];
 
+  // Pre-compiled regular expressions for parsing
+  public static readonly WHITESPACE_REGEX = /[ \t]/;
+  public static readonly COMMA_SPACE_REGEX = /[, \t]/;
+  public static readonly SYMBOL_SPACE_REGEX = /[, \t<>()\:\[\]{}`~|]/;
+  public static readonly LABEL_SPACE_REGEX = /[\[{#`~|:]/;
+  public static readonly OBJECT_SPACE_REGEX = /[<\[]/;
+  public static readonly ADDRESS_SPACE_REGEX = /[@&^#$%*]/;
+  public static readonly COP_SPLIT_REGEX = /[ \t,()[\]$#]/;
+  
+  // Trim patterns (for start/end of string)
+  public static readonly COMMA_SPACE_TRIM_REGEX = /^[, \t]+|[, \t]+$/g;
+
   /**
    * Gets the size of an object for processing purposes
    * @param obj The object to get the size for

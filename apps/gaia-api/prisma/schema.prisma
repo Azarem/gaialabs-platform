@@ -36,6 +36,10 @@ model Game {
   files    GameFile[]
   blocks   GameBlock[]
   releases Release[]
+  
+  // Game-specific data structures
+  mnemonics GameMnemonic[]
+  cops      GameCop[]
 
   // Audit fields
   createdAt   DateTime  @default(now())
@@ -151,6 +155,12 @@ model Release {
   files  ReleaseFile[]
   blocks ReleaseBlock[]
   parts  ReleasePart[]
+  
+  // Release-specific data structures
+  overrides  ReleaseOverride[]
+  rewrites   ReleaseRewrite[]
+  transforms ReleaseTransform[]
+  labels     ReleaseLabel[]
 
   // Audit fields
   createdAt   DateTime  @default(now())
@@ -363,4 +373,294 @@ enum UserRole {
   USER
   MODERATOR
   ADMIN
+}
+
+// =====================================================
+// 65C816 PROCESSOR INSTRUCTION SET MODELS
+// =====================================================
+
+enum ProcessorFlag {
+  N  // Negative
+  V  // Overflow
+  M  // Memory/Accumulator width
+  X  // Index register width
+  D  // Decimal mode
+  I  // Interrupt disable
+  Z  // Zero
+  C  // Carry
+  B  // Break
+  E  // Emulation mode
+  WILDCARD @map("*") // Special wildcard flag
+}
+
+enum AddressingModeType {
+  Immediate
+  Absolute
+  AbsoluteLong
+  DirectPage
+  DirectPageIndirect
+  DirectPageIndirectLong
+  AbsoluteIndexedX
+  AbsoluteLongIndexedX
+  AbsoluteIndexedY
+  DirectPageIndexedX
+  DirectPageIndexedY
+  DirectPageIndexedIndirectX
+  DirectPageIndirectIndexedY
+  DirectPageIndirectLongIndexedY
+  StackRelative
+  StackRelativeIndirectIndexedY
+  Accumulator
+  Implied
+  Stack
+  StackInterrupt
+  PCRelative
+  PCRelativeLong
+  AbsoluteIndirect
+  AbsoluteIndirectLong
+  AbsoluteIndexedIndirect
+  BlockMove
+}
+
+enum InstructionCategory {
+  LoadStore
+  Arithmetic
+  Logical
+  Shift
+  ControlFlow
+  Branch
+  System
+  Interrupt
+  Flags
+  Stack
+  Transfer
+  BlockMove
+  Special
+}
+
+enum OperandType {
+  Absolute
+  AbsoluteLong
+  Direct
+  Immediate
+  None
+  Label
+  Byte
+  BankPair
+  InterruptVector
+}
+
+model InstructionSet {
+  id               String   @id @default(cuid())
+  name             String   @unique
+  version          String
+  description      String?
+  baseProcessor    String?
+  generatedFrom    String?
+  totalInstructions Int
+  totalVariants    Int
+  
+  // JSON fields for complex metadata
+  cycleNotation    Json     // Cycle timing notation and examples
+  metadata         Json?    // Additional metadata
+  
+  // Relationships
+  instructionGroups InstructionGroup[]
+  validationRules   ValidationRule[]
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model InstructionGroup {
+  id             String              @id @default(cuid())
+  name           String              
+  category       InstructionCategory
+  description    String?
+  
+  // Relationships
+  instructionSet InstructionSet      @relation(fields: [instructionSetId], references: [id], onDelete: Cascade)
+  instructionSetId String
+  instructions   Instruction[]
+  
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  
+  @@unique([instructionSetId, name])
+}
+
+model Instruction {
+  id              String              @id @default(cuid())
+  mnemonic        String              // e.g., "LDA", "STA"
+  description     String
+  affectedFlags   ProcessorFlag[]     // Flags affected by this instruction
+  
+  // Relationships
+  instructionGroup InstructionGroup   @relation(fields: [instructionGroupId], references: [id], onDelete: Cascade)
+  instructionGroupId String
+  variants        InstructionVariant[]
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  @@unique([instructionGroupId, mnemonic])
+}
+
+model InstructionVariant {
+  id               String            @id @default(cuid())
+  opcode           Int               @unique // 0-255 opcode value
+  size             Int?              // Size in bytes, null for flag-dependent
+  isFlagDependent  Boolean           @default(false) // True if size depends on processor flags
+  
+  // Cycle timing stored as JSON for complex conditional logic
+  cycleTiming      Json              // CycleTiming object with base, penalties, description, etc.
+  
+  // Relationships
+  instruction      Instruction       @relation(fields: [instructionId], references: [id], onDelete: Cascade)
+  instructionId    String
+  addressingMode   AddressingMode    @relation(fields: [addressingModeId], references: [id])
+  addressingModeId String
+  
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model AddressingMode {
+  id                  String               @id @default(cuid())
+  mode                AddressingModeType   @unique
+  shorthand           String               @unique // e.g., "abs", "imm"
+  operandType         OperandType
+  description         String
+  officialName        String?
+  length              Int                  // Instruction length in bytes
+  format              String               // Format pattern like "$OP $LL $HH"
+  formatString        String               // Format string like "${0:X4}"
+  parseRegex          String               // Regex for parsing assembly
+  operandSize         Int                  // Size of operand in bytes
+  supportsSymbols     Boolean              @default(false)
+  bankWrapping        Boolean              @default(false)
+  pageWrapping        Boolean              @default(false)
+  
+  // JSON fields for complex validation and configuration
+  validationPatterns  Json                 // Validation regex patterns
+  examples            Json                 // Example usage patterns
+  
+  // Relationships  
+  instructionVariants InstructionVariant[]
+  
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+}
+
+model ValidationRule {
+  id                String         @id @default(cuid())
+  name              String
+  category          String         // e.g., "operandSizeValidation", "instructionValidation"
+  
+  // JSON field to store complex validation logic
+  rules             Json           // Complete validation rule object
+  
+  // Relationships
+  instructionSet    InstructionSet @relation(fields: [instructionSetId], references: [id], onDelete: Cascade)
+  instructionSetId  String
+  
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  @@unique([instructionSetId, name, category])
+}
+
+// =====================================================
+// GAME-SPECIFIC DATA MODELS
+// =====================================================
+
+model GameMnemonic {
+  id    String @id @default(cuid())
+  key   Int    // Memory address key
+  value String // Mnemonic name/value
+  
+  // Relationships
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([gameId, key])
+}
+
+model GameCop {
+  id    String  @id @default(cuid())
+  code  Int     // COP operation code
+  mnem  String  // Mnemonic representation  
+  size  Int     // Size in bytes
+  halt  Boolean // Whether this operation halts execution
+  parts Json    // Array of parts/parameters
+  
+  // Relationships
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([gameId, code])
+}
+
+// =====================================================
+// RELEASE-SPECIFIC DATA MODELS
+// =====================================================
+
+model ReleaseOverride {
+  id       String @id @default(cuid())
+  data     Json   // Override data structure (flexible for different override types)
+  
+  // Relationships
+  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  releaseId String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ReleaseRewrite {
+  id       String @id @default(cuid())
+  data     Json   // Rewrite data structure (flexible for different rewrite types)
+  
+  // Relationships
+  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  releaseId String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ReleaseTransform {
+  id         String @id @default(cuid())
+  block      String // Block name that this transform applies to
+  transforms Json   // Array of key-value transform rules
+  
+  // Relationships
+  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  releaseId String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([releaseId, block])
+}
+
+model ReleaseLabel {
+  id       String @id @default(cuid())
+  location Int    // Memory location/address
+  label    String // Label name
+  
+  // Relationships
+  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  releaseId String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([releaseId, location])
 }

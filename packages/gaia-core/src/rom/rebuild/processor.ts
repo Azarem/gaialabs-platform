@@ -101,6 +101,7 @@ export class RomProcessor {
             }
           }
           if (file) break;
+          else match = null;
         }
         if (match) {
           file!.parts![dstIx++] = block;

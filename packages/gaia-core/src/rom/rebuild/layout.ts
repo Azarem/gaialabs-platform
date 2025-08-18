@@ -62,7 +62,7 @@ export class RomLayout {
         position += file.size || 0;
       }
 
-      console.log(`Page ${start.toString(16).toUpperCase().padStart(2, '0')} matched with ${this.bestDepth} files ${this.bestRemain} remaining`);
+      console.log(`Page ${start.toString(16).toUpperCase().padStart(6, '0')} matched with ${this.bestDepth} files ${this.bestRemain} remaining`);
       // Commit: remove placed files from queue
       this.commitPage();
     }
@@ -84,7 +84,7 @@ export class RomLayout {
       if (file.parts) {
         if (!asmMode) {
           if (!this.currentUpper || file.bank !== undefined) continue;
-        } else if (file.bank !== undefined && file.bank !== this.currentBank) {
+        } else if (file.bank !== this.currentBank) {
           continue;
         }
       } else if (asmMode) {

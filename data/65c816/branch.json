@@ -1,0 +1,182 @@
+{
+  "description": "Branch instructions",
+  "instructions": {
+    "BCC": {
+      "mnemonic": "BCC",
+      "description": "Branch if Carry Clear",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "PCRelative",
+          "opcode": 144,
+          "size": 2,
+          "cycles": {
+            "base": 2,
+            "branch_taken_penalty": 1,
+            "emulation_page_penalty": 1,
+            "description": "2 cycles not taken, 3 cycles taken, +1 in emulation mode if page boundary crossed"
+          }
+        }
+      ]
+    },
+    "BCS": {
+      "mnemonic": "BCS",
+      "description": "Branch if Carry Set",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "PCRelative",
+          "opcode": 176,
+          "size": 2,
+          "cycles": {
+            "base": 2,
+            "branch_taken_penalty": 1,
+            "emulation_page_penalty": 1,
+            "description": "2 cycles not taken, 3 cycles taken, +1 in emulation mode if page boundary crossed"
+          }
+        }
+      ]
+    },
+    "BEQ": {
+      "mnemonic": "BEQ",
+      "description": "Branch if Equal",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "PCRelative",
+          "opcode": 240,
+          "size": 2,
+          "cycles": {
+            "base": 2,
+            "branch_taken_penalty": 1,
+            "emulation_page_penalty": 1,
+            "description": "2 cycles not taken, 3 cycles taken, +1 in emulation mode if page boundary crossed"
+          }
+        }
+      ]
+    },
+    "BNE": {
+      "mnemonic": "BNE",
+      "description": "Branch if Not Equal",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "PCRelative",
+          "opcode": 208,
+          "size": 2,
+          "cycles": {
+            "base": 2,
+            "branch_taken_penalty": 1,
+            "emulation_page_penalty": 1,
+            "description": "2 cycles not taken, 3 cycles taken, +1 in emulation mode if page boundary crossed"
+          }
+        }
+      ]
+    },
+    "BMI": {
+      "mnemonic": "BMI",
+      "description": "Branch if Minus",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "PCRelative",
+          "opcode": 48,
+          "size": 2,
+          "cycles": {
+            "base": 2,
+            "branch_taken_penalty": 1,
+            "emulation_page_penalty": 1,
+            "description": "2 cycles not taken, 3 cycles taken, +1 in emulation mode if page boundary crossed"
+          }
+        }
+      ]
+    },
+    "BPL": {
+      "mnemonic": "BPL",
+      "description": "Branch if Plus",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "PCRelative",
+          "opcode": 16,
+          "size": 2,
+          "cycles": {
+            "base": 2,
+            "branch_taken_penalty": 1,
+            "emulation_page_penalty": 1,
+            "description": "2 cycles not taken, 3 cycles taken, +1 in emulation mode if page boundary crossed"
+          }
+        }
+      ]
+    },
+    "BVC": {
+      "mnemonic": "BVC",
+      "description": "Branch if Overflow Clear",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "PCRelative",
+          "opcode": 80,
+          "size": 2,
+          "cycles": {
+            "base": 2,
+            "branch_taken_penalty": 1,
+            "emulation_page_penalty": 1,
+            "description": "2 cycles not taken, 3 cycles taken, +1 in emulation mode if page boundary crossed"
+          }
+        }
+      ]
+    },
+    "BVS": {
+      "mnemonic": "BVS",
+      "description": "Branch if Overflow Set",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "PCRelative",
+          "opcode": 112,
+          "size": 2,
+          "cycles": {
+            "base": 2,
+            "branch_taken_penalty": 1,
+            "emulation_page_penalty": 1,
+            "description": "2 cycles not taken, 3 cycles taken, +1 in emulation mode if page boundary crossed"
+          }
+        }
+      ]
+    },
+    "BRA": {
+      "mnemonic": "BRA",
+      "description": "Branch Always",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "PCRelative",
+          "opcode": 128,
+          "size": 2,
+          "cycles": {
+            "base": 3,
+            "emulation_page_penalty": 1,
+            "description": "3 cycles, +1 in emulation mode if page boundary crossed"
+          }
+        }
+      ]
+    },
+    "BRL": {
+      "mnemonic": "BRL",
+      "description": "Branch Always Long",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "PCRelativeLong",
+          "opcode": 130,
+          "size": 3,
+          "cycles": {
+            "base": 4,
+            "description": "4 cycles"
+          }
+        }
+      ]
+    }
+  }
+} 

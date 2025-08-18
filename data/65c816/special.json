@@ -1,0 +1,37 @@
+{
+  "description": "Special 65c816 instructions",
+  "instructions": {
+    "XBA": {
+      "mnemonic": "XBA",
+      "description": "Exchange B and A",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 235,
+          "size": 1,
+          "cycles": {
+            "base": 3,
+            "description": "3 cycles"
+          }
+        }
+      ]
+    },
+    "XCE": {
+      "mnemonic": "XCE",
+      "description": "Exchange Carry and Emulation",
+      "affectsFlags": ["C", "E"],
+      "variants": [
+        {
+          "addressingMode": "Implied",
+          "opcode": 251,
+          "size": 1,
+          "cycles": {
+            "base": 2,
+            "description": "2 cycles"
+          }
+        }
+      ]
+    }
+  }
+} 

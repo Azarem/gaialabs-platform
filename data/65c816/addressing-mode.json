@@ -1,0 +1,823 @@
+{
+  "metadata": {
+    "name": "65c816-addressing-modes",
+    "version": "2.0.0",
+    "description": "Complete 65C816 addressing mode definitions with operand types, parsing, formatting, validation metadata, and factory shorthand labels",
+    "sources": [
+      "GaiaLib/Asm/OpCode.cs - Regex patterns for parsing",
+      "GaiaLib/db/us/config.json - Assembly formatting strings",
+      "docs/6502.org_ Tutorial_ 65C816 Opcodes.html - Official documentation",
+      "docs/TSAL/working/op.ts - TypeScript addressing mode definitions and shorthand labels"
+    ],
+    "totalAddressingModes": 25,
+    "totalOperandTypes": 9,
+    "lastUpdated": "2024-12-22",
+    "compatibleWith": "65C816 processor family",
+    "features": [
+      "Complete operand type system for TypeScript generation",
+      "Type-safe parameter signatures for all addressing modes",
+      "Full regex patterns for assembly parsing",
+      "Format strings for code generation",
+      "Shorthand labels for factory method generation",
+      "Symbol validation patterns",
+      "Bank/page wrapping behavior metadata",
+      "Official 65C816 documentation cross-references"
+    ]
+  },
+
+  "addressingModes": {
+    "Absolute": {
+      "mode": "Absolute",
+      "shorthand": "abs",
+      "operandType": "Absolute",
+      "description": "16-bit absolute address. For JMP/JSR, jumps to K:$HHLL. For data operations, accesses $rr:$HHLL where $rr is DBR.",
+      "officialName": "Absolute",
+      "length": 3,
+      "format": "$OP $LL $HH",
+      "formatString": "${0:X4}",
+      "parseRegex": "^\\$([A-Fa-f0-9]{4}|&[A-Za-z0-9-+_]+)$",
+      "operandSize": 2,
+      "supportsSymbols": true,
+      "bankWrapping": false,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{4}$",
+        "symbolReference": "^&[A-Za-z0-9-+_]+$"
+      },
+      "examples": [
+        "LDA $1234",
+        "JMP $ABCD"
+      ]
+    },
+
+    "AbsoluteIndexedX": {
+      "mode": "AbsoluteIndexedX",
+      "shorthand": "abs_x",
+      "operandType": "Absolute",
+      "description": "16-bit absolute address with X register offset. Data address is $rrHHLL+X.",
+      "officialName": "Absolute,X",
+      "length": 3,
+      "format": "$OP $LL $HH",
+      "formatString": "${0:X4}, X",
+      "parseRegex": "^(\\$[A-Fa-f0-9]{4}|\\$?&[A-Za-z0-9-+_]+),\\s?[Xx]$",
+      "operandSize": 2,
+      "supportsSymbols": true,
+      "bankWrapping": false,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{4}$",
+        "symbolReference": "^&[A-Za-z0-9-+_]+$",
+        "indexRegister": ",\\s?[Xx]$"
+      },
+      "examples": [
+        "LDA $1234,X",
+        "STA $ABCD,X"
+      ]
+    },
+
+    "AbsoluteIndexedY": {
+      "mode": "AbsoluteIndexedY",
+      "shorthand": "abs_y",
+      "operandType": "Absolute",
+      "description": "16-bit absolute address with Y register offset. Data address is $rrHHLL+Y.",
+      "officialName": "Absolute,Y",
+      "length": 3,
+      "format": "$OP $LL $HH",
+      "formatString": "${0:X4}, Y",
+      "parseRegex": "^(\\$[A-Fa-f0-9]{4}|\\$?&[A-Za-z0-9-+_]+),\\s?[Yy]$",
+      "operandSize": 2,
+      "supportsSymbols": true,
+      "bankWrapping": false,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{4}$",
+        "symbolReference": "^&[A-Za-z0-9-+_]+$",
+        "indexRegister": ",\\s?[Yy]$"
+      },
+      "examples": [
+        "LDA $1234,Y",
+        "STA $ABCD,Y"
+      ]
+    },
+
+    "AbsoluteIndirect": {
+      "mode": "AbsoluteIndirect",
+      "shorthand": "abs_ind",
+      "operandType": "Absolute",
+      "description": "16-bit indirect through absolute address. Uses 16-bit pointer at $HHLL in bank 0. JMP only.",
+      "officialName": "(Absolute)",
+      "length": 3,
+      "format": "$OP $LL $HH",
+      "formatString": "(${0})",
+      "parseRegex": "^\\((\\$[A-Fa-f0-9]{4}|\\$?&[A-Za-z0-9-+_]+)\\)$",
+      "operandSize": 2,
+      "supportsSymbols": true,
+      "bankWrapping": true,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{4}$",
+        "symbolReference": "^&[A-Za-z0-9-+_]+$"
+      },
+      "examples": [
+        "JMP ($1234)"
+      ]
+    },
+
+    "AbsoluteIndirectLong": {
+      "mode": "AbsoluteIndirectLong",
+      "shorthand": "abs_indl",
+      "operandType": "Absolute",
+      "description": "24-bit indirect through absolute address. Uses 24-bit pointer at $HHLL in bank 0. JMP only.",
+      "officialName": "[Absolute]",
+      "length": 3,
+      "format": "$OP $LL $HH",
+      "formatString": "[${0}]",
+      "parseRegex": "^\\[(\\$[A-Fa-f0-9]{4}|\\$?&[A-Za-z0-9-+_]+)\\]$",
+      "operandSize": 2,
+      "supportsSymbols": true,
+      "bankWrapping": true,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{4}$",
+        "symbolReference": "^&[A-Za-z0-9-+_]+$"
+      },
+      "examples": [
+        "JMP [$1234]"
+      ]
+    },
+
+    "AbsoluteIndexedIndirect": {
+      "mode": "AbsoluteIndexedIndirect",
+      "shorthand": "abs_x_ind",
+      "operandType": "Absolute",
+      "description": "16-bit indirect through absolute address with X offset. Pointer address is K:$HHLL+X. JMP/JSR only.",
+      "officialName": "(Absolute,X)",
+      "length": 3,
+      "format": "$OP $LL $HH",
+      "formatString": "(${0}, X)",
+      "parseRegex": "^\\((\\$[A-Fa-f0-9]{4}|\\$?&[A-Za-z0-9-+_]+),\\s*[Xx]\\)$",
+      "operandSize": 2,
+      "supportsSymbols": true,
+      "bankWrapping": true,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{4}$",
+        "symbolReference": "^&[A-Za-z0-9-+_]+$",
+        "indexRegister": ",\\s*[Xx]"
+      },
+      "examples": [
+        "JMP ($1234,X)",
+        "JSR ($ABCD,X)"
+      ]
+    },
+
+    "AbsoluteLong": {
+      "mode": "AbsoluteLong",
+      "shorthand": "long",
+      "operandType": "AbsoluteLong",
+      "description": "24-bit absolute address. For JMP, jumps to $HHMMLL. For data operations, accesses $HHMMLL directly.",
+      "officialName": "Long",
+      "length": 4,
+      "format": "$OP $LL $MM $HH",
+      "formatString": "${0:X6}",
+      "parseRegex": "^\\$([A-Fa-f0-9]{6}|\\@[A-Za-z0-9-+_]+)$",
+      "operandSize": 3,
+      "supportsSymbols": true,
+      "bankWrapping": false,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{6}$",
+        "symbolReference": "^@[A-Za-z0-9-+_]+$"
+      },
+      "examples": [
+        "LDA $123456",
+        "JMP $ABCDEF"
+      ]
+    },
+
+    "AbsoluteLongIndexedX": {
+      "mode": "AbsoluteLongIndexedX",
+      "shorthand": "long_x",
+      "operandType": "AbsoluteLong",
+      "description": "24-bit absolute address with X register offset. Data address is $HHMMLL+X.",
+      "officialName": "Long,X",
+      "length": 4,
+      "format": "$OP $LL $MM $HH",
+      "formatString": "${0:X6}, X",
+      "parseRegex": "^(\\$[A-Fa-f0-9]{6}|\\$?@[A-Za-z0-9-+_]+),\\s?[Xx]$",
+      "operandSize": 3,
+      "supportsSymbols": true,
+      "bankWrapping": false,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{6}$",
+        "symbolReference": "^@[A-Za-z0-9-+_]+$",
+        "indexRegister": ",\\s?[Xx]$"
+      },
+      "examples": [
+        "LDA $123456,X",
+        "STA $ABCDEF,X"
+      ]
+    },
+
+    "DirectPage": {
+      "mode": "DirectPage",
+      "shorthand": "dp",
+      "operandType": "Direct",
+      "description": "8-bit direct page address. Address is D+$LL in bank 0. May wrap at page boundary in emulation mode when DL=$00.",
+      "officialName": "Direct",
+      "length": 2,
+      "format": "$OP $LL",
+      "formatString": "${0:X2}",
+      "parseRegex": "^\\$([A-Fa-f0-9]{2})$",
+      "operandSize": 1,
+      "supportsSymbols": false,
+      "bankWrapping": true,
+      "pageWrapping": true,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{2}$"
+      },
+      "examples": [
+        "LDA $12",
+        "STA $AB"
+      ]
+    },
+
+    "DirectPageIndexedX": {
+      "mode": "DirectPageIndexedX",
+      "shorthand": "dp_x",
+      "operandType": "Direct",
+      "description": "8-bit direct page address with X register offset. Address is D+$LL+X in bank 0.",
+      "officialName": "Direct,X",
+      "length": 2,
+      "format": "$OP $LL",
+      "formatString": "${0:X2}, X",
+      "parseRegex": "^\\$([A-Fa-f0-9]{2}),\\s?[Xx]$",
+      "operandSize": 1,
+      "supportsSymbols": false,
+      "bankWrapping": true,
+      "pageWrapping": true,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{2}$",
+        "indexRegister": ",\\s?[Xx]$"
+      },
+      "examples": [
+        "LDA $12,X",
+        "STA $AB,X"
+      ]
+    },
+
+    "DirectPageIndexedY": {
+      "mode": "DirectPageIndexedY",
+      "shorthand": "dp_y",
+      "operandType": "Direct",
+      "description": "8-bit direct page address with Y register offset. Address is D+$LL+Y in bank 0. Used by LDX/STX only.",
+      "officialName": "Direct,Y",
+      "length": 2,
+      "format": "$OP $LL",
+      "formatString": "${0:X2}, Y",
+      "parseRegex": "^\\$([A-Fa-f0-9]{2}),\\s?[Yy]$",
+      "operandSize": 1,
+      "supportsSymbols": false,
+      "bankWrapping": true,
+      "pageWrapping": true,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{2}$",
+        "indexRegister": ",\\s?[Yy]$"
+      },
+      "examples": [
+        "LDX $12,Y",
+        "STX $AB,Y"
+      ]
+    },
+
+    "DirectPageIndirect": {
+      "mode": "DirectPageIndirect",
+      "shorthand": "dp_ind",
+      "operandType": "Direct",
+      "description": "16-bit indirect through direct page address. Uses 16-bit pointer at D+$LL in bank 0. Data address uses DBR.",
+      "officialName": "(Direct)",
+      "length": 2,
+      "format": "$OP $LL",
+      "formatString": "(${0:X2})",
+      "parseRegex": "^\\(\\$([A-Fa-f0-9]{2})\\)$",
+      "operandSize": 1,
+      "supportsSymbols": false,
+      "bankWrapping": true,
+      "pageWrapping": true,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{2}$"
+      },
+      "examples": [
+        "LDA ($12)",
+        "STA ($AB)"
+      ]
+    },
+
+    "DirectPageIndirectLong": {
+      "mode": "DirectPageIndirectLong",
+      "shorthand": "dp_indl",
+      "operandType": "Direct",
+      "description": "24-bit indirect through direct page address. Uses 24-bit pointer at D+$LL in bank 0.",
+      "officialName": "[Direct]",
+      "length": 2,
+      "format": "$OP $LL",
+      "formatString": "[${0:X2}]",
+      "parseRegex": "^\\[\\$([A-Fa-f0-9]{2})\\]$",
+      "operandSize": 1,
+      "supportsSymbols": false,
+      "bankWrapping": true,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{2}$"
+      },
+      "examples": [
+        "LDA [$12]",
+        "STA [$AB]"
+      ]
+    },
+
+    "DirectPageIndexedIndirectX": {
+      "mode": "DirectPageIndexedIndirectX",
+      "shorthand": "dp_x_ind",
+      "operandType": "Direct",
+      "description": "16-bit indirect through direct page address with X offset. Pointer at D+$LL+X in bank 0.",
+      "officialName": "(Direct,X)",
+      "length": 2,
+      "format": "$OP $LL",
+      "formatString": "(${0:X2}, X)",
+      "parseRegex": "^\\(\\$([A-Fa-f0-9]{2}),\\s?[Xx]\\)$",
+      "operandSize": 1,
+      "supportsSymbols": false,
+      "bankWrapping": true,
+      "pageWrapping": true,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{2}$",
+        "indexRegister": ",\\s?[Xx]"
+      },
+      "examples": [
+        "LDA ($12,X)",
+        "STA ($AB,X)"
+      ]
+    },
+
+    "DirectPageIndirectIndexedY": {
+      "mode": "DirectPageIndirectIndexedY",
+      "shorthand": "dp_ind_y",
+      "operandType": "Direct",
+      "description": "16-bit indirect through direct page address, then add Y. Pointer at D+$LL, data at (pointer)+Y.",
+      "officialName": "(Direct),Y",
+      "length": 2,
+      "format": "$OP $LL",
+      "formatString": "(${0:X2}), Y",
+      "parseRegex": "^\\(\\$([A-Fa-f0-9]{2})\\),\\s?[Yy]$",
+      "operandSize": 1,
+      "supportsSymbols": false,
+      "bankWrapping": true,
+      "pageWrapping": true,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{2}$",
+        "indexRegister": ",\\s?[Yy]"
+      },
+      "examples": [
+        "LDA ($12),Y",
+        "STA ($AB),Y"
+      ]
+    },
+
+    "DirectPageIndirectLongIndexedY": {
+      "mode": "DirectPageIndirectLongIndexedY",
+      "shorthand": "dp_indl_y",
+      "operandType": "Direct",
+      "description": "24-bit indirect through direct page address, then add Y. Pointer at D+$LL, data at (pointer)+Y.",
+      "officialName": "[Direct],Y",
+      "length": 2,
+      "format": "$OP $LL",
+      "formatString": "[${0:X2}], Y",
+      "parseRegex": "^\\[\\$([A-Fa-f0-9]{2})\\],\\s?[Yy]$",
+      "operandSize": 1,
+      "supportsSymbols": false,
+      "bankWrapping": true,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{2}$",
+        "indexRegister": ",\\s?[Yy]"
+      },
+      "examples": [
+        "LDA [$12],Y",
+        "STA [$AB],Y"
+      ]
+    },
+
+    "Immediate": {
+      "mode": "Immediate",
+      "shorthand": "imm",
+      "operandType": "Immediate",
+      "description": "Immediate value embedded in instruction. Size depends on m flag (accumulator) or x flag (index registers).",
+      "officialName": "Immediate",
+      "length": "2-3",
+      "format": "$OP $LL [$HH]",
+      "formatString": "#${0:X2}",
+      "parseRegex": "^#(\\$[A-Fa-f0-9]{2,4}|\\$?[&^*][A-Za-z0-9-+_]+)$",
+      "operandSize": "1-2",
+      "supportsSymbols": true,
+      "bankWrapping": false,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^#\\$[A-Fa-f0-9]{2,4}$",
+        "symbolReference": "^#[&^*][A-Za-z0-9-+_]+$"
+      },
+      "examples": [
+        "LDA #$12",
+        "LDX #$1234",
+        "REP #$30"
+      ]
+    },
+
+    "Implied": {
+      "mode": "Implied",
+      "shorthand": "imp",
+      "operandType": "None",
+      "description": "No operand. Instruction implies which register, flag, or memory location is used.",
+      "officialName": "Implied",
+      "length": 1,
+      "format": "$OP",
+      "formatString": "",
+      "parseRegex": "^$",
+      "operandSize": 0,
+      "supportsSymbols": false,
+      "bankWrapping": false,
+      "pageWrapping": false,
+      "validationPatterns": {},
+      "examples": [
+        "CLC",
+        "INX",
+        "RTS"
+      ]
+    },
+
+    "Accumulator": {
+      "mode": "Accumulator",
+      "shorthand": "acc",
+      "operandType": "None",
+      "description": "Operates on accumulator register. Distinguished from Implied because these instructions have multiple addressing modes.",
+      "officialName": "Accumulator",
+      "length": 1,
+      "format": "$OP",
+      "formatString": "",
+      "parseRegex": "^(A)?$",
+      "operandSize": 0,
+      "supportsSymbols": false,
+      "bankWrapping": false,
+      "pageWrapping": false,
+      "validationPatterns": {},
+      "examples": [
+        "ASL",
+        "ROL A",
+        "INC"
+      ]
+    },
+
+    "PCRelative": {
+      "mode": "PCRelative",
+      "shorthand": "rel",
+      "operandType": "Label",
+      "description": "8-bit signed relative branch. Branch distance is -128 to +127 from next instruction.",
+      "officialName": "Relative8",
+      "length": 2,
+      "format": "$OP $LL",
+      "formatString": "{0}",
+      "parseRegex": "^([A-Za-z_][A-Za-z0-9_]*|\\$[A-Fa-f0-9]{2})$",
+      "operandSize": 1,
+      "supportsSymbols": true,
+      "bankWrapping": true,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{2}$",
+        "labelReference": "^[A-Za-z_][A-Za-z0-9_]*$"
+      },
+      "examples": [
+        "BCC LABEL",
+        "BNE $FE"
+      ]
+    },
+
+    "PCRelativeLong": {
+      "mode": "PCRelativeLong",
+      "shorthand": "rel16",
+      "operandType": "Label",
+      "description": "16-bit signed relative branch. Branch distance is -32768 to +32767 from next instruction. BRL only.",
+      "officialName": "Relative16",
+      "length": 3,
+      "format": "$OP $LL $HH",
+      "formatString": "{0}",
+      "parseRegex": "^([A-Za-z_][A-Za-z0-9_]*|\\$[A-Fa-f0-9]{4})$",
+      "operandSize": 2,
+      "supportsSymbols": true,
+      "bankWrapping": true,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{4}$",
+        "labelReference": "^[A-Za-z_][A-Za-z0-9_]*$"
+      },
+      "examples": [
+        "BRL LABEL",
+        "PER LABEL"
+      ]
+    },
+
+    "StackRelative": {
+      "mode": "StackRelative",
+      "shorthand": "stkr",
+      "operandType": "Byte",
+      "description": "Stack relative addressing. Address is $LL+S in bank 0.",
+      "officialName": "Stack,S",
+      "length": 2,
+      "format": "$OP $LL",
+      "formatString": "${0:X2}, S",
+      "parseRegex": "^\\$([A-Fa-f0-9]{2}),\\s?[Ss]$",
+      "operandSize": 1,
+      "supportsSymbols": false,
+      "bankWrapping": true,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{2}$",
+        "stackRegister": ",\\s?[Ss]$"
+      },
+      "examples": [
+        "LDA $12,S",
+        "STA $AB,S"
+      ]
+    },
+
+    "StackRelativeIndirectIndexedY": {
+      "mode": "StackRelativeIndirectIndexedY",
+      "shorthand": "stkr_ind_y",
+      "operandType": "Byte",
+      "description": "16-bit indirect through stack relative address, then add Y. Pointer at $LL+S, data at (pointer)+Y.",
+      "officialName": "(Stack,S),Y",
+      "length": 2,
+      "format": "$OP $LL",
+      "formatString": "(${0:X2}, S), Y",
+      "parseRegex": "^\\(\\$([A-Fa-f0-9]{2}),\\s?[Ss]\\),\\s?[Yy]$",
+      "operandSize": 1,
+      "supportsSymbols": false,
+      "bankWrapping": true,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^\\$[A-Fa-f0-9]{2}$",
+        "stackRegister": ",\\s?[Ss]",
+        "indexRegister": ",\\s?[Yy]"
+      },
+      "examples": [
+        "LDA ($12,S),Y",
+        "STA ($AB,S),Y"
+      ]
+    },
+
+    "BlockMove": {
+      "mode": "BlockMove",
+      "shorthand": "src_dest",
+      "operandType": "BankPair",
+      "description": "Block move source and destination banks. MVN/MVP only. Format is source bank, destination bank.",
+      "officialName": "Source,Destination",
+      "length": 3,
+      "format": "$OP $TT $SS",
+      "formatString": "#${0:X2}, #${1:X2}",
+      "parseRegex": "^#\\$([A-Fa-f0-9]{2}|\\^[A-Za-z0-9-+_]+),\\s?#\\$([A-Fa-f0-9]{2}|\\^[A-Za-z0-9-+_]+)$",
+      "operandSize": 2,
+      "supportsSymbols": true,
+      "bankWrapping": true,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^#\\$[A-Fa-f0-9]{2}$",
+        "symbolReference": "^#\\^[A-Za-z0-9-+_]+$"
+      },
+      "examples": [
+        "MVN #$12, #$34",
+        "MVP #$AB, #$CD"
+      ]
+    },
+
+    "StackInterrupt": {
+      "mode": "StackInterrupt",
+      "shorthand": "stk_int",
+      "operandType": "InterruptVector",
+      "description": "8-bit immediate value for interrupt instructions. Used by COP only.",
+      "officialName": "Stack Interrupt",
+      "length": 2,
+      "format": "$OP $LL",
+      "formatString": "#${0:X2}",
+      "parseRegex": "^#\\$([A-Fa-f0-9]{2})$",
+      "operandSize": 1,
+      "supportsSymbols": false,
+      "bankWrapping": false,
+      "pageWrapping": false,
+      "validationPatterns": {
+        "hexNumber": "^#\\$[A-Fa-f0-9]{2}$"
+      },
+      "examples": [
+        "COP #$12"
+      ]
+    },
+
+    "Stack": {
+      "mode": "Stack",
+      "shorthand": "stk",
+      "operandType": "None",
+      "description": "Stack operations (push/pull). No operand but operates on stack. Internal addressing mode.",
+      "officialName": "Stack",
+      "length": 1,
+      "format": "$OP",
+      "formatString": "",
+      "parseRegex": "^$",
+      "operandSize": 0,
+      "supportsSymbols": false,
+      "bankWrapping": true,
+      "pageWrapping": true,
+      "validationPatterns": {},
+      "examples": [
+        "PHA",
+        "PHP",
+        "PEA #$1234"
+      ]
+    }
+  },
+
+  "addressingModeCategories": {
+    "immediate": ["Immediate", "StackInterrupt"],
+    "absolute": ["Absolute", "AbsoluteIndexedX", "AbsoluteIndexedY", "AbsoluteLong", "AbsoluteLongIndexedX"],
+    "indirect": ["AbsoluteIndirect", "AbsoluteIndirectLong", "AbsoluteIndexedIndirect", "DirectPageIndirect", "DirectPageIndirectLong", "DirectPageIndexedIndirectX", "DirectPageIndirectIndexedY", "DirectPageIndirectLongIndexedY", "StackRelativeIndirectIndexedY"],
+    "directPage": ["DirectPage", "DirectPageIndexedX", "DirectPageIndexedY"],
+    "stack": ["Stack", "StackRelative", "StackRelativeIndirectIndexedY"],
+    "relative": ["PCRelative", "PCRelativeLong"],
+    "noOperand": ["Implied", "Accumulator"],
+    "special": ["BlockMove"]
+  },
+
+  "operandSizes": {
+    "0": ["Implied", "Accumulator", "Stack"],
+    "1": ["DirectPage", "DirectPageIndexedX", "DirectPageIndexedY", "DirectPageIndirect", "DirectPageIndirectLong", "DirectPageIndexedIndirectX", "DirectPageIndirectIndexedY", "DirectPageIndirectLongIndexedY", "Immediate", "StackRelative", "StackRelativeIndirectIndexedY", "PCRelative", "StackInterrupt"],
+    "2": ["Absolute", "AbsoluteIndexedX", "AbsoluteIndexedY", "AbsoluteIndirect", "AbsoluteIndirectLong", "AbsoluteIndexedIndirect", "PCRelativeLong", "BlockMove"],
+    "3": ["AbsoluteLong", "AbsoluteLongIndexedX"],
+    "variable": ["Immediate"]
+  },
+
+  "operandTypes": {
+    "None": {
+      "type": "None",
+      "description": "No operand required",
+      "typeScriptSignature": "",
+      "parameterName": "",
+      "size": 0,
+      "examples": []
+    },
+    "Byte": {
+      "type": "Byte",
+      "description": "8-bit unsigned integer value (0-255)",
+      "typeScriptSignature": "val: Byte",
+      "parameterName": "val",
+      "size": 1,
+      "examples": ["0x12", "255", "$AB"]
+    },
+    "Word": {
+      "type": "Word", 
+      "description": "16-bit unsigned integer value (0-65535)",
+      "typeScriptSignature": "val: Word",
+      "parameterName": "val",
+      "size": 2,
+      "examples": ["0x1234", "65535", "$ABCD"]
+    },
+    "Immediate": {
+      "type": "Immediate",
+      "description": "Immediate value, size depends on processor flags (m/x flags)",
+      "typeScriptSignature": "val: Byte | Word",
+      "parameterName": "val",
+      "size": "1-2",
+      "examples": ["0x12", "0x1234", "#$30"]
+    },
+    "Direct": {
+      "type": "Direct",
+      "description": "8-bit direct page address (0-255)",
+      "typeScriptSignature": "addr: Direct",
+      "parameterName": "addr",
+      "size": 1,
+      "examples": ["0x80", "$12", "Direct.ZeroPage"]
+    },
+    "Absolute": {
+      "type": "Absolute",
+      "description": "16-bit absolute address within current bank",
+      "typeScriptSignature": "addr: Absolute",
+      "parameterName": "addr", 
+      "size": 2,
+      "examples": ["0x1234", "$8000", "Absolute.IoRegs"]
+    },
+    "AbsoluteLong": {
+      "type": "AbsoluteLong",
+      "description": "24-bit long address spanning all banks",
+      "typeScriptSignature": "addr: AbsoluteLong",
+      "parameterName": "addr",
+      "size": 3,
+      "examples": ["0x123456", "$808000", "AbsoluteLong.RomStart"]
+    },
+    "Label": {
+      "type": "Label",
+      "description": "Branch target label or relative offset",
+      "typeScriptSignature": "target: Label",
+      "parameterName": "target",
+      "size": "1-2",
+      "examples": ["'loop'", "0x10", "-5"]
+    },
+    "BankPair": {
+      "type": "BankPair", 
+      "description": "Source and destination bank pair for block moves",
+      "typeScriptSignature": "srcBank: Byte, destBank: Byte",
+      "parameterName": "srcBank, destBank",
+      "size": 2,
+      "examples": ["0x7E, 0x80", "$00, $7F"]
+    },
+    "InterruptVector": {
+      "type": "InterruptVector",
+      "description": "8-bit interrupt vector for COP instruction",
+      "typeScriptSignature": "vector: Byte",
+      "parameterName": "vector",
+      "size": 1,
+      "examples": ["0x12", "$FF", "CopVector.UserDefined"]
+    }
+  },
+
+  "compilationNotes": {
+    "pageWrapping": "Only occurs in emulation mode when DL register is $00",
+    "bankWrapping": "Direct page and stack confined to bank 0, Program Counter confined to bank K",
+    "immediateMode": "Size depends on processor flags: m flag for accumulator, x flag for index registers",
+    "symbolTypes": {
+      "&": "16-bit absolute address symbol",
+      "@": "24-bit long address symbol", 
+      "^": "8-bit bank or immediate symbol",
+      "*": "Current location symbol"
+    },
+    "validation": "All regex patterns are compiled and case-insensitive for register names (X/x, Y/y, S/s)"
+  },
+
+  "operandTypeMapping": {
+    "description": "Mapping of operand types to addressing modes that use them",
+    "byOperandType": {
+      "None": ["Implied", "Accumulator", "Stack"],
+      "Byte": ["StackRelative", "StackRelativeIndirectIndexedY"],
+      "Word": [],
+      "Immediate": ["Immediate"],
+      "Direct": ["DirectPage", "DirectPageIndexedX", "DirectPageIndexedY", "DirectPageIndirect", "DirectPageIndirectLong", "DirectPageIndexedIndirectX", "DirectPageIndirectIndexedY", "DirectPageIndirectLongIndexedY"],
+      "Absolute": ["Absolute", "AbsoluteIndexedX", "AbsoluteIndexedY", "AbsoluteIndirect", "AbsoluteIndirectLong", "AbsoluteIndexedIndirect"],
+      "AbsoluteLong": ["AbsoluteLong", "AbsoluteLongIndexedX"],
+      "Label": ["PCRelative", "PCRelativeLong"],
+      "BankPair": ["BlockMove"],
+      "InterruptVector": ["StackInterrupt"]
+    },
+    "factorySignatures": {
+      "None": "() => Instruction",
+      "Byte": "(val: Byte) => Instruction",
+      "Word": "(val: Word) => Instruction",
+      "Immediate": "(val: Byte | Word) => Instruction",
+      "Direct": "(addr: Direct) => Instruction",
+      "Absolute": "(addr: Absolute) => Instruction",
+      "AbsoluteLong": "(addr: AbsoluteLong) => Instruction",
+      "Label": "(target: Label) => Instruction",
+      "BankPair": "(srcBank: Byte, destBank: Byte) => Instruction",
+      "InterruptVector": "(vector: Byte) => Instruction"
+    }
+  },
+
+  "shorthandReference": {
+    "description": "Quick reference mapping of shorthand labels to full addressing mode names, ordered by common usage",
+    "mapping": {
+      "imm": "Immediate",
+      "abs": "Absolute", 
+      "abs_x": "AbsoluteIndexedX",
+      "abs_y": "AbsoluteIndexedY",
+      "long": "AbsoluteLong",
+      "long_x": "AbsoluteLongIndexedX",
+      "dp": "DirectPage",
+      "dp_x": "DirectPageIndexedX",
+      "dp_y": "DirectPageIndexedY",
+      "dp_ind": "DirectPageIndirect",
+      "dp_indl": "DirectPageIndirectLong",
+      "dp_x_ind": "DirectPageIndexedIndirectX",
+      "dp_ind_y": "DirectPageIndirectIndexedY",
+      "dp_indl_y": "DirectPageIndirectLongIndexedY",
+      "stkr": "StackRelative",
+      "stkr_ind_y": "StackRelativeIndirectIndexedY",
+      "acc": "Accumulator",
+      "imp": "Implied",
+      "rel": "PCRelative",
+      "rel16": "PCRelativeLong",
+      "abs_ind": "AbsoluteIndirect",
+      "abs_indl": "AbsoluteIndirectLong",
+      "abs_x_ind": "AbsoluteIndexedIndirect",
+      "src_dest": "BlockMove",
+      "stk_int": "StackInterrupt",
+      "stk": "Stack"
+    },
+    "generateFactoryMethods": "Use shorthand labels as method names for type-safe factory pattern generation",
+    "exampleUsage": "lda.imm(0x12), lda.abs(0x1234), lda.dp_x(0x80), mvn.src_dest(0x80, 0x7E)"
+  }
+} 

@@ -1,0 +1,27 @@
+{
+  "name": "65c816-instruction-set-complete",
+  "version": "1.0.0",
+  "description": "Complete 65c816 instruction set with TypeScript validation metadata",
+  "baseProcessor": "65c816-processor-schema.json",
+  "generatedFrom": "GaiaLib/db/65c816/opCodes.json",
+  "totalInstructions": 92,
+  "totalVariants": 256,
+  "cycleNotation": {
+    "description": "65C816 cycle timing formulas",
+    "notation": {
+      "base": "Base cycle count",
+      "m_flag_penalty": "Subtract 1 cycle when M flag is 0 (16-bit accumulator)",
+      "x_flag_penalty": "Subtract 1 cycle when X flag is 0 (16-bit index registers)",
+      "m_double_penalty": "Subtract 2 cycles when M flag is 0 (16-bit accumulator)",
+      "direct_page_penalty": "Add 1 cycle when Direct Page register is not zero",
+      "page_boundary_penalty": "Add 1 cycle when page boundary is crossed",
+      "branch_taken_penalty": "Add 1 cycle when branch is taken",
+      "emulation_page_penalty": "Add 1 cycle in emulation mode when page boundary is crossed"
+    },
+    "examples": {
+      "5-m": "5 cycles in 8-bit mode, 4 cycles in 16-bit mode",
+      "4-m+w": "4-5 cycles in 8-bit mode, 3-4 cycles in 16-bit mode, +1 if Direct Page ≠ 0",
+      "6-m-x+x*p": "Complex: depends on M flag, X flag, and page boundary crossing"
+    }
+  }
+} 

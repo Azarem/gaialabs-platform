@@ -3,8 +3,15 @@ const { PrismaClient } = pkg;
 import type { Game, GameBlock } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 const prisma = new PrismaClient();
+
+// --- Database Path Configuration ---
+const DB_PATH = '../../ext/GaiaLib/db/us'; // Hardcoded relative path
 
 // --- Game and Release Master Data ---
 const GAME_TITLE = 'Illusion of Gaia';
@@ -24,19 +31,42 @@ const RELEASE_ROM_CRC = 0x1C3848C0;
 async function main() {
   console.log('Starting seed process...');
 
-  // 1. Clean up existing data for a clean seed
-  console.log('Clearing existing data...');
+  // 1. First, seed the 65C816 instruction set data
+  console.log('🔄 Seeding 65C816 instruction set...');
+  try {
+    await execAsync('npx ts-node prisma/scripts/seed-65c816.ts');
+    console.log('✅ 65C816 instruction set seeded successfully');
+  } catch (error) {
+    console.error('❌ Failed to seed 65C816 instruction set:', error);
+    throw error;
+  }
+
+  // 2. Clean up existing game data for a clean seed
+  console.log('Clearing existing game data...');
+  
+  // Clear release-specific data first
+  await prisma.releaseLabel.deleteMany({});
+  await prisma.releaseTransform.deleteMany({});
+  await prisma.releaseRewrite.deleteMany({});
+  await prisma.releaseOverride.deleteMany({});
   await prisma.releasePart.deleteMany({});
-  await prisma.gamePart.deleteMany({});
   await prisma.releaseBlock.deleteMany({});
-  await prisma.gameBlock.deleteMany({});
   await prisma.releaseFile.deleteMany({});
+  
+  // Clear game-specific data
+  await prisma.gameCop.deleteMany({});
+  await prisma.gameMnemonic.deleteMany({});
+  await prisma.gamePart.deleteMany({});
+  await prisma.gameBlock.deleteMany({});
   await prisma.gameFile.deleteMany({});
+  
+  // Clear top-level entities
   await prisma.release.deleteMany({});
   await prisma.game.deleteMany({});
-  console.log('Data cleared.');
+  
+  console.log('Game data cleared.');
 
-  // 2. Create the master Game record
+  // 3. Create the master Game record
   console.log(`Creating Game: ${GAME_TITLE}`);
   const game = await prisma.game.create({
     data: {
@@ -51,7 +81,7 @@ async function main() {
   });
   console.log(`Created game with ID: ${game.id}`);
 
-  // 3. Create the Release record
+  // 4. Create the Release record
   console.log(`Creating Release: ${RELEASE_ROM_TITLE}`);
   const release = await prisma.release.create({
     data: {
@@ -65,18 +95,9 @@ async function main() {
   });
   console.log(`Created release with ID: ${release.id}`);
 
-  // 4. Get the path to the DB files from command-line arguments
-  const dbPath = process.argv[2];
-  if (!dbPath) {
-    console.error(
-      'Error: Please provide the path to the database directory (e.g., ext/GaiaLib/db/us) as an argument.'
-    );
-    process.exit(1);
-  }
-  console.log(`Using database path: ${dbPath}`);
-
   // 5. Read and process files.json
-  const filesPath = path.join(dbPath, 'files.json');
+  console.log(`Using database path: ${DB_PATH}`);
+  const filesPath = path.join(DB_PATH, 'files.json');
   console.log(`Reading files from: ${filesPath}`);
   const filesFile = fs.readFileSync(filesPath, 'utf-8');
   const filesData = JSON.parse(filesFile);
@@ -103,7 +124,7 @@ async function main() {
   console.log('Finished importing files.');
 
   // 6. Read and process blocks.json
-  const blocksPath = path.join(dbPath, 'blocks.json');
+  const blocksPath = path.join(DB_PATH, 'blocks.json');
   console.log(`Reading blocks from: ${blocksPath}`);
   const blocksFile = fs.readFileSync(blocksPath, 'utf-8');
   const blocksData = JSON.parse(blocksFile);
@@ -130,7 +151,7 @@ async function main() {
   console.log('Finished importing blocks.');
 
   // 7. Read and process parts.json
-  const partsPath = path.join(dbPath, 'parts.json');
+  const partsPath = path.join(DB_PATH, 'parts.json');
   console.log(`Reading parts from: ${partsPath}`);
   const partsFile = fs.readFileSync(partsPath, 'utf-8');
   const partsData = JSON.parse(partsFile);
@@ -167,7 +188,170 @@ async function main() {
   }
   console.log('Finished importing parts.');
 
+  // 8. Read and process game-specific data files
+  await seedGameMnemonics(game.id);
+  await seedGameCops(game.id);
+
+  // 9. Read and process release-specific data files  
+  await seedReleaseOverrides(release.id);
+  await seedReleaseRewrites(release.id);
+  await seedReleaseTransforms(release.id);
+  await seedReleaseLabels(release.id);
+
   console.log('Seed process finished successfully.');
+}
+
+// Game-specific data seeding functions
+async function seedGameMnemonics(gameId: string) {
+  const mnemonicsPath = path.join(DB_PATH, 'mnemonics_old.json');
+  console.log(`Reading mnemonics from: ${mnemonicsPath}`);
+  
+  if (!fs.existsSync(mnemonicsPath)) {
+    console.log('No mnemonics file found, skipping...');
+    return;
+  }
+  
+  const mnemonicsFile = fs.readFileSync(mnemonicsPath, 'utf-8');
+  const mnemonicsData = JSON.parse(mnemonicsFile);
+  
+  console.log(`Importing ${mnemonicsData.length} mnemonics...`);
+  for (const mnemonicData of mnemonicsData) {
+    await prisma.gameMnemonic.create({
+      data: {
+        gameId,
+        key: mnemonicData.key,
+        value: mnemonicData.value,
+      },
+    });
+  }
+  console.log('Finished importing mnemonics.');
+}
+
+async function seedGameCops(gameId: string) {
+  const copsPath = path.join(DB_PATH, 'copdef.json');
+  console.log(`Reading COP definitions from: ${copsPath}`);
+  
+  if (!fs.existsSync(copsPath)) {
+    console.log('No copdef file found, skipping...');
+    return;
+  }
+  
+  const copsFile = fs.readFileSync(copsPath, 'utf-8');
+  const copsData = JSON.parse(copsFile);
+  
+  console.log(`Importing ${copsData.length} COP definitions...`);
+  for (const copData of copsData) {
+    await prisma.gameCop.create({
+      data: {
+        gameId,
+        code: copData.code,
+        mnem: copData.mnem,
+        size: copData.size,
+        halt: copData.halt,
+        parts: copData.parts,
+      },
+    });
+  }
+  console.log('Finished importing COP definitions.');
+}
+
+// Release-specific data seeding functions
+async function seedReleaseOverrides(releaseId: string) {
+  const overridesPath = path.join(DB_PATH, 'overrides.json');
+  console.log(`Reading overrides from: ${overridesPath}`);
+  
+  if (!fs.existsSync(overridesPath)) {
+    console.log('No overrides file found, skipping...');
+    return;
+  }
+  
+  const overridesFile = fs.readFileSync(overridesPath, 'utf-8');
+  const overridesData = JSON.parse(overridesFile);
+  
+  console.log(`Importing ${overridesData.length} overrides...`);
+  for (const overrideData of overridesData) {
+    await prisma.releaseOverride.create({
+      data: {
+        releaseId,
+        data: overrideData,
+      },
+    });
+  }
+  console.log('Finished importing overrides.');
+}
+
+async function seedReleaseRewrites(releaseId: string) {
+  const rewritesPath = path.join(DB_PATH, 'rewrites.json');
+  console.log(`Reading rewrites from: ${rewritesPath}`);
+  
+  if (!fs.existsSync(rewritesPath)) {
+    console.log('No rewrites file found, skipping...');
+    return;
+  }
+  
+  const rewritesFile = fs.readFileSync(rewritesPath, 'utf-8');
+  const rewritesData = JSON.parse(rewritesFile);
+  
+  console.log(`Importing ${rewritesData.length} rewrites...`);
+  for (const rewriteData of rewritesData) {
+    await prisma.releaseRewrite.create({
+      data: {
+        releaseId,
+        data: rewriteData,
+      },
+    });
+  }
+  console.log('Finished importing rewrites.');
+}
+
+async function seedReleaseTransforms(releaseId: string) {
+  const transformsPath = path.join(DB_PATH, 'transforms.json');
+  console.log(`Reading transforms from: ${transformsPath}`);
+  
+  if (!fs.existsSync(transformsPath)) {
+    console.log('No transforms file found, skipping...');
+    return;
+  }
+  
+  const transformsFile = fs.readFileSync(transformsPath, 'utf-8');
+  const transformsData = JSON.parse(transformsFile);
+  
+  console.log(`Importing ${transformsData.length} transforms...`);
+  for (const transformData of transformsData) {
+    await prisma.releaseTransform.create({
+      data: {
+        releaseId,
+        block: transformData.block,
+        transforms: transformData.transforms,
+      },
+    });
+  }
+  console.log('Finished importing transforms.');
+}
+
+async function seedReleaseLabels(releaseId: string) {
+  const labelsPath = path.join(DB_PATH, 'labels.json');
+  console.log(`Reading labels from: ${labelsPath}`);
+  
+  if (!fs.existsSync(labelsPath)) {
+    console.log('No labels file found, skipping...');
+    return;
+  }
+  
+  const labelsFile = fs.readFileSync(labelsPath, 'utf-8');
+  const labelsData = JSON.parse(labelsFile);
+  
+  console.log(`Importing ${labelsData.length} labels...`);
+  for (const labelData of labelsData) {
+    await prisma.releaseLabel.create({
+      data: {
+        releaseId,
+        location: labelData.location,
+        label: labelData.label,
+      },
+    });
+  }
+  console.log('Finished importing labels.');
 }
 
 main()

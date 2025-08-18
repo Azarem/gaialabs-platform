@@ -1,14 +1,11 @@
 import { RomDataReader } from './reader';
-import { Address, AddressSpace, AddressType, MemberType, RomProcessingConstants, AsmBlockUtils, ChunkFileUtils } from '@gaialabs/shared';
+import { Address, AddressSpace, AddressType, MemberType, RomProcessingConstants, AsmBlockUtils, ChunkFileUtils, TableEntry } from '@gaialabs/shared';
 import type { DbStringType, DbStringCommand } from '@gaialabs/shared';
 import type { StringWrapper } from '@gaialabs/shared';
 import type { BlockReader } from './blocks';
 import { indexOfAny } from '../../utils';
 
-interface TableEntry {
-  Location: number;
-  Object: StringWrapper;
-}
+// Using shared TableEntry type from @gaialabs/shared
 
 /**
  * Reads and processes strings from ROM data
@@ -177,7 +174,8 @@ export class StringReader {
               // Try to find the target using IsOutside pattern
               const [isOutside, block, part] = ChunkFileUtils.isOutsideWithPart(this._blockReader._enrichedChunks, this._blockReader._currentChunk!, sloc);
               if (part != null) {
-                const entry = part.objList?.find(x => x.location === target);
+                const entry = part.objList?.find((x): x is TableEntry => 
+                  typeof x === 'object' && x !== null && 'location' in x && 'object' in x && (x as TableEntry).location === target) as TableEntry | undefined;
                 if (entry && entry.object) {
                   (entry.object as StringWrapper).marker = offset;
                 }

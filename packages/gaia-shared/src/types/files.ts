@@ -21,6 +21,7 @@ export interface ChunkFile {
   compressed?: boolean;
   upper?: boolean;
   rawData?: Uint8Array | null;
+  textData?: string;
   transforms?: { key: string; value: string }[];
   postProcess?: string;
   mnemonics: Record<number, string>;
@@ -111,9 +112,11 @@ function enrichWithRawDataFromDbFile(rom: Uint8Array, chunkFile: ChunkFile, comp
     fileData = combineHeader(rom, start, length, header, dbFile.type);
   }
   
+  const hasSizePrefix = chunkFile.compressed !== undefined || dbFile.type === BinType.Sound;
+
   // Binary files get rawData
   chunkFile.rawData = fileData;
-  chunkFile.size = fileData.length + (chunkFile.compressed !== undefined ? 2 : 0) + (dbFile.type === BinType.Sound ? 2 : 0);
+  chunkFile.size = fileData.length + (hasSizePrefix ? 2 : 0);
 }
 
 /**

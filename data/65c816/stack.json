@@ -1,0 +1,268 @@
+{
+  "description": "Stack operations",
+  "instructions": {
+    "PHA": {
+      "mnemonic": "PHA",
+      "description": "Push Accumulator",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 72,
+          "size": 1,
+          "cycles": {
+            "base": 4,
+            "m_flag_penalty": -1,
+            "description": "3 cycles (16-bit), 4 cycles (8-bit)"
+          }
+        }
+      ]
+    },
+    "PHX": {
+      "mnemonic": "PHX",
+      "description": "Push X Register",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 218,
+          "size": 1,
+          "cycles": {
+            "base": 4,
+            "x_flag_penalty": -1,
+            "description": "3 cycles (16-bit), 4 cycles (8-bit)"
+          }
+        }
+      ]
+    },
+    "PHY": {
+      "mnemonic": "PHY",
+      "description": "Push Y Register",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 90,
+          "size": 1,
+          "cycles": {
+            "base": 4,
+            "x_flag_penalty": -1,
+            "description": "3 cycles (16-bit), 4 cycles (8-bit)"
+          }
+        }
+      ]
+    },
+    "PLA": {
+      "mnemonic": "PLA",
+      "description": "Pull Accumulator",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 104,
+          "size": 1,
+          "cycles": {
+            "base": 5,
+            "m_flag_penalty": -1,
+            "description": "4 cycles (16-bit), 5 cycles (8-bit)"
+          }
+        }
+      ]
+    },
+    "PLX": {
+      "mnemonic": "PLX",
+      "description": "Pull X Register",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 250,
+          "size": 1,
+          "cycles": {
+            "base": 5,
+            "x_flag_penalty": -1,
+            "description": "4 cycles (16-bit), 5 cycles (8-bit)"
+          }
+        }
+      ]
+    },
+    "PLY": {
+      "mnemonic": "PLY",
+      "description": "Pull Y Register",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 122,
+          "size": 1,
+          "cycles": {
+            "base": 5,
+            "x_flag_penalty": -1,
+            "description": "4 cycles (16-bit), 5 cycles (8-bit)"
+          }
+        }
+      ]
+    },
+    "PHB": {
+      "mnemonic": "PHB",
+      "description": "Push Data Bank Register",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 139,
+          "size": 1,
+          "cycles": {
+            "base": 3,
+            "description": "3 cycles"
+          }
+        }
+      ]
+    },
+    "PHD": {
+      "mnemonic": "PHD",
+      "description": "Push Direct Register",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 11,
+          "size": 1,
+          "cycles": {
+            "base": 4,
+            "description": "4 cycles"
+          }
+        }
+      ]
+    },
+    "PHK": {
+      "mnemonic": "PHK",
+      "description": "Push Program Bank Register",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 75,
+          "size": 1,
+          "cycles": {
+            "base": 3,
+            "description": "3 cycles"
+          }
+        }
+      ]
+    },
+    "PHP": {
+      "mnemonic": "PHP",
+      "description": "Push Processor Status",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 8,
+          "size": 1,
+          "cycles": {
+            "base": 3,
+            "description": "3 cycles"
+          }
+        }
+      ]
+    },
+    "PLB": {
+      "mnemonic": "PLB",
+      "description": "Pull Data Bank Register",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 171,
+          "size": 1,
+          "cycles": {
+            "base": 4,
+            "description": "4 cycles"
+          }
+        }
+      ]
+    },
+    "PLD": {
+      "mnemonic": "PLD",
+      "description": "Pull Direct Register",
+      "affectsFlags": ["N", "Z"],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 43,
+          "size": 1,
+          "cycles": {
+            "base": 5,
+            "description": "5 cycles"
+          }
+        }
+      ]
+    },
+    "PLP": {
+      "mnemonic": "PLP",
+      "description": "Pull Processor Status",
+      "affectsFlags": ["*"],
+      "variants": [
+        {
+          "addressingMode": "Stack",
+          "opcode": 40,
+          "size": 1,
+          "cycles": {
+            "base": 4,
+            "description": "4 cycles"
+          }
+        }
+      ]
+    },
+    "PEA": {
+      "mnemonic": "PEA",
+      "description": "Push Effective Address",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "Absolute",
+          "opcode": 244,
+          "size": 3,
+          "cycles": {
+            "base": 5,
+            "description": "5 cycles"
+          }
+        }
+      ]
+    },
+    "PEI": {
+      "mnemonic": "PEI",
+      "description": "Push Effective Indirect Address",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "DirectPageIndirect",
+          "opcode": 212,
+          "size": 2,
+          "cycles": {
+            "base": 6,
+            "description": "6+w",
+            "note": "Formula not fully parsed"
+          }
+        }
+      ]
+    },
+    "PER": {
+      "mnemonic": "PER",
+      "description": "Push Effective Relative Address",
+      "affectsFlags": [],
+      "variants": [
+        {
+          "addressingMode": "PCRelativeLong",
+          "opcode": 98,
+          "size": 3,
+          "cycles": {
+            "base": 6,
+            "description": "6 cycles"
+          }
+        }
+      ]
+    }
+  }
+} 
