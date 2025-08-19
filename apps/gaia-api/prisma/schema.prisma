@@ -38,8 +38,9 @@ model Game {
   releases Release[]
   
   // Game-specific data structures
-  mnemonics GameMnemonic[]
-  cops      GameCop[]
+  mnemonics   GameMnemonic[]
+  cops        GameCop[]
+  gameStrings GameString[]
 
   // Audit fields
   createdAt   DateTime  @default(now())
@@ -157,10 +158,11 @@ model Release {
   parts  ReleasePart[]
   
   // Release-specific data structures
-  overrides  ReleaseOverride[]
-  rewrites   ReleaseRewrite[]
-  transforms ReleaseTransform[]
-  labels     ReleaseLabel[]
+  overrides     ReleaseOverride[]
+  rewrites      ReleaseRewrite[]
+  transforms    ReleaseTransform[]
+  labels        ReleaseLabel[]
+  releaseStrings ReleaseString[]
 
   // Audit fields
   createdAt   DateTime  @default(now())
@@ -359,6 +361,18 @@ model User {
   createdReleaseParts ReleasePart[]  @relation("CreatedReleaseParts")
   updatedReleaseParts ReleasePart[]  @relation("UpdatedReleaseParts")
   deletedReleaseParts ReleasePart[]  @relation("DeletedReleaseParts")
+
+  createdGameStrings    GameString[]    @relation("CreatedGameStrings")
+  updatedGameStrings    GameString[]    @relation("UpdatedGameStrings")
+  deletedGameStrings    GameString[]    @relation("DeletedGameStrings")
+
+  createdReleaseStrings ReleaseString[] @relation("CreatedReleaseStrings")
+  updatedReleaseStrings ReleaseString[] @relation("UpdatedReleaseStrings")
+  deletedReleaseStrings ReleaseString[] @relation("DeletedReleaseStrings")
+
+  createdReleaseStringCommands ReleaseStringCommand[] @relation("CreatedReleaseStringCommands")
+  updatedReleaseStringCommands ReleaseStringCommand[] @relation("UpdatedReleaseStringCommands")
+  deletedReleaseStringCommands ReleaseStringCommand[] @relation("DeletedReleaseStringCommands")
 }
 
 model VerificationToken {
@@ -663,4 +677,151 @@ model ReleaseLabel {
   updatedAt DateTime @updatedAt
   
   @@unique([releaseId, location])
+}
+
+// =====================================================
+// STRING PROCESSING MODELS
+// =====================================================
+
+// Game-specific string type definition (replaces StringType)
+model GameString {
+  id String @id @default(cuid())
+  
+  // Relationships
+  game   Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId String
+  
+  // Base string type properties
+  name        String  // e.g., "ASCIIString", "WideString"
+  delimiter   String  // e.g., "|", "`", "~"
+  shiftType   String? // e.g., "wh2", "h2"
+  terminator  Int     // Terminator byte value
+  greedyTerminator Boolean @default(false)
+  description String? // Optional description of how this string type is used in this game
+  
+  // Relationships
+  commands       GameStringCommand[]
+  releaseStrings ReleaseString[]
+  
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+  deletedById String?
+  
+  createdBy User? @relation("CreatedGameStrings", fields: [createdById], references: [id])
+  updatedBy User? @relation("UpdatedGameStrings", fields: [updatedById], references: [id])
+  deletedBy User? @relation("DeletedGameStrings", fields: [deletedById], references: [id])
+  
+  @@unique([gameId, name])
+}
+
+// Commands for GameString
+model GameStringCommand {
+  id        String  @id @default(cuid())
+  key       Int     // Command key/code
+  value     String  // Command name/mnemonic
+  types     Json    // Array of parameter types
+  delimiter Int?    // Optional delimiter for ESC commands
+  halt      Boolean @default(false) // Whether this command halts processing
+  
+  // Relationships
+  gameString   GameString @relation(fields: [gameStringId], references: [id], onDelete: Cascade)
+  gameStringId String
+  
+  // Release overrides
+  releaseStringCommands ReleaseStringCommand[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([gameStringId, key])
+}
+
+// Override table for GameString with actual character map and properties
+model ReleaseString {
+  id String @id @default(cuid())
+  
+  // Relationships
+  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  releaseId String
+  
+  gameString   GameString @relation(fields: [gameStringId], references: [id], onDelete: Cascade)
+  gameStringId String
+  
+  // --- Overridable fields ---
+  name             String? // Override the string type name for this release
+  delimiter        String? // Override delimiter
+  shiftType        String? // Override shiftType
+  terminator       Int?    // Override terminator
+  greedyTerminator Boolean? // Override greedyTerminator
+  characterMap     Json    // Array of character mappings - THIS IS WHERE THE ACTUAL DATA LIVES
+  description      String? // Override the description for this release
+  
+  // Relationships
+  commands ReleaseStringCommand[]
+  layers   ReleaseStringLayer[]
+  
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+  deletedById String?
+  
+  createdBy User? @relation("CreatedReleaseStrings", fields: [createdById], references: [id])
+  updatedBy User? @relation("UpdatedReleaseStrings", fields: [updatedById], references: [id])
+  deletedBy User? @relation("DeletedReleaseStrings", fields: [deletedById], references: [id])
+  
+  @@unique([releaseId, gameStringId])
+}
+
+// Override table for GameStringCommand
+model ReleaseStringCommand {
+  id String @id @default(cuid())
+  
+  // Relationships
+  releaseString   ReleaseString @relation(fields: [releaseStringId], references: [id], onDelete: Cascade)
+  releaseStringId String
+  
+  gameStringCommand   GameStringCommand @relation(fields: [gameStringCommandId], references: [id], onDelete: Cascade)
+  gameStringCommandId String
+  
+  // --- Overridable fields ---
+  key       Int?     // Override command key/code
+  value     String?  // Override command name/mnemonic
+  types     Json?    // Override parameter types
+  delimiter Int?     // Override delimiter for ESC commands
+  halt      Boolean? // Override whether this command halts processing
+  
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+  deletedById String?
+  
+  createdBy User? @relation("CreatedReleaseStringCommands", fields: [createdById], references: [id])
+  updatedBy User? @relation("UpdatedReleaseStringCommands", fields: [updatedById], references: [id])
+  deletedBy User? @relation("DeletedReleaseStringCommands", fields: [deletedById], references: [id])
+  
+  @@unique([releaseStringId, gameStringCommandId])
+}
+
+// Layers for ReleaseString
+model ReleaseStringLayer {
+  id   String @id @default(cuid())
+  base Int    // Base offset for the layer
+  map  Json   // Array of character mappings for this layer
+  
+  // Relationships
+  releaseString   ReleaseString @relation(fields: [releaseStringId], references: [id], onDelete: Cascade)
+  releaseStringId String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

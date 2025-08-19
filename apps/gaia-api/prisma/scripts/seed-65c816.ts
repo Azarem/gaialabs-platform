@@ -452,11 +452,17 @@ async function main() {
   }
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// Export the function for use in main seed script
+export { main as seed65C816 };
+
+// Only run directly if this file is executed directly
+if (process.argv[1]?.includes('seed-65c816.ts')) {
+  main()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

@@ -3,12 +3,44 @@ const { PrismaClient } = pkg;
 import type { Game, GameBlock } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 
-const execAsync = promisify(exec);
+// Import seed functions from other modules - will resolve at runtime
+let seed65C816: any;
+let seedStringTypesExternal: any;
+
+// Dynamic imports to avoid circular dependencies
+async function initSeedFunctions() {
+  try {
+    const mod65c816 = await import('file://' + import.meta.url.replace(/seed\.ts$/, 'seed-65c816.ts'));
+    seed65C816 = mod65c816.seed65C816;
+  } catch (error) {
+    try {
+      // Fallback: try different import path
+      const mod65c816 = await import('./seed-65c816.ts');
+      seed65C816 = mod65c816.seed65C816;
+    } catch (error2) {
+      console.warn('Could not import seed65C816:', error2);
+    }
+  }
+  
+  try {
+    const modStringTypes = await import('file://' + import.meta.url.replace(/seed\.ts$/, 'seed-string-types.ts'));
+    seedStringTypesExternal = modStringTypes.seedStringTypes;
+  } catch (error) {
+    try {
+      // Fallback: try different import path
+      const modStringTypes = await import('./seed-string-types.ts');
+      seedStringTypesExternal = modStringTypes.seedStringTypes;
+    } catch (error2) {
+      console.warn('Could not import seedStringTypes:', error2);
+    }
+  }
+}
+
 
 const prisma = new PrismaClient();
+
+
 
 // --- Database Path Configuration ---
 const DB_PATH = '../../ext/GaiaLib/db/us'; // Hardcoded relative path
@@ -28,20 +60,30 @@ const RELEASE_ROM_CODE = '01JG  ';
 const RELEASE_ROM_TITLE = 'ILLUSION OF GAIA USA ';
 const RELEASE_ROM_CRC = 0x1C3848C0;
 
+
 async function main() {
   console.log('Starting seed process...');
+  
+  // Initialize imported functions
+  await initSeedFunctions();
 
-  // 1. First, seed the 65C816 instruction set data
+  // 1. First, seed the 65C816 instruction set
   console.log('🔄 Seeding 65C816 instruction set...');
   try {
-    await execAsync('npx ts-node prisma/scripts/seed-65c816.ts');
-    console.log('✅ 65C816 instruction set seeded successfully');
+    if (seed65C816) {
+      await seed65C816();
+      console.log('✅ 65C816 instruction set seeded successfully');
+    } else {
+      console.warn('⚠️ seed65C816 function not available, skipping');
+    }
   } catch (error) {
     console.error('❌ Failed to seed 65C816 instruction set:', error);
     throw error;
   }
 
-  // 2. Clean up existing game data for a clean seed
+  // 2. Skip string types seeding at this point - we'll do it after creating game/release
+
+  // 3. Clean up existing game data for a clean seed
   console.log('Clearing existing game data...');
   
   // Clear release-specific data first
@@ -66,7 +108,7 @@ async function main() {
   
   console.log('Game data cleared.');
 
-  // 3. Create the master Game record
+  // 4. Create the master Game record
   console.log(`Creating Game: ${GAME_TITLE}`);
   const game = await prisma.game.create({
     data: {
@@ -81,7 +123,7 @@ async function main() {
   });
   console.log(`Created game with ID: ${game.id}`);
 
-  // 4. Create the Release record
+  // 5. Create the Release record
   console.log(`Creating Release: ${RELEASE_ROM_TITLE}`);
   const release = await prisma.release.create({
     data: {
@@ -95,7 +137,21 @@ async function main() {
   });
   console.log(`Created release with ID: ${release.id}`);
 
-  // 5. Read and process files.json
+  // 6. Seed string types now that we have game and release IDs
+  console.log('🔄 Seeding string types...');
+  try {
+    if (seedStringTypesExternal) {
+      await seedStringTypesExternal(game.id, release.id);
+      console.log('✅ String types seeded successfully');
+    } else {
+      console.warn('⚠️ seedStringTypes function not available, skipping');
+    }
+  } catch (error) {
+    console.error('❌ Failed to seed string types:', error);
+    throw error;
+  }
+
+  // 7. Read and process files.json
   console.log(`Using database path: ${DB_PATH}`);
   const filesPath = path.join(DB_PATH, 'files.json');
   console.log(`Reading files from: ${filesPath}`);
@@ -123,7 +179,7 @@ async function main() {
   }
   console.log('Finished importing files.');
 
-  // 6. Read and process blocks.json
+  // 7. Read and process blocks.json
   const blocksPath = path.join(DB_PATH, 'blocks.json');
   console.log(`Reading blocks from: ${blocksPath}`);
   const blocksFile = fs.readFileSync(blocksPath, 'utf-8');
@@ -150,7 +206,7 @@ async function main() {
   }
   console.log('Finished importing blocks.');
 
-  // 7. Read and process parts.json
+  // 8. Read and process parts.json
   const partsPath = path.join(DB_PATH, 'parts.json');
   console.log(`Reading parts from: ${partsPath}`);
   const partsFile = fs.readFileSync(partsPath, 'utf-8');
@@ -188,11 +244,11 @@ async function main() {
   }
   console.log('Finished importing parts.');
 
-  // 8. Read and process game-specific data files
+  // 9. Read and process game-specific data files
   await seedGameMnemonics(game.id);
   await seedGameCops(game.id);
 
-  // 9. Read and process release-specific data files  
+  // 10. Read and process release-specific data files  
   await seedReleaseOverrides(release.id);
   await seedReleaseRewrites(release.id);
   await seedReleaseTransforms(release.id);
