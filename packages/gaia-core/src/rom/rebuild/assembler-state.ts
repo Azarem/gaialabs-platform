@@ -1,6 +1,6 @@
 import { DbRoot, DbStruct, RomProcessingConstants } from '@gaialabs/shared';
-import { AddressingMode, AsmBlock } from '@gaialabs/shared';
-import { OpCode, GROUPED_OPCODES, ADDRESSING_REGEX, HEX_REGEX } from '../../assembly/OpCode';
+import { AsmBlock } from '@gaialabs/shared';
+import { OpCode } from '../../assembly/OpCode';
 import { Op } from '../../assembly/Op';
 import type { AssemblerContext } from './assembler-context';
 
@@ -172,14 +172,14 @@ export class AssemblerState {
         return;
       }
 
-      if (this.context.lineBuffer.startsWith('DB')) {
-        const hex = this.context.lineBuffer.substring(2).replace(HEX_REGEX, '');
-        const data = this.hexStringToBytes(hex);
-        this.context.currentBlock!.objList.push(data);
-        this.context.currentBlock!.size += data.length;
-        this.context.lineBuffer = '';
-        continue;
-      }
+      // if (this.context.lineBuffer.startsWith('DB')) {
+      //   const hex = this.context.lineBuffer.substring(2).replace(HEX_REGEX, '');
+      //   const data = this.hexStringToBytes(hex);
+      //   this.context.currentBlock!.objList.push(data);
+      //   this.context.currentBlock!.size += data.length;
+      //   this.context.lineBuffer = '';
+      //   continue;
+      // }
 
       let mnemonic: string | null = null;
       let operand: string | null = null;
@@ -286,7 +286,7 @@ export class AssemblerState {
 
       if (mnemonic && mnemonic.length > 0) {
         // Get list of opcodes from mnemonic
-        const codes = GROUPED_OPCODES[mnemonic.toUpperCase()];
+        const codes = this.root.opLookup[mnemonic.toUpperCase()];
 
         // If no codes were found, try to create a label
         if (!codes || codes.length === 0) {
@@ -302,7 +302,7 @@ export class AssemblerState {
         this.context.lineBuffer = '';
 
         // No operand instructions
-        if (!operand || operand.length === 0) {
+        if (!operand) {
           this.context.currentBlock!.objList.push(new Op(
             codes.find(x => x.size === 1)!,
             0,
@@ -318,7 +318,7 @@ export class AssemblerState {
 
         // COP processing
         let opCode: OpCode | null = codes[0];
-        if (opCode.mnem === 'COP') {
+        if (opCode?.mnem === 'COP') {
           const parts = operand.split(/[\s\t,()[\]$#]/).filter(p => p.length > 0);
 
           const cop = this.root.copLookup[parts[0]];
@@ -341,13 +341,14 @@ export class AssemblerState {
         opCode = null;
         for (const code of codes) {
           // Keep branch operands until all blocks are processed (for labels)
-          if (code.mode === AddressingMode.PCRelative || code.mode === AddressingMode.PCRelativeLong) {
+          if (code.mode === 'PCRelative' || code.mode === 'PCRelativeLong') {
             opCode = code;
             break;
           }
 
           // Regex parse operand based on addressing mode
-          const regex = ADDRESSING_REGEX[code.mode];
+          const addrMode = this.root.addrLookup[code.mode]; 
+          const regex = addrMode.regex;
           if (regex) {
             const match = regex.exec(operand);
             if (match) {
@@ -367,26 +368,26 @@ export class AssemblerState {
           }
         }
 
-        if (operand && operand.startsWith('#')) {
-          operand = operand.substring(1);
+        if (operand!.startsWith('#')) {
+          operand = operand!.substring(1);
         }
 
-        if (operand && operand.startsWith('$')) {
-          operand = operand.substring(1);
+        if (operand!.startsWith('$')) {
+          operand = operand!.substring(1);
         }
 
         if (opCode == null) {
-          const addrIx = operand.search(RomProcessingConstants.ADDRESS_SPACE_REGEX);
-          if (addrIx >= 0) {
-            const eix = operand.search(/[\s\t,\])]/);
-            if (eix >= 0) {
-              operand = operand.substring(addrIx, eix);
+          const addrIx = operand!.search(RomProcessingConstants.ADDRESS_SPACE_REGEX);
+          if (addrIx && addrIx >= 0) {
+            const eix = operand!.search(/[\s\t,\])]/);
+            if (eix && eix >= 0) {
+              operand = operand!.substring(addrIx, eix);
             }
           }
 
-          opCode = codes.find(x => x.mode === AddressingMode.Immediate)
-            ?? codes.find(x => x.mode === AddressingMode.AbsoluteLong)
-            ?? codes.find(x => x.mode === AddressingMode.Absolute)
+          opCode = codes.find(x => x.mode === 'Immediate')
+            ?? codes.find(x => x.mode === 'AbsoluteLong')
+            ?? codes.find(x => x.mode === 'Absolute')
             ?? null;
 
           if (opCode == null) {
@@ -394,11 +395,11 @@ export class AssemblerState {
           }
         }
 
-        const opnd1 = this.context.parseOperand(operand);
+        const opnd1 = this.context.parseOperand(operand!);
 
         let size = opCode.size;
         if (size === -2) {
-          size = operand.startsWith('^') || typeof opnd1 === 'number' && opnd1 <= 0xFF ? 2 : 3;
+          size = operand?.startsWith('^') || typeof opnd1 === 'number' && opnd1 <= 0xFF ? 2 : 3;
         }
 
         const opnds: unknown[] = operand2 != null ? [opnd1, this.context.parseOperand(operand2)] : [opnd1];

@@ -1,37 +1,5 @@
 import { RomProcessingConstants } from './constants';
 
-/**
- * Addressing mode types for 65816 processor
- * Converted from GaiaLib/Enum/AddressingMode.cs
- */
-export enum AddressingMode {
-  Accumulator = 'Accumulator',
-  Immediate = 'Immediate',
-  Absolute = 'Absolute',
-  AbsoluteIndirect = 'AbsoluteIndirect',
-  AbsoluteIndirectLong = 'AbsoluteIndirectLong',
-  DirectPage = 'DirectPage',
-  AbsoluteIndexedX = 'AbsoluteIndexedX',
-  AbsoluteIndexedY = 'AbsoluteIndexedY',
-  AbsoluteIndexedIndirect = 'AbsoluteIndexedIndirect',
-  DirectPageIndexedX = 'DirectPageIndexedX',
-  DirectPageIndexedY = 'DirectPageIndexedY',
-  DirectPageIndexedIndirectX = 'DirectPageIndexedIndirectX',
-  Implied = 'Implied',
-  StackRelative = 'StackRelative',
-  StackRelativeIndirectIndexedY = 'StackRelativeIndirectIndexedY',
-  DirectPageIndirect = 'DirectPageIndirect',
-  AbsoluteLong = 'AbsoluteLong',
-  AbsoluteLongIndexedX = 'AbsoluteLongIndexedX',
-  DirectPageIndirectLong = 'DirectPageIndirectLong',
-  DirectPageIndirectLongIndexedY = 'DirectPageIndirectLongIndexedY',
-  DirectPageIndirectIndexedY = 'DirectPageIndirectIndexedY',
-  BlockMove = 'BlockMove',
-  PCRelative = 'PCRelative',
-  PCRelativeLong = 'PCRelativeLong',
-  StackInterrupt = 'StackInterrupt',
-  Stack = 'Stack'
-}
 
 /**
  * Address type classifications

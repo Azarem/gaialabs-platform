@@ -11,6 +11,7 @@ import type { BlockReader } from './blocks';
  */
 export class AsmReader {
   // Constants
+  private static readonly PROCESSOR_FLAG_MASK = 0xDF;
   private static readonly ACCUMULATOR_OP_MASK = 0xF;
   private static readonly ACCUMULATOR_OP_VALUE = 0x9;
   private static readonly VARIABLE_SIZE_INDICATOR = -2;
@@ -99,8 +100,10 @@ export class AsmReader {
   private calculateInstructionSize(code: OpCode, reg: Registers): number {
     let size = code.size;
     
-    if (size === AsmReader.VARIABLE_SIZE_INDICATOR) {
-      if ((code.code & AsmReader.ACCUMULATOR_OP_MASK) === AsmReader.ACCUMULATOR_OP_VALUE) {
+    if (size === AsmReader.VARIABLE_SIZE_INDICATOR || code.mode === 'Immediate') {
+      if((code.code & AsmReader.PROCESSOR_FLAG_MASK) === 0xC2){
+        size = AsmReader.TWO_BYTES_SIZE;
+      } else if ((code.code & AsmReader.ACCUMULATOR_OP_MASK) === AsmReader.ACCUMULATOR_OP_VALUE) {
         size = (reg.accumulatorFlag ?? false) ? AsmReader.TWO_BYTES_SIZE : AsmReader.THREE_BYTES_SIZE;
       } else {
         size = (reg.indexFlag ?? false) ? AsmReader.TWO_BYTES_SIZE : AsmReader.THREE_BYTES_SIZE;

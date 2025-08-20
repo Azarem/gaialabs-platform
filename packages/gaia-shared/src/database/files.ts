@@ -10,6 +10,6 @@ export interface DbFile {
   start: number;
   end: number;
   compressed?: boolean;
-  move?: boolean;
+  //move?: boolean;
   upper?: boolean;
 } 

@@ -31,10 +31,11 @@ describe('BlockReader', () => {
         .on('error', reject);
     });
 
-    const dbRoot = await DbRootUtils.fromFolder(
-      '../../ext/GaiaLib/db/us',
-      '../../ext/GaiaLib/db/snes'
-    );
+    // const dbRoot = await DbRootUtils.fromFolder(
+    //   '../../ext/GaiaLib/db/us',
+    //   '../../ext/GaiaLib/db/snes'
+    // );
+    const dbRoot = await DbRootUtils.fromSupabase();
     reader = new BlockReader(data, dbRoot);
     writer = new BlockWriter(reader);
   }, 30000);
@@ -83,7 +84,7 @@ describe('BlockReader', () => {
   });
   
   describe('Assembler process', () => {
-    it('Should be able to assemble code', async () => {
+    it('Should be able to assemble code', () => {
       for(const block of asmFiles) {
         const assembler = new Assembler(reader._root, block.textData!);
         const { blocks, includes, reqBank } = assembler.parseAssembly();

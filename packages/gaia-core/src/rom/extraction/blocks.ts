@@ -7,7 +7,6 @@ import { AsmReader } from './asm';
 import { TypeParser } from './parser';
 import { 
   Address, 
-  AddressingMode, 
   AddressType, 
   LocationWrapper, 
   StructDef, 
@@ -193,7 +192,9 @@ export class BlockReader {
    */
   public noteType(loc: number, type: string, silent: boolean = false, reg?: Registers): string {
     this._referenceManager.tryAddStruct(loc, type);
-
+if(loc === 101636){
+  console.log('ok');
+}
     const nameResult = this._referenceManager.tryGetName(loc);
     let name: string;
     
@@ -423,40 +424,40 @@ export class BlockReader {
       this._currentChunk = chunkFile;
       for (const asmBlock of chunkFile.parts || []) {
         this._currentAsmBlock = asmBlock;
-        this.processAsmBlock(asmBlock);
+        this.processPart(asmBlock);
       }
     }
   }
 
-  /**
-   * Processes a single AsmBlock (similar to processPart)
-   */
-  private processAsmBlock(asmBlock: AsmBlock): void {
-    this._romDataReader.position = asmBlock.location;
-    this._partEnd = asmBlock.location + asmBlock.size;
+  // /**
+  //  * Processes a single AsmBlock (similar to processPart)
+  //  */
+  // private processAsmBlock(asmBlock: AsmBlock): void {
+  //   this._romDataReader.position = asmBlock.location;
+  //   this._partEnd = asmBlock.location + asmBlock.size;
 
-    let current = asmBlock.structName || BlockReaderConstants.BINARY_TYPE;
-    const chunks: TableEntry[] = [];
-    const reg = new Registers();
-    const bank = this._currentAsmBlock?.bank;
-    let last: TableEntry | null = null;
+  //   let current = asmBlock.structName || BlockReaderConstants.BINARY_TYPE;
+  //   const chunks: TableEntry[] = [];
+  //   const reg = new Registers();
+  //   const bank = this._currentAsmBlock?.bank;
+  //   let last: TableEntry | null = null;
 
-    while (this._romDataReader.position < this._partEnd) {
-      const structResult = this._referenceManager.tryGetStruct(this._romDataReader.position);
-      if (structResult.found) {
-        current = structResult.chunkType!;
-      } else if (last !== null) {
-        this.processContinuousEntry(current, reg, bank, last);
-        continue;
-      }
+  //   while (this._romDataReader.position < this._partEnd) {
+  //     const structResult = this._referenceManager.tryGetStruct(this._romDataReader.position);
+  //     if (structResult.found) {
+  //       current = structResult.chunkType!;
+  //     } else if (last !== null) {
+  //       this.processContinuousEntry(current, reg, bank, last);
+  //       continue;
+  //     }
 
-      last = createTableEntry(this._romDataReader.position);
-      chunks.push(last);
-      this.processNewEntry(current, reg, bank, last);
-    }
+  //     last = createTableEntry(this._romDataReader.position);
+  //     chunks.push(last);
+  //     this.processNewEntry(current, reg, bank, last);
+  //   }
 
-    asmBlock.objList = chunks;
-  }
+  //   asmBlock.objList = chunks;
+  // }
 
   /**
    * Resolves references in assembly ChunkFiles only
@@ -544,8 +545,8 @@ export class BlockReader {
    * Checks if an operation is a branch operation
    */
   private isBranchOperation(op: Op): boolean {
-    return op.code.mode === AddressingMode.PCRelative ||
-           op.code.mode === AddressingMode.PCRelativeLong ||
+    return op.code.mode === 'PCRelative' ||
+           op.code.mode === 'PCRelativeLong' ||
            op.code.mnem[0] === 'J';
   }
 

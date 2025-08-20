@@ -41,6 +41,7 @@ model Game {
   mnemonics   GameMnemonic[]
   cops        GameCop[]
   gameStrings GameString[]
+  structs     GameStruct[]
 
   // Audit fields
   createdAt   DateTime  @default(now())
@@ -61,6 +62,8 @@ model GameFile {
   type    String? // e.g., "Graphics", "Text", "Code"
   group   String? // For logical grouping
   scene   String? // e.g., "Intro", "World Map"
+  compressed Boolean?
+  upper Boolean @default(false)
 
   game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
   gameId String
@@ -87,6 +90,7 @@ model GameBlock {
   name  String
   group String?
   scene String?
+  movable Boolean @default(false)
 
   game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
   gameId String
@@ -163,6 +167,7 @@ model Release {
   transforms    ReleaseTransform[]
   labels        ReleaseLabel[]
   releaseStrings ReleaseString[]
+  structs       ReleaseStruct[]
 
   // Audit fields
   createdAt   DateTime  @default(now())
@@ -194,6 +199,8 @@ model ReleaseFile {
   type  String?
   group String?
   scene String?
+  compressed Boolean?
+  upper Boolean?
 
   // --- Release-specific fields ---
   romLocation Int?
@@ -228,6 +235,8 @@ model ReleaseBlock {
   name  String?
   group String?
   scene String?
+  movable Boolean?
+  postProcess String?
   
   // A ReleaseBlock is an organizational unit and does not have a direct location.
   // Its Parts define the content and locations.
@@ -243,6 +252,9 @@ model ReleaseBlock {
   createdBy User? @relation("CreatedReleaseBlocks", fields: [createdById], references: [id])
   updatedBy User? @relation("UpdatedReleaseBlocks", fields: [updatedById], references: [id])
   deletedBy User? @relation("DeletedReleaseBlocks", fields: [deletedById], references: [id])
+
+  // Reverse relationships
+  transforms ReleaseTransform[]
 
   @@unique([releaseId, gameBlockId])
 }
@@ -265,6 +277,7 @@ model ReleasePart {
   // --- Release-specific fields ---
   romLocation Int? // The address of the part in the ROM
   romSize     Int?
+  bank        Int?
 
   // Audit fields
   createdAt   DateTime  @default(now())
@@ -366,9 +379,17 @@ model User {
   updatedGameStrings    GameString[]    @relation("UpdatedGameStrings")
   deletedGameStrings    GameString[]    @relation("DeletedGameStrings")
 
+  createdGameStructs    GameStruct[]    @relation("CreatedGameStructs")
+  updatedGameStructs    GameStruct[]    @relation("UpdatedGameStructs")
+  deletedGameStructs    GameStruct[]    @relation("DeletedGameStructs")
+
   createdReleaseStrings ReleaseString[] @relation("CreatedReleaseStrings")
   updatedReleaseStrings ReleaseString[] @relation("UpdatedReleaseStrings")
   deletedReleaseStrings ReleaseString[] @relation("DeletedReleaseStrings")
+
+  createdReleaseStructs ReleaseStruct[] @relation("CreatedReleaseStructs")
+  updatedReleaseStructs ReleaseStruct[] @relation("UpdatedReleaseStructs")
+  deletedReleaseStructs ReleaseStruct[] @relation("DeletedReleaseStructs")
 
   createdReleaseStringCommands ReleaseStringCommand[] @relation("CreatedReleaseStringCommands")
   updatedReleaseStringCommands ReleaseStringCommand[] @relation("UpdatedReleaseStringCommands")
@@ -407,34 +428,7 @@ enum ProcessorFlag {
   WILDCARD @map("*") // Special wildcard flag
 }
 
-enum AddressingModeType {
-  Immediate
-  Absolute
-  AbsoluteLong
-  DirectPage
-  DirectPageIndirect
-  DirectPageIndirectLong
-  AbsoluteIndexedX
-  AbsoluteLongIndexedX
-  AbsoluteIndexedY
-  DirectPageIndexedX
-  DirectPageIndexedY
-  DirectPageIndexedIndirectX
-  DirectPageIndirectIndexedY
-  DirectPageIndirectLongIndexedY
-  StackRelative
-  StackRelativeIndirectIndexedY
-  Accumulator
-  Implied
-  Stack
-  StackInterrupt
-  PCRelative
-  PCRelativeLong
-  AbsoluteIndirect
-  AbsoluteIndirectLong
-  AbsoluteIndexedIndirect
-  BlockMove
-}
+
 
 enum InstructionCategory {
   LoadStore
@@ -480,6 +474,7 @@ model InstructionSet {
   
   // Relationships
   instructionGroups InstructionGroup[]
+  addressingModes   AddressingMode[]
   validationRules   ValidationRule[]
   
   createdAt        DateTime @default(now())
@@ -541,11 +536,11 @@ model InstructionVariant {
 
 model AddressingMode {
   id                  String               @id @default(cuid())
-  mode                AddressingModeType   @unique
-  shorthand           String               @unique // e.g., "abs", "imm"
+  mode                String               
+  shorthand           String               // e.g., "abs", "imm"
+  name                String               // Official name, same as mode
   operandType         OperandType
   description         String
-  officialName        String?
   length              Int                  // Instruction length in bytes
   format              String               // Format pattern like "$OP $LL $HH"
   formatString        String               // Format string like "${0:X4}"
@@ -559,11 +554,16 @@ model AddressingMode {
   validationPatterns  Json                 // Validation regex patterns
   examples            Json                 // Example usage patterns
   
-  // Relationships  
+  // Relationships
+  instructionSet      InstructionSet       @relation(fields: [instructionSetId], references: [id], onDelete: Cascade)
+  instructionSetId    String
   instructionVariants InstructionVariant[]
   
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
+  
+  @@unique([instructionSetId, mode])
+  @@unique([instructionSetId, shorthand])
 }
 
 model ValidationRule {
@@ -621,6 +621,39 @@ model GameCop {
   @@unique([gameId, code])
 }
 
+model GameStruct {
+  id String @id @default(cuid())
+  
+  // Relationships
+  game   Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId String
+  
+  // Base struct properties from structs.json
+  name           String  // e.g., "h_actor", "sprite_group"
+  types          Json?   // Array of type strings like ["Byte", "Byte", "Byte"]
+  delimiter      Int?    // Optional delimiter value
+  descriminator  Int?    // Optional descriminator value  
+  parent         String? // Optional parent struct name
+  parts          Json?   // Optional array of part names
+  
+  // Relationships
+  releaseStructs ReleaseStruct[]
+  
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+  deletedById String?
+  
+  createdBy User? @relation("CreatedGameStructs", fields: [createdById], references: [id])
+  updatedBy User? @relation("UpdatedGameStructs", fields: [updatedById], references: [id])
+  deletedBy User? @relation("DeletedGameStructs", fields: [deletedById], references: [id])
+  
+  @@unique([gameId, name])
+}
+
 // =====================================================
 // RELEASE-SPECIFIC DATA MODELS
 // =====================================================
@@ -651,17 +684,51 @@ model ReleaseRewrite {
 
 model ReleaseTransform {
   id         String @id @default(cuid())
-  block      String // Block name that this transform applies to
   transforms Json   // Array of key-value transform rules
+  
+  // Relationships
+  release       Release      @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  releaseId     String
+  releaseBlock  ReleaseBlock @relation(fields: [releaseBlockId], references: [id], onDelete: Cascade)
+  releaseBlockId String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([releaseId, releaseBlockId])
+}
+
+model ReleaseStruct {
+  id String @id @default(cuid())
   
   // Relationships
   release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
   releaseId String
   
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  gameStruct   GameStruct @relation(fields: [gameStructId], references: [id], onDelete: Cascade)
+  gameStructId String
   
-  @@unique([releaseId, block])
+  // --- Overridable fields ---
+  name           String? // Override the struct name for this release
+  types          Json?   // Override types array
+  delimiter      Int?    // Override delimiter
+  descriminator  Int?    // Override descriminator
+  parent         String? // Override parent struct name
+  parts          Json?   // Override parts array
+  
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  createdById String?
+  updatedById String?
+  deletedById String?
+  
+  createdBy User? @relation("CreatedReleaseStructs", fields: [createdById], references: [id])
+  updatedBy User? @relation("UpdatedReleaseStructs", fields: [updatedById], references: [id])
+  deletedBy User? @relation("DeletedReleaseStructs", fields: [deletedById], references: [id])
+  
+  @@unique([releaseId, gameStructId])
 }
 
 model ReleaseLabel {

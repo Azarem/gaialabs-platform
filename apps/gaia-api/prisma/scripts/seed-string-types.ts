@@ -1,33 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import type { DbStringType, DbStringCommand, DbStringLayer } from '@gaialabs/shared';
 
 const prisma = new PrismaClient();
-
-// Define the interfaces for the JSON data structures
-interface StringTypeData {
-  name: string;
-  delimiter: string;
-  shiftType?: string | null;
-  terminator: number;
-  greedyTerminator?: boolean;
-  characterMap: (string | null)[];
-}
-
-interface StringCommandData {
-  set: string;
-  key: number;
-  value: string;
-  types: string[];
-  delimiter?: number;
-  halt?: boolean;
-}
-
-interface StringLayerData {
-  type: string;
-  base: number;
-  map: string[];
-}
 
 async function loadJsonData<T>(filePath: string): Promise<T> {
   try {
@@ -47,9 +23,9 @@ async function seedStringTypes(gameId: string, releaseId: string) {
 
   try {
     // Load JSON data
-    const stringTypes = await loadJsonData<StringTypeData[]>('stringTypes.json');
-    const stringCommands = await loadJsonData<StringCommandData[]>('stringCommands.json');
-    const stringLayers = await loadJsonData<StringLayerData[]>('stringLayers.json');
+    const stringTypes = await loadJsonData<DbStringType[]>('stringTypes.json');
+    const stringCommands = await loadJsonData<DbStringCommand[]>('stringCommands.json');
+    const stringLayers = await loadJsonData<DbStringLayer[]>('stringLayers.json');
 
     // Clear existing data
     console.log('🧹 Cleaning existing string type data...');

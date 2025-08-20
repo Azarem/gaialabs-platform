@@ -2,6 +2,7 @@ import { BinType } from '../types/resources';
 import { readJsonFile } from '../utils';
 import type { ICompressionProvider } from '../types/compression';
 import { CompressionRegistry } from '../types/compression-registry';
+import { DataProcessor, StringTypeMapper } from './mappers';
 import type { DbBlock } from './blocks';
 import type { DbConfig } from './config';
 import type { DbEntryPoint } from './entrypoints';
@@ -40,6 +41,8 @@ export interface DbRoot {
   entryPoints: DbEntryPoint[];
   opCodes: Record<number, any>; // OpCode type (from gaia-core/assembly)
   opLookup: Record<string, any[]>; // OpCode[] type (from gaia-core/assembly)
+  addrModes: any[]; // AddressingMode type (from database)
+  addrLookup: Record<string, any>; // AddressingMode lookup by name
   compression: ICompressionProvider;
 }
 
@@ -168,6 +171,8 @@ export class DbRootUtils {
         acc[x.mnem].push(x);
         return acc;
       }, {} as Record<string, any[]>),
+      addrModes: [], // Not available in file-based loading
+      addrLookup: {}, // Not available in file-based loading
       entryPoints: cfg.entryPoints,
       paths: cfg.paths,
       stringTypes: stringTypes.reduce((acc, x) => {
@@ -194,7 +199,7 @@ export class DbRootUtils {
    * 
    * @param gameName Game title to query (defaults to "Illusion of Gaia")
    * @param platform Game platform (defaults to "SNES")
-   * @param systemPath Optional path to load additional data from local files (fallback)
+   * @param systemPath Optional path to load additional data from local files (fallback for opCodes)
    * @returns Promise<DbRoot> The loaded database root object
    * 
    * @example
@@ -209,8 +214,7 @@ export class DbRootUtils {
    */
   public static async fromSupabase(
     gameName: string = 'Illusion of Gaia', 
-    platform: string = 'SNES',
-    systemPath?: string
+    platform: string = 'SNES'
   ): Promise<DbRoot> {
     // Get environment variables
     const supabaseUrl = process.env.VITE_SUPABASE_URL;
@@ -245,8 +249,10 @@ export class DbRootUtils {
       partsResponse,
       filesResponse,
       copdefResponse,
+      structsResponse,
       releasesResponse,
       instructionSetResponse,
+      addressingModesResponse,
       stringTypesResponse
     ] = await Promise.all([
       supabase.from('GameMnemonic').select('*').eq('gameId', gameId),
@@ -254,6 +260,7 @@ export class DbRootUtils {
       supabase.from('GamePart').select('*, block:GameBlock!inner(gameId)').eq('block.gameId', gameId),
       supabase.from('GameFile').select('*').eq('gameId', gameId),
       supabase.from('GameCop').select('*').eq('gameId', gameId),
+      supabase.from('GameStruct').select('*').eq('gameId', gameId),
       supabase.from('Release').select(`
         *,
         files:ReleaseFile(*,gameFile:GameFile(*)),
@@ -261,8 +268,9 @@ export class DbRootUtils {
         parts:ReleasePart(*,gamePart:GamePart(*)),
         overrides:ReleaseOverride(*),
         rewrites:ReleaseRewrite(*),
-        transforms:ReleaseTransform(*),
-        labels:ReleaseLabel(*)
+        transforms:ReleaseTransform(*,releaseBlock:ReleaseBlock(*,gameBlock:GameBlock(name))),
+        labels:ReleaseLabel(*),
+        structs:ReleaseStruct(*,gameStruct:GameStruct(*))
       `).eq('gameId', gameId),
       supabase.from('InstructionSet').select(`
         *,
@@ -272,11 +280,12 @@ export class DbRootUtils {
             *,
             variants:InstructionVariant(
               *,
-              addressingMode:AddressingMode(*)
+              addressingMode:AddressingMode(name)
             )
           )
         )
-      `).eq('name', '65C816').single(),
+      `).eq('name', '65c816-instruction-set-complete').single(),
+      supabase.from('AddressingMode').select('*'),
       supabase.from('GameString')
         .select(`
           *,
@@ -297,8 +306,10 @@ export class DbRootUtils {
       { name: 'parts', response: partsResponse },
       { name: 'files', response: filesResponse },
       { name: 'copdef', response: copdefResponse },
+      { name: 'structs', response: structsResponse },
       { name: 'releases', response: releasesResponse },
       { name: 'instructionSet', response: instructionSetResponse },
+      { name: 'addressingModes', response: addressingModesResponse },
       { name: 'gameStrings', response: stringTypesResponse }
     ];
 
@@ -314,41 +325,41 @@ export class DbRootUtils {
     const gameParts = partsResponse.data || [];
     const gameFiles = filesResponse.data || [];
     const copdef = copdefResponse.data || [];
+    const gameStructs = structsResponse.data || [];
     const releases = releasesResponse.data || [];
     const instructionSetData = instructionSetResponse.data;
+    const addressingModes = addressingModesResponse.data || [];
     const gameStringsData = stringTypesResponse.data || [];
 
-    // Build opCodes from instruction set data
-    let opCodes: any[] = [];
-    if (instructionSetData?.instructionGroups) {
-      opCodes = this.buildOpCodesFromInstructionSet(instructionSetData);
+    // Build addressing mode lookup tables
+    const addrLookup: Record<string, any> = {};
+    for (const mode of addressingModes) {
+      addrLookup[mode.name] = mode;
     }
 
-    // Process blocks and parts with coalesce logic
-    const processedData = this.processGameDataWithCoalesce(
-      { blocks: gameBlocks, parts: gameParts, files: gameFiles },
+    // Build opCodes from instruction set data
+    let opCodes: Record<number, any> = {};
+    if (instructionSetData?.instructionGroups) {
+      console.log('Building opCodes from instruction set data...');
+      console.log('InstructionSet found:', instructionSetData.name);
+      console.log('Instruction groups:', instructionSetData.instructionGroups?.length || 0);
+      opCodes = this.buildOpCodesFromInstructionSet(instructionSetData, addrLookup);
+      console.log(`Built ${Object.keys(opCodes).length} opCodes`);
+    } else {
+      console.log('No instruction set data found:', instructionSetData);
+    }
+
+    // Process blocks and parts with coalesce logic using new mappers
+    const processedData = DataProcessor.processWithCoalesce(
+      { blocks: gameBlocks, parts: gameParts, files: gameFiles, structs: gameStructs },
       releases
     );
 
     // Extract processed data
-    const { blocks, files, parts, overrides, rewrites, labels, transforms } = processedData;
+    const { blocks, files, parts, structs, overrides, rewrites, labels } = processedData;
 
-    // Process string types with GameString/ReleaseString coalesce logic
-    const stringTypes: DbStringType[] = gameStringsData.map((gameString: any) => {
-      // Find matching ReleaseString for coalesce logic
-      const releaseString = gameString.releaseStrings?.[0]; // Assume one release for now
-      
-      return {
-        name: releaseString?.name || gameString.name,
-        delimiter: releaseString?.delimiter || gameString.delimiter,
-        shiftType: releaseString?.shiftType || gameString.shiftType,
-        terminator: releaseString?.terminator || gameString.terminator,
-        greedyTerminator: releaseString?.greedyTerminator ?? gameString.greedyTerminator,
-        characterMap: releaseString?.characterMap || [], // ReleaseString has the actual data
-        commands: {},
-        layers: releaseString?.layers || []
-      };
-    });
+    // Process string types with GameString/ReleaseString coalesce logic using new mappers
+    const stringTypes: DbStringType[] = DataProcessor.processStringTypes(gameStringsData);
 
     // Build config from game data
     const cfg: DbConfig = {
@@ -358,35 +369,10 @@ export class DbRootUtils {
       sfxLocation: (game.meta as any)?.sfxLocation || 0,
       sfxCount: (game.meta as any)?.sfxCount || 0,
       accentMap: (game.meta as any)?.accentMap || [],
-      asmFormats: (game.meta as any)?.asmFormats || {}
+      //asmFormats: (game.meta as any)?.asmFormats || {}
     };
 
-    // Process string types - commands with GameStringCommand/ReleaseStringCommand coalesce logic
-    for (let i = 0; i < stringTypes.length; i++) {
-      const strType = stringTypes[i];
-      const gameString = gameStringsData[i];
-      const releaseString = gameString?.releaseStrings?.[0];
-
-      // Convert commands array to keyed object with coalesce logic
-      if (gameString?.commands) {
-        strType.commands = gameString.commands.reduce((acc: any, gameCmd: any) => {
-          // Find matching ReleaseStringCommand for coalesce logic
-          const releaseCmd = releaseString?.commands?.find((rc: any) => rc.gameStringCommandId === gameCmd.id);
-          
-          acc[gameCmd.key] = {
-            key: releaseCmd?.key ?? gameCmd.key,
-            value: releaseCmd?.value || gameCmd.value,
-            types: releaseCmd?.types || gameCmd.types,
-            delimiter: releaseCmd?.delimiter ?? gameCmd.delimiter,
-            halt: releaseCmd?.halt ?? gameCmd.halt,
-            set: strType.name
-          };
-          return acc;
-        }, {} as Record<number, any>);
-      }
-
-      // Layers are already processed in the string type mapping above
-    }
+    // String types are now fully processed by the DataProcessor.processStringTypes method
 
     const compression = CompressionRegistry.get(cfg.compression || 'QuintetLZ');
 
@@ -399,7 +385,10 @@ export class DbRootUtils {
       overrides,
       rewrites,
       labels,
-      structs: {}, // TODO: Load structs from database or meta field
+      structs: structs.reduce((acc, x) => {
+        acc[x.name] = x;
+        return acc;
+      }, {} as Record<string, DbStruct>),
       blocks,
       files,
       copDef: copdef.reduce((acc, x) => {
@@ -411,15 +400,14 @@ export class DbRootUtils {
         return acc;
       }, {} as Record<string, CopDef>),
       config: cfg,
-      opCodes: opCodes.reduce((acc, x) => {
-        acc[x.code] = x;
-        return acc;
-      }, {} as Record<number, any>),
-      opLookup: opCodes.reduce((acc, x) => {
+      opCodes: opCodes,
+      opLookup: Object.values(opCodes).reduce((acc, x) => {
         if (!acc[x.mnem]) acc[x.mnem] = [];
         acc[x.mnem].push(x);
         return acc;
       }, {} as Record<string, any[]>),
+      addrModes: addressingModes,
+      addrLookup: addrLookup,
       entryPoints: cfg.entryPoints || [],
       paths: cfg.paths || {},
       stringTypes: stringTypes.reduce((acc, x) => {
@@ -438,168 +426,36 @@ export class DbRootUtils {
   }
 
   /**
-   * Build opCodes array from instruction set data
+   * Build opCodes record from instruction set data - indexed by opcode value
    */
-  private static buildOpCodesFromInstructionSet(instructionSetData: any): any[] {
-    const opCodes: any[] = [];
+  private static buildOpCodesFromInstructionSet(instructionSetData: any, addrLookup: Record<string, any>): Record<number, any> {
+    const opCodes: Record<number, any> = {};
     
+    console.log('Processing instruction groups:', instructionSetData.instructionGroups?.length);
     for (const group of instructionSetData.instructionGroups || []) {
+      console.log(`Processing group: ${group.name}, instructions: ${group.instructions?.length || 0}`);
       for (const instruction of group.instructions || []) {
+        console.log(`Processing instruction: ${instruction.mnemonic}, variants: ${instruction.variants?.length || 0}`);
         for (const variant of instruction.variants || []) {
-          opCodes.push({
+          console.log(`Adding opcode: ${variant.opcode} (0x${variant.opcode.toString(16)}) - ${instruction.mnemonic}`);
+          opCodes[variant.opcode] = {
             code: variant.opcode,
             mnem: instruction.mnemonic,
             description: instruction.description,
             size: variant.size,
             cycleTiming: variant.cycleTiming,
-            addressingMode: variant.addressingMode,
+            mode: variant.addressingMode?.name || 'Unknown',
             affectedFlags: instruction.affectedFlags
-          });
+          };
         }
       }
     }
     
+    console.log(`Final opCodes count: ${Object.keys(opCodes).length}`);
     return opCodes;
   }
 
-  /**
-   * Process game data with coalesce logic - Release* data overrides Game* data
-   */
-  private static processGameDataWithCoalesce(
-    gameData: { blocks: any[], parts: any[], files: any[] },
-    releases: any[]
-  ): {
-    blocks: any[], 
-    files: any[], 
-    parts: any[],
-    overrides: Record<number, DbOverride>,
-    rewrites: Record<number, number>,
-    labels: Record<number, string>,
-    transforms: any[]
-  } {
-    const processedBlocks: any[] = [];
-    const processedFiles: any[] = [];
-    const processedParts: any[] = [];
-    let overrides: Record<number, DbOverride> = {};
-    let rewrites: Record<number, number> = {};
-    let labels: Record<number, string> = {};
-    const transforms: any[] = [];
 
-    // Process each release
-    for (const release of releases) {
-      // Collect release-specific data
-      if (release.overrides) {
-        for (const override of release.overrides) {
-          if (override.data?.location) {
-            overrides[override.data.location] = override.data;
-          }
-        }
-      }
-
-      if (release.rewrites) {
-        for (const rewrite of release.rewrites) {
-          if (rewrite.data?.location && rewrite.data?.value !== undefined) {
-            rewrites[rewrite.data.location] = rewrite.data.value;
-          }
-        }
-      }
-
-      if (release.labels) {
-        for (const label of release.labels) {
-          labels[label.location] = label.label;
-        }
-      }
-
-      if (release.transforms) {
-        transforms.push(...release.transforms);
-      }
-
-      // Process files with coalesce logic
-      for (const gameFile of gameData.files) {
-        const releaseFile = release.files?.find((rf: any) => rf.gameFileId === gameFile.id);
-        
-        if (releaseFile) {
-          // Merge releaseFile data over gameFile data
-          processedFiles.push({
-            ...gameFile,
-            name: releaseFile.name ?? gameFile.name,
-            type: releaseFile.type ?? gameFile.type,
-            group: releaseFile.group ?? gameFile.group,
-            scene: releaseFile.scene ?? gameFile.scene,
-            romLocation: releaseFile.romLocation,
-            romSize: releaseFile.romSize
-          });
-        } else {
-          // Use game file as-is
-          processedFiles.push(gameFile);
-        }
-      }
-
-      // Process blocks with coalesce logic
-      for (const gameBlock of gameData.blocks) {
-        const releaseBlock = release.blocks?.find((rb: any) => rb.gameBlockId === gameBlock.id);
-        
-        if (releaseBlock) {
-          // Merge releaseBlock data over gameBlock data
-          processedBlocks.push({
-            ...gameBlock,
-            name: releaseBlock.name ?? gameBlock.name,
-            group: releaseBlock.group ?? gameBlock.group,
-            scene: releaseBlock.scene ?? gameBlock.scene
-          });
-        } else {
-          // Use game block as-is
-          processedBlocks.push(gameBlock);
-        }
-      }
-
-      // Process parts with coalesce logic
-      for (const gamePart of gameData.parts) {
-        const releasePart = release.parts?.find((rp: any) => rp.gamePartId === gamePart.id);
-        
-        if (releasePart) {
-          // Merge releasePart data over gamePart data
-          processedParts.push({
-            ...gamePart,
-            name: releasePart.name ?? gamePart.name,
-            struct: releasePart.struct ?? gamePart.struct,
-            order: releasePart.order ?? gamePart.order,
-            romLocation: releasePart.romLocation,
-            romSize: releasePart.romSize
-          });
-        } else {
-          // Use game part as-is
-          processedParts.push(gamePart);
-        }
-      }
-    }
-
-    // If no releases, use game data directly
-    if (releases.length === 0) {
-      processedBlocks.push(...gameData.blocks);
-      processedFiles.push(...gameData.files);
-      processedParts.push(...gameData.parts);
-    }
-
-    // Process blocks and parts relationships (same as fromFolder)
-    for (const block of processedBlocks) {
-      block.parts = processedParts.filter(p => p.block === block.name);
-      block.transforms = transforms.find(t => t.block === block.name)?.transforms;
-      for (const part of block.parts) {
-        (part as any)._block = block;
-      }
-    }
-
-    return {
-      blocks: processedBlocks,
-      files: processedFiles,
-      parts: processedParts,
-      overrides,
-      rewrites,
-      labels,
-      transforms
-    };
-  }
 
   /**
    * Read a JSON table file

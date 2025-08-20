@@ -1,6 +1,5 @@
 import { 
   BinType, 
-  AddressingMode, 
   AddressType, 
   Address, 
   RomProcessingConstants,
@@ -263,8 +262,8 @@ export class RomWriter {
 
             let loc: number;
             const isRelative = parentOp && 
-              (parentOp.code.mode === AddressingMode.PCRelative || 
-               parentOp.code.mode === AddressingMode.PCRelativeLong);
+              (parentOp.code.mode === 'PCRelative' || 
+               parentOp.code.mode === 'PCRelativeLong');
 
             const operatorIdx = this.indexOfAny(label, RomProcessingConstants.OPERATORS);
             let offset: number | null = null;

@@ -26,7 +26,8 @@ export class RomLayout {
         const aAsm = a.parts ? 0 : 1;
         const bAsm = b.parts ? 0 : 1;
         if (aAsm !== bAsm) return aAsm - bAsm;
-        return (b.size || 0) - (a.size || 0);
+        if (b.size !== a.size) return b.size - a.size;
+        return a.location - b.location;
       });
   }
 
@@ -83,7 +84,7 @@ export class RomLayout {
       // Assembly preference and constraints
       if (file.parts) {
         if (!asmMode) {
-          if (!this.currentUpper || file.bank !== undefined) continue;
+          if (!this.currentUpper || file.bank !== undefined || file.bank !== null) continue;
         } else if (file.bank !== this.currentBank) {
           continue;
         }

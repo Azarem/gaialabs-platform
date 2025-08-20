@@ -125,6 +125,9 @@ function enrichWithRawDataFromDbFile(rom: Uint8Array, chunkFile: ChunkFile, comp
 function enrichWithPartsFromDbBlock(chunkFile: ChunkFile, block: DbBlock): void {
   chunkFile.parts = [];
   chunkFile.size = 0;
+  if(!block.parts?.length) {
+    throw new Error(`Block ${block.name} has no parts`);
+  }
   chunkFile.location = block.parts[0].start;
   chunkFile.bank = block.movable ? undefined : chunkFile.location >> 16;
   chunkFile.transforms = block.transforms;

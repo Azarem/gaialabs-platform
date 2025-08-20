@@ -1,6 +1,5 @@
 import { OpCode, Registers } from '../../assembly';
 import {
-  AddressingMode,
   AddressType,
   AddressSpace,
   Address,
@@ -49,60 +48,64 @@ export class AddressingModeHandler {
     const operands: unknown[] = [];
 
     switch (code.mode) {
-      case AddressingMode.Stack:
-      case AddressingMode.Implied:
+      case 'Stack':
+      case 'Implied':
+      case 'Accumulator':
         this.handleStackOrImpliedMode(code.mnem, reg);
         break;
 
-      case AddressingMode.Immediate:
+      case 'Immediate':
         this.handleImmediateMode(code.mnem, context.size, operands, reg);
         break;
 
-      case AddressingMode.AbsoluteIndirect:
-      case AddressingMode.AbsoluteIndirectLong:
-      case AddressingMode.AbsoluteIndexedIndirect:
-      case AddressingMode.Absolute:
-      case AddressingMode.AbsoluteIndexedX:
-      case AddressingMode.AbsoluteIndexedY:
+      case 'AbsoluteIndirect':
+      case 'AbsoluteIndirectLong':
+      case 'AbsoluteIndexedIndirect':
+      case 'Absolute':
+      case 'AbsoluteIndexedX':
+      case 'AbsoluteIndexedY':
         this.handleAbsoluteMode(code.mnem, undefined, context.nextAddress, reg.dataBank, operands, reg);
         break;
 
-      case AddressingMode.AbsoluteLong:
-      case AddressingMode.AbsoluteLongIndexedX:
+      case 'AbsoluteLong':
+      case 'AbsoluteLongIndexedX':
         this.handleAbsoluteLongMode(code.mnem, operands, reg);
         break;
 
-      case AddressingMode.BlockMove:
+      case 'BlockMove':
         this.handleBlockMoveMode(operands, context);
         break;
 
-      case AddressingMode.DirectPage:
-      case AddressingMode.DirectPageIndexedIndirectX:
-      case AddressingMode.DirectPageIndexedX:
-      case AddressingMode.DirectPageIndexedY:
-      case AddressingMode.DirectPageIndirect:
-      case AddressingMode.DirectPageIndirectIndexedY:
-      case AddressingMode.DirectPageIndirectLong:
-      case AddressingMode.DirectPageIndirectLongIndexedY:
+      case 'DirectPage':
+      case 'DirectPageIndexedIndirectX':
+      case 'DirectPageIndexedX':
+      case 'DirectPageIndexedY':
+      case 'DirectPageIndirect':
+      case 'DirectPageIndirectIndexedY':
+      case 'DirectPageIndirectLong':
+      case 'DirectPageIndirectLongIndexedY':
         this.handleDirectPageMode(operands);
         break;
 
-      case AddressingMode.PCRelative:
+      case 'PCRelative':
         this.handlePCRelativeMode(operands, context.nextAddress, reg, false);
         break;
 
-      case AddressingMode.PCRelativeLong:
+      case 'PCRelativeLong':
         this.handlePCRelativeMode(operands, context.nextAddress, reg, true);
         break;
 
-      case AddressingMode.StackRelative:
-      case AddressingMode.StackRelativeIndirectIndexedY:
+      case 'StackRelative':
+      case 'StackRelativeIndirectIndexedY':
         this.handleStackRelativeMode(operands);
         break;
 
-      case AddressingMode.StackInterrupt:
+      case 'StackInterrupt':
         this.handleStackInterruptMode(code.mnem, operands, context);
         break;
+
+      default:
+        throw new Error(`Unknown addressing mode: ${code}`);
     }
 
     return operands;

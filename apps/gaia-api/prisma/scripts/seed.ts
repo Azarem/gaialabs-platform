@@ -3,39 +3,13 @@ const { PrismaClient } = pkg;
 import type { Game, GameBlock } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import { seed65C816 } from './seed-65c816.ts';
+import { seedStringTypes } from './seed-string-types.ts';
+import { join } from 'path';
+import { readFileSync } from 'fs';
+import type { CopDef, DbBlock, DbFile, DbLabel, DbMnemonic, DbOverride, DbPart, DbRewrite, DbStruct, DbTransform } from '@gaialabs/shared';
 
-// Import seed functions from other modules - will resolve at runtime
-let seed65C816: any;
-let seedStringTypesExternal: any;
 
-// Dynamic imports to avoid circular dependencies
-async function initSeedFunctions() {
-  try {
-    const mod65c816 = await import('file://' + import.meta.url.replace(/seed\.ts$/, 'seed-65c816.ts'));
-    seed65C816 = mod65c816.seed65C816;
-  } catch (error) {
-    try {
-      // Fallback: try different import path
-      const mod65c816 = await import('./seed-65c816.ts');
-      seed65C816 = mod65c816.seed65C816;
-    } catch (error2) {
-      console.warn('Could not import seed65C816:', error2);
-    }
-  }
-  
-  try {
-    const modStringTypes = await import('file://' + import.meta.url.replace(/seed\.ts$/, 'seed-string-types.ts'));
-    seedStringTypesExternal = modStringTypes.seedStringTypes;
-  } catch (error) {
-    try {
-      // Fallback: try different import path
-      const modStringTypes = await import('./seed-string-types.ts');
-      seedStringTypesExternal = modStringTypes.seedStringTypes;
-    } catch (error2) {
-      console.warn('Could not import seedStringTypes:', error2);
-    }
-  }
-}
 
 
 const prisma = new PrismaClient();
@@ -60,22 +34,27 @@ const RELEASE_ROM_CODE = '01JG  ';
 const RELEASE_ROM_TITLE = 'ILLUSION OF GAIA USA ';
 const RELEASE_ROM_CRC = 0x1C3848C0;
 
+async function loadJsonData<T>(filePath: string): Promise<T> {
+  try {
+    const fullPath = join(process.cwd(), '../../ext/GaiaLib/db/us', filePath);
+    const data = readFileSync(fullPath, 'utf-8')
+      .replace(/^\uFEFF/, '') // Remove BOM if present
+      .trim();
+    return JSON.parse(data);
+  } catch (error) {
+    console.error(`Failed to load ${filePath}:`, error);
+    return [] as T;
+  }
+}
 
 async function main() {
   console.log('Starting seed process...');
   
-  // Initialize imported functions
-  await initSeedFunctions();
 
   // 1. First, seed the 65C816 instruction set
   console.log('🔄 Seeding 65C816 instruction set...');
   try {
-    if (seed65C816) {
-      await seed65C816();
-      console.log('✅ 65C816 instruction set seeded successfully');
-    } else {
-      console.warn('⚠️ seed65C816 function not available, skipping');
-    }
+    await seed65C816();
   } catch (error) {
     console.error('❌ Failed to seed 65C816 instruction set:', error);
     throw error;
@@ -140,29 +119,49 @@ async function main() {
   // 6. Seed string types now that we have game and release IDs
   console.log('🔄 Seeding string types...');
   try {
-    if (seedStringTypesExternal) {
-      await seedStringTypesExternal(game.id, release.id);
-      console.log('✅ String types seeded successfully');
-    } else {
-      console.warn('⚠️ seedStringTypes function not available, skipping');
-    }
+    await seedStringTypes(game.id, release.id);
   } catch (error) {
     console.error('❌ Failed to seed string types:', error);
     throw error;
   }
 
-  // 7. Read and process files.json
-  console.log(`Using database path: ${DB_PATH}`);
-  const filesPath = path.join(DB_PATH, 'files.json');
-  console.log(`Reading files from: ${filesPath}`);
-  const filesFile = fs.readFileSync(filesPath, 'utf-8');
-  const filesData = JSON.parse(filesFile);
+  // 7. Seed struct definitions
+  console.log('🔄 Seeding struct definitions...');
+  try {
+    await seedStructs(game.id, release.id);
+  } catch (error) {
+    console.error('❌ Failed to seed struct definitions:', error);
+    throw error;
+  }
 
+  await seedGameFiles(game.id, release.id);
+
+  // 7. Read and process blocks.json
+  await seedGameBlocks(game.id, release.id);
+
+  // 8. Read and process parts.json
+  await seedGameParts(release.id);
+
+  // 9. Read and process game-specific data files
+  await seedGameMnemonics(game.id);
+  await seedGameCops(game.id);
+
+  // 10. Read and process release-specific data files  
+  await seedReleaseOverrides(release.id);
+  await seedReleaseRewrites(release.id);
+  await seedReleaseTransforms(release.id);
+  await seedReleaseLabels(release.id);
+
+  console.log('Seed process finished successfully.');
+}
+
+async function seedGameFiles(gameId: string, releaseId: string){
+  const filesData = await loadJsonData<DbFile[]>('files.json');
   console.log(`Importing ${filesData.length} files...`);
   for (const fileData of filesData) {
     const gameFile = await prisma.gameFile.create({
       data: {
-        gameId: game.id,
+        gameId: gameId,
         name: fileData.name,
         type: fileData.type,
       },
@@ -170,7 +169,7 @@ async function main() {
 
     await prisma.releaseFile.create({
       data: {
-        releaseId: release.id,
+        releaseId: releaseId,
         gameFileId: gameFile.id,
         romLocation: fileData.start,
         romSize: fileData.end - fileData.start,
@@ -178,39 +177,42 @@ async function main() {
     });
   }
   console.log('Finished importing files.');
+}
 
-  // 7. Read and process blocks.json
-  const blocksPath = path.join(DB_PATH, 'blocks.json');
-  console.log(`Reading blocks from: ${blocksPath}`);
-  const blocksFile = fs.readFileSync(blocksPath, 'utf-8');
-  const blocksData = JSON.parse(blocksFile);
-  const gameBlocksMap = new Map<string, GameBlock>();
+const gameBlocksMap = new Map<string, GameBlock>();
+const releaseBlocksMap = new Map<string, string>(); // Maps block name to ReleaseBlock ID
+
+async function seedGameBlocks(gameId: string, releaseId: string){
+  const blocksData = await loadJsonData<DbBlock[]>('blocks.json');
 
   console.log(`Importing ${blocksData.length} blocks...`);
   for (const blockData of blocksData) {
     const gameBlock = await prisma.gameBlock.create({
       data: {
-        gameId: game.id,
+        gameId: gameId,
         name: blockData.name,
         group: blockData.group,
+        movable: blockData.movable,
       },
     });
     gameBlocksMap.set(gameBlock.name, gameBlock);
 
-    await prisma.releaseBlock.create({
+    const releaseBlock = await prisma.releaseBlock.create({
       data: {
-        releaseId: release.id,
+        releaseId: releaseId,
         gameBlockId: gameBlock.id,
+        postProcess: blockData.postProcess,
       },
     });
+    releaseBlocksMap.set(gameBlock.name, releaseBlock.id);
   }
   console.log('Finished importing blocks.');
+}
+
+async function seedGameParts(releaseId: string){
 
   // 8. Read and process parts.json
-  const partsPath = path.join(DB_PATH, 'parts.json');
-  console.log(`Reading parts from: ${partsPath}`);
-  const partsFile = fs.readFileSync(partsPath, 'utf-8');
-  const partsData = JSON.parse(partsFile);
+  const partsData = await loadJsonData<DbPart[]>('parts.json');
 
   console.log(`Importing ${partsData.length} parts...`);
   for (const [i, partData] of partsData.entries()) {
@@ -235,40 +237,20 @@ async function main() {
 
     await prisma.releasePart.create({
       data: {
-        releaseId: release.id,
+        releaseId: releaseId,
         gamePartId: gamePart.id,
         romLocation: partData.start,
-        romSize: partData.end - partData.start,
+        romSize: partData.size,
+        bank: partData.bank,
       },
     });
   }
   console.log('Finished importing parts.');
-
-  // 9. Read and process game-specific data files
-  await seedGameMnemonics(game.id);
-  await seedGameCops(game.id);
-
-  // 10. Read and process release-specific data files  
-  await seedReleaseOverrides(release.id);
-  await seedReleaseRewrites(release.id);
-  await seedReleaseTransforms(release.id);
-  await seedReleaseLabels(release.id);
-
-  console.log('Seed process finished successfully.');
 }
 
 // Game-specific data seeding functions
 async function seedGameMnemonics(gameId: string) {
-  const mnemonicsPath = path.join(DB_PATH, 'mnemonics_old.json');
-  console.log(`Reading mnemonics from: ${mnemonicsPath}`);
-  
-  if (!fs.existsSync(mnemonicsPath)) {
-    console.log('No mnemonics file found, skipping...');
-    return;
-  }
-  
-  const mnemonicsFile = fs.readFileSync(mnemonicsPath, 'utf-8');
-  const mnemonicsData = JSON.parse(mnemonicsFile);
+  const mnemonicsData = await loadJsonData<DbMnemonic[]>('mnemonics_old.json');
   
   console.log(`Importing ${mnemonicsData.length} mnemonics...`);
   for (const mnemonicData of mnemonicsData) {
@@ -284,16 +266,7 @@ async function seedGameMnemonics(gameId: string) {
 }
 
 async function seedGameCops(gameId: string) {
-  const copsPath = path.join(DB_PATH, 'copdef.json');
-  console.log(`Reading COP definitions from: ${copsPath}`);
-  
-  if (!fs.existsSync(copsPath)) {
-    console.log('No copdef file found, skipping...');
-    return;
-  }
-  
-  const copsFile = fs.readFileSync(copsPath, 'utf-8');
-  const copsData = JSON.parse(copsFile);
+  const copsData = await loadJsonData<CopDef[]>('copdef.json');
   
   console.log(`Importing ${copsData.length} COP definitions...`);
   for (const copData of copsData) {
@@ -313,16 +286,7 @@ async function seedGameCops(gameId: string) {
 
 // Release-specific data seeding functions
 async function seedReleaseOverrides(releaseId: string) {
-  const overridesPath = path.join(DB_PATH, 'overrides.json');
-  console.log(`Reading overrides from: ${overridesPath}`);
-  
-  if (!fs.existsSync(overridesPath)) {
-    console.log('No overrides file found, skipping...');
-    return;
-  }
-  
-  const overridesFile = fs.readFileSync(overridesPath, 'utf-8');
-  const overridesData = JSON.parse(overridesFile);
+  const overridesData = await loadJsonData<DbOverride[]>('overrides.json');
   
   console.log(`Importing ${overridesData.length} overrides...`);
   for (const overrideData of overridesData) {
@@ -337,16 +301,7 @@ async function seedReleaseOverrides(releaseId: string) {
 }
 
 async function seedReleaseRewrites(releaseId: string) {
-  const rewritesPath = path.join(DB_PATH, 'rewrites.json');
-  console.log(`Reading rewrites from: ${rewritesPath}`);
-  
-  if (!fs.existsSync(rewritesPath)) {
-    console.log('No rewrites file found, skipping...');
-    return;
-  }
-  
-  const rewritesFile = fs.readFileSync(rewritesPath, 'utf-8');
-  const rewritesData = JSON.parse(rewritesFile);
+  const rewritesData = await loadJsonData<DbRewrite[]>('rewrites.json');
   
   console.log(`Importing ${rewritesData.length} rewrites...`);
   for (const rewriteData of rewritesData) {
@@ -361,23 +316,20 @@ async function seedReleaseRewrites(releaseId: string) {
 }
 
 async function seedReleaseTransforms(releaseId: string) {
-  const transformsPath = path.join(DB_PATH, 'transforms.json');
-  console.log(`Reading transforms from: ${transformsPath}`);
-  
-  if (!fs.existsSync(transformsPath)) {
-    console.log('No transforms file found, skipping...');
-    return;
-  }
-  
-  const transformsFile = fs.readFileSync(transformsPath, 'utf-8');
-  const transformsData = JSON.parse(transformsFile);
+  const transformsData = await loadJsonData<DbTransform[]>('transforms.json');
   
   console.log(`Importing ${transformsData.length} transforms...`);
   for (const transformData of transformsData) {
+    const releaseBlockId = releaseBlocksMap.get(transformData.block);
+    if (!releaseBlockId) {
+      console.warn(`Could not find ReleaseBlock for block name '${transformData.block}'. Skipping transform.`);
+      continue;
+    }
+
     await prisma.releaseTransform.create({
       data: {
         releaseId,
-        block: transformData.block,
+        releaseBlockId,
         transforms: transformData.transforms,
       },
     });
@@ -386,16 +338,7 @@ async function seedReleaseTransforms(releaseId: string) {
 }
 
 async function seedReleaseLabels(releaseId: string) {
-  const labelsPath = path.join(DB_PATH, 'labels.json');
-  console.log(`Reading labels from: ${labelsPath}`);
-  
-  if (!fs.existsSync(labelsPath)) {
-    console.log('No labels file found, skipping...');
-    return;
-  }
-  
-  const labelsFile = fs.readFileSync(labelsPath, 'utf-8');
-  const labelsData = JSON.parse(labelsFile);
+  const labelsData = await loadJsonData<DbLabel[]>('labels.json');
   
   console.log(`Importing ${labelsData.length} labels...`);
   for (const labelData of labelsData) {
@@ -408,6 +351,56 @@ async function seedReleaseLabels(releaseId: string) {
     });
   }
   console.log('Finished importing labels.');
+}
+
+async function seedStructs(gameId: string, releaseId: string) {
+  try {
+    const structsData = await loadJsonData<DbStruct[]>('structs.json');
+
+    // Clear existing struct data
+    console.log('🧹 Cleaning existing struct data...');
+    await prisma.releaseStruct.deleteMany({});
+    await prisma.gameStruct.deleteMany({});
+
+    // Seed GameStruct (base struct definitions)
+    console.log('📝 Creating game struct definitions...');
+    for (const structDef of structsData) {
+      const createdGameStruct = await prisma.gameStruct.create({
+        data: {
+          gameId,
+          name: structDef.name,
+          types: structDef.types,
+          delimiter: structDef.delimiter,
+          descriminator: structDef.discriminator,
+          parent: structDef.parent,
+          // parts field doesn't exist in the DbStruct interface yet, but is in the JSON
+          // We'll handle it as JSON in case it's present in the actual data
+          parts: (structDef as any).parts || null,
+        },
+      });
+
+      console.log(`  ✅ Created game struct: ${createdGameStruct.name}`);
+
+      // Create ReleaseStruct (release-specific overrides)
+      // For now, we'll create a basic ReleaseStruct without overrides
+      // In the future, release-specific struct variations can be added here
+      await prisma.releaseStruct.create({
+        data: {
+          releaseId,
+          gameStructId: createdGameStruct.id,
+          // Override fields can be left null if same as GameStruct
+          // romLocation and romSize can be added later when we know the actual addresses
+        },
+      });
+
+      console.log(`    🎯 Created release struct for: ${createdGameStruct.name}`);
+    }
+
+    console.log(`✅ Successfully seeded ${structsData.length} struct definitions!`);
+  } catch (error) {
+    console.error('❌ Error seeding structs:', error);
+    throw error;
+  }
 }
 
 main()

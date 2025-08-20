@@ -198,7 +198,7 @@ export class TypeParser {
 
   private parseLocation(offset: number, bank: number | undefined, typeName: string | null, addrType: AddressType): unknown {
     // If bank is not provided and offset is 0, it should resolve to #$0000
-    if (bank === undefined && offset === 0) {
+    if ((bank === undefined || bank === null) && offset === 0) {
       return createWord(offset);
     }
 

@@ -753,90 +753,103 @@ ALTER TABLE "ReleaseStringLayer" ADD CONSTRAINT "ReleaseStringLayer_releaseStrin
 -- Note: This enables public read-only access to game data and instruction sets.
 -- Authentication tables (User, Account, Session, VerificationToken) are excluded
 -- from anonymous access for security.
+-- Only apply RLS and policies in production (Supabase) environments
+DO $$
+BEGIN
+  -- Check if we're in a Supabase/production environment by looking for specific extensions
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'supabase_vault') OR
+     EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
+    
+    GRANT USAGE ON SCHEMA public TO anon;
 
-GRANT USAGE ON SCHEMA public TO anon;
+    -- Grant SELECT permissions on all tables to anonymous role
+    GRANT SELECT ON TABLE public."Game" TO anon;
+    GRANT SELECT ON TABLE public."GameFile" TO anon;
+    GRANT SELECT ON TABLE public."GameBlock" TO anon;
+    GRANT SELECT ON TABLE public."GamePart" TO anon;
+    GRANT SELECT ON TABLE public."Release" TO anon;
+    GRANT SELECT ON TABLE public."ReleaseFile" TO anon;
+    GRANT SELECT ON TABLE public."ReleaseBlock" TO anon;
+    GRANT SELECT ON TABLE public."ReleasePart" TO anon;
+    GRANT SELECT ON TABLE public."InstructionSet" TO anon;
+    GRANT SELECT ON TABLE public."InstructionGroup" TO anon;
+    GRANT SELECT ON TABLE public."Instruction" TO anon;
+    GRANT SELECT ON TABLE public."InstructionVariant" TO anon;
+    GRANT SELECT ON TABLE public."AddressingMode" TO anon;
+    GRANT SELECT ON TABLE public."ValidationRule" TO anon;
+    GRANT SELECT ON TABLE public."GameMnemonic" TO anon;
+    GRANT SELECT ON TABLE public."GameCop" TO anon;
+    GRANT SELECT ON TABLE public."ReleaseOverride" TO anon;
+    GRANT SELECT ON TABLE public."ReleaseRewrite" TO anon;
+    GRANT SELECT ON TABLE public."ReleaseTransform" TO anon;
+    GRANT SELECT ON TABLE public."ReleaseLabel" TO anon;
+    GRANT SELECT ON TABLE public."GameString" TO anon;
+    GRANT SELECT ON TABLE public."GameStringCommand" TO anon;
+    GRANT SELECT ON TABLE public."ReleaseString" TO anon;
+    GRANT SELECT ON TABLE public."ReleaseStringCommand" TO anon;
+    GRANT SELECT ON TABLE public."ReleaseStringLayer" TO anon;
 
--- Grant SELECT permissions on all tables to anonymous role
-GRANT SELECT ON TABLE public."Game" TO anon;
-GRANT SELECT ON TABLE public."GameFile" TO anon;
-GRANT SELECT ON TABLE public."GameBlock" TO anon;
-GRANT SELECT ON TABLE public."GamePart" TO anon;
-GRANT SELECT ON TABLE public."Release" TO anon;
-GRANT SELECT ON TABLE public."ReleaseFile" TO anon;
-GRANT SELECT ON TABLE public."ReleaseBlock" TO anon;
-GRANT SELECT ON TABLE public."ReleasePart" TO anon;
-GRANT SELECT ON TABLE public."InstructionSet" TO anon;
-GRANT SELECT ON TABLE public."InstructionGroup" TO anon;
-GRANT SELECT ON TABLE public."Instruction" TO anon;
-GRANT SELECT ON TABLE public."InstructionVariant" TO anon;
-GRANT SELECT ON TABLE public."AddressingMode" TO anon;
-GRANT SELECT ON TABLE public."ValidationRule" TO anon;
-GRANT SELECT ON TABLE public."GameMnemonic" TO anon;
-GRANT SELECT ON TABLE public."GameCop" TO anon;
-GRANT SELECT ON TABLE public."ReleaseOverride" TO anon;
-GRANT SELECT ON TABLE public."ReleaseRewrite" TO anon;
-GRANT SELECT ON TABLE public."ReleaseTransform" TO anon;
-GRANT SELECT ON TABLE public."ReleaseLabel" TO anon;
-GRANT SELECT ON TABLE public."GameString" TO anon;
-GRANT SELECT ON TABLE public."GameStringCommand" TO anon;
-GRANT SELECT ON TABLE public."ReleaseString" TO anon;
-GRANT SELECT ON TABLE public."ReleaseStringCommand" TO anon;
-GRANT SELECT ON TABLE public."ReleaseStringLayer" TO anon;
+    -- Enable Row Level Security on all tables
+    ALTER TABLE "Game" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "GameFile" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "GameBlock" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "GamePart" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "Release" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "ReleaseFile" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "ReleaseBlock" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "ReleasePart" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "Account" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "Session" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "VerificationToken" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "InstructionSet" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "InstructionGroup" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "Instruction" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "InstructionVariant" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "AddressingMode" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "ValidationRule" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "GameMnemonic" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "GameCop" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "ReleaseOverride" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "ReleaseRewrite" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "ReleaseTransform" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "ReleaseLabel" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "GameString" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "GameStringCommand" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "ReleaseString" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "ReleaseStringCommand" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "ReleaseStringLayer" ENABLE ROW LEVEL SECURITY;
 
--- Enable Row Level Security on all tables
-ALTER TABLE "Game" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "GameFile" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "GameBlock" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "GamePart" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Release" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "ReleaseFile" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "ReleaseBlock" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "ReleasePart" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Account" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Session" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "VerificationToken" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "InstructionSet" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "InstructionGroup" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Instruction" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "InstructionVariant" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "AddressingMode" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "ValidationRule" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "GameMnemonic" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "GameCop" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "ReleaseOverride" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "ReleaseRewrite" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "ReleaseTransform" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "ReleaseLabel" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "GameString" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "GameStringCommand" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "ReleaseString" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "ReleaseStringCommand" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "ReleaseStringLayer" ENABLE ROW LEVEL SECURITY;
+    -- Create anonymous SELECT policies for all tables
+    CREATE POLICY "Anonymous can read games" ON "Game" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read game files" ON "GameFile" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read game blocks" ON "GameBlock" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read game parts" ON "GamePart" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read releases" ON "Release" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read release files" ON "ReleaseFile" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read release blocks" ON "ReleaseBlock" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read release parts" ON "ReleasePart" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read instruction sets" ON "InstructionSet" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read instruction groups" ON "InstructionGroup" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read instructions" ON "Instruction" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read instruction variants" ON "InstructionVariant" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read addressing modes" ON "AddressingMode" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read validation rules" ON "ValidationRule" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read game mnemonics" ON "GameMnemonic" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read game cops" ON "GameCop" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read release overrides" ON "ReleaseOverride" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read release rewrites" ON "ReleaseRewrite" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read release transforms" ON "ReleaseTransform" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read release labels" ON "ReleaseLabel" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read game strings" ON "GameString" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read game string commands" ON "GameStringCommand" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read release strings" ON "ReleaseString" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read release string commands" ON "ReleaseStringCommand" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read release string layers" ON "ReleaseStringLayer" FOR SELECT TO anon USING (true);
 
--- Create anonymous SELECT policies for all tables
-CREATE POLICY "Anonymous can read games" ON "Game" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read game files" ON "GameFile" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read game blocks" ON "GameBlock" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read game parts" ON "GamePart" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read releases" ON "Release" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read release files" ON "ReleaseFile" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read release blocks" ON "ReleaseBlock" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read release parts" ON "ReleasePart" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read instruction sets" ON "InstructionSet" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read instruction groups" ON "InstructionGroup" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read instructions" ON "Instruction" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read instruction variants" ON "InstructionVariant" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read addressing modes" ON "AddressingMode" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read validation rules" ON "ValidationRule" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read game mnemonics" ON "GameMnemonic" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read game cops" ON "GameCop" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read release overrides" ON "ReleaseOverride" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read release rewrites" ON "ReleaseRewrite" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read release transforms" ON "ReleaseTransform" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read release labels" ON "ReleaseLabel" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read game strings" ON "GameString" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read game string commands" ON "GameStringCommand" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read release strings" ON "ReleaseString" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read release string commands" ON "ReleaseStringCommand" FOR SELECT TO anon USING (true);
-CREATE POLICY "Anonymous can read release string layers" ON "ReleaseStringLayer" FOR SELECT TO anon USING (true);
+    RAISE NOTICE 'Applied RLS policies and grants for production environment';
+  ELSE
+    RAISE NOTICE 'Skipped RLS setup - not in production environment';
+  END IF;
+END
+$$;

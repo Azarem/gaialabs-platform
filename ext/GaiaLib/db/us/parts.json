@@ -3572,7 +3572,7 @@
     "end": 50968,
     "name": "table_00C710",
     "struct": "&Code",
-    "bank": "02",
+    "bank": 2,
     "block": "func_00C6E4",
     "size": 8
   },

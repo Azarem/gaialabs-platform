@@ -1,5 +1,5 @@
 import { Op } from '../../assembly/Op';
-import { AddressingMode, AsmBlock, ChunkFile, ChunkFileUtils, TypedNumber } from '@gaialabs/shared';
+import { AsmBlock, ChunkFile, ChunkFileUtils, TypedNumber } from '@gaialabs/shared';
 import { 
   DbRoot,
   AddressType, 
@@ -169,26 +169,9 @@ export class BlockWriter {
       if(op.size === 3){
 
       }
-      if (op.code.mode === AddressingMode.Immediate) {
+      if (op.code.mode === 'Immediate') {
         return obj;
       }
-
-      // // Direct page and stack operations should not resolve to labels
-      // switch (op.code.mode) {
-      //   case AddressingMode.DirectPage:
-      //   case AddressingMode.DirectPageIndexedX:
-      //   case AddressingMode.DirectPageIndexedY:
-      //   case AddressingMode.DirectPageIndexedIndirectX:
-      //   case AddressingMode.DirectPageIndirect:
-      //   case AddressingMode.DirectPageIndirectLong:
-      //   case AddressingMode.DirectPageIndirectLongIndexedY:
-      //   case AddressingMode.DirectPageIndirectIndexedY:
-      //   case AddressingMode.StackRelative:
-      //   case AddressingMode.StackRelativeIndirectIndexedY:
-      //   case AddressingMode.Stack:
-      //   case AddressingMode.StackInterrupt:
-      //     return obj;
-      // }
 
       return this._blockReader.resolveName(obj, AddressType.Address, isBranch);
     }
@@ -222,7 +205,7 @@ export class BlockWriter {
         return obj;
       }
 
-      if (typeof typed.value === 'number' && op.code.mode !== AddressingMode.Immediate) {
+      if (typeof typed.value === 'number' && op.code.mode !== 'Immediate') {
         const resolved = this._blockReader.resolveName(typed.value, AddressType.Address, isBranch);
         return { ...typed, value: resolved };
       }
@@ -444,16 +427,16 @@ export class BlockWriter {
           }
         } else {
           const isBr = op.code.mnem[0] === 'J' || 
-                      op.code.mode === AddressingMode.PCRelative ||
-                      op.code.mode === AddressingMode.PCRelativeLong;
+                      op.code.mode === 'PCRelative' ||
+                      op.code.mode === 'PCRelativeLong';
   
           // Regular instruction formatting
           const resolvedOperand = this.resolveOperand(op, op.operands[0], isBr);
-          const format = this._root.config.asmFormats?.[op.code.mode];
+          const format = this._root.addrLookup[op.code.mode]?.formatString; // || this._root.config.asmFormats?.[op.code.mode];
           
           if (format) {
             let actualFormat = format;
-            if (op.code.mode === AddressingMode.Immediate && op.size === 3) {
+            if (op.code.mode === 'Immediate' && op.size === 3) {
               actualFormat = format.replace('X2', 'X4');
             }
             opLine += this.formatOperand(actualFormat, [resolvedOperand, ...op.operands.slice(1)]);

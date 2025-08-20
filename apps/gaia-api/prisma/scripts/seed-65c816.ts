@@ -72,35 +72,7 @@ interface ValidationRulesData {
   [key: string]: any;
 }
 
-// Mapping from JSON addressing mode names to enum values
-const ADDRESSING_MODE_MAP: Record<string, string> = {
-  'Immediate': 'Immediate',
-  'Absolute': 'Absolute',
-  'AbsoluteLong': 'AbsoluteLong', 
-  'DirectPage': 'DirectPage',
-  'DirectPageIndirect': 'DirectPageIndirect',
-  'DirectPageIndirectLong': 'DirectPageIndirectLong',
-  'AbsoluteIndexedX': 'AbsoluteIndexedX',
-  'AbsoluteLongIndexedX': 'AbsoluteLongIndexedX',
-  'AbsoluteIndexedY': 'AbsoluteIndexedY',
-  'DirectPageIndexedX': 'DirectPageIndexedX',
-  'DirectPageIndexedY': 'DirectPageIndexedY',
-  'DirectPageIndexedIndirectX': 'DirectPageIndexedIndirectX',
-  'DirectPageIndirectIndexedY': 'DirectPageIndirectIndexedY',
-  'DirectPageIndirectLongIndexedY': 'DirectPageIndirectLongIndexedY',
-  'StackRelative': 'StackRelative',
-  'StackRelativeIndirectIndexedY': 'StackRelativeIndirectIndexedY',
-  'Accumulator': 'Accumulator',
-  'Implied': 'Implied',
-  'Stack': 'Stack',
-  'StackInterrupt': 'StackInterrupt',
-  'PCRelative': 'PCRelative',
-  'PCRelativeLong': 'PCRelativeLong',
-  'AbsoluteIndirect': 'AbsoluteIndirect',
-  'AbsoluteIndirectLong': 'AbsoluteIndirectLong',
-  'AbsoluteIndexedIndirect': 'AbsoluteIndexedIndirect',
-  'BlockMove': 'BlockMove'
-};
+// No longer needed - using strings directly instead of enum mapping
 
 // Instruction group category mapping
 const INSTRUCTION_GROUP_CATEGORIES: Record<string, string> = {
@@ -144,16 +116,17 @@ function mapProcessorFlags(flags: string[]): string[] {
   return flags.map(flag => PROCESSOR_FLAG_MAP[flag] || flag);
 }
 
-async function seedAddressingModes() {
+async function seedAddressingModes(instructionSetId: string) {
   console.log('🔄 Seeding addressing modes...');
   
   const addressingData = readJsonFile<AddressingModeData>('addressing-mode.json');
   
   const addressingModes = [];
   for (const [key, mode] of Object.entries(addressingData.addressingModes)) {
-    const enumValue = ADDRESSING_MODE_MAP[mode.mode];
-    if (!enumValue) {
-      console.warn(`⚠️  Unknown addressing mode: ${mode.mode}`);
+    // Use the mode value directly as a string
+    const modeValue = mode.mode;
+    if (!modeValue) {
+      console.warn(`⚠️  Missing mode value for: ${key}`);
       continue;
     }
     
@@ -169,11 +142,12 @@ async function seedAddressingModes() {
     };
     
     addressingModes.push({
-      mode: enumValue,
+      instructionSetId,
+      mode: modeValue,
       shorthand: mode.shorthand || key.toLowerCase(),
+      name: modeValue, // Name should be the same as mode
       operandType: mode.operandType, // Use the operand type from JSON
       description: mode.description,
-      officialName: mode.officialName,
       length: parseNumericField(mode.length),
       format: mode.format,
       formatString: mode.formatString,
@@ -189,7 +163,12 @@ async function seedAddressingModes() {
   
   for (const mode of addressingModes) {
     await prisma.addressingMode.upsert({
-      where: { mode: mode.mode as any },
+      where: { 
+        instructionSetId_mode: {
+          instructionSetId: mode.instructionSetId,
+          mode: mode.mode
+        }
+      },
       update: mode,
       create: mode
     });
@@ -311,7 +290,7 @@ async function seedInstructionGroups(instructionSetId: string) {
       console.log(`✅ Created instruction group: ${groupName}`);
       
       // Seed instructions in this group
-      await seedInstructions(instructionGroup.id, groupData.instructions);
+      await seedInstructions(instructionGroup.id, groupData.instructions, instructionSetId);
       
     } catch (error) {
       console.error(`❌ Error processing ${filename}:`, error);
@@ -319,7 +298,7 @@ async function seedInstructionGroups(instructionSetId: string) {
   }
 }
 
-async function seedInstructions(instructionGroupId: string, instructions: Record<string, Instruction>) {
+async function seedInstructions(instructionGroupId: string, instructions: Record<string, Instruction>, instructionSetId: string) {
   console.log('🔄 Seeding instructions...');
   
   for (const [mnemonic, instruction] of Object.entries(instructions)) {
@@ -345,27 +324,33 @@ async function seedInstructions(instructionGroupId: string, instructions: Record
     });
     
     // Seed instruction variants
-    await seedInstructionVariants(instructionRecord.id, instruction.variants);
+    await seedInstructionVariants(instructionRecord.id, instruction.variants, instructionSetId);
   }
   
   console.log(`✅ Seeded ${Object.keys(instructions).length} instructions`);
 }
 
-async function seedInstructionVariants(instructionId: string, variants: InstructionVariant[]) {
+async function seedInstructionVariants(instructionId: string, variants: InstructionVariant[], instructionSetId: string) {
   for (const variant of variants) {
-    const addressingModeEnum = ADDRESSING_MODE_MAP[variant.addressingMode];
-    if (!addressingModeEnum) {
-      console.warn(`⚠️  Unknown addressing mode: ${variant.addressingMode}`);
+    // Use the addressing mode value directly
+    const addressingModeValue = variant.addressingMode;
+    if (!addressingModeValue) {
+      console.warn(`⚠️  Missing addressing mode for variant with opcode: ${variant.opcode}`);
       continue;
     }
     
-    // Find the addressing mode record
+    // Find the addressing mode record by instructionSetId and mode
     const addressingMode = await prisma.addressingMode.findUnique({
-      where: { mode: addressingModeEnum as any }
+      where: { 
+        instructionSetId_mode: {
+          instructionSetId,
+          mode: addressingModeValue
+        }
+      }
     });
     
     if (!addressingMode) {
-      console.error(`❌ Addressing mode not found: ${addressingModeEnum}`);
+      console.error(`❌ Addressing mode not found: ${addressingModeValue} for instruction set ${instructionSetId}`);
       continue;
     }
     
@@ -411,8 +396,8 @@ async function main() {
     await prisma.instructionSet.deleteMany({});
     
     // Seed in order due to relationships
-    await seedAddressingModes();
     const instructionSet = await seedInstructionSet();
+    await seedAddressingModes(instructionSet.id);
     await seedInstructionGroups(instructionSet.id);
     
     console.log('🎉 65C816 instruction set seeding completed successfully!');

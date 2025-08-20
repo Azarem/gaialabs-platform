@@ -548,6 +548,9 @@ importers:
 
   packages/gaia-shared:
     dependencies:
+      '@prisma/client':
+        specifier: ^6.11.1
+        version: 6.11.1(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)
       '@supabase/supabase-js':
         specifier: ^2.55.0
         version: 2.55.0
