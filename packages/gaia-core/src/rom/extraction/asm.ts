@@ -1,4 +1,5 @@
-import { Op, OpCode, Registers } from '../../assembly';
+import { Op, OpCode } from '@gaialabs/shared';
+import { Registers } from '../../assembly';
 import { RomDataReader } from './reader';
 import { TransformProcessor } from './transforms';
 import { AddressingModeHandler, OperationContext } from './addressing';
@@ -14,7 +15,7 @@ export class AsmReader {
   private static readonly PROCESSOR_FLAG_MASK = 0xDF;
   private static readonly ACCUMULATOR_OP_MASK = 0xF;
   private static readonly ACCUMULATOR_OP_VALUE = 0x9;
-  private static readonly VARIABLE_SIZE_INDICATOR = -2;
+  public static readonly VARIABLE_SIZE_INDICATOR = -2;
   private static readonly TWO_BYTES_SIZE = 2;
   private static readonly THREE_BYTES_SIZE = 3;
 
@@ -98,7 +99,8 @@ export class AsmReader {
   }
 
   private calculateInstructionSize(code: OpCode, reg: Registers): number {
-    let size = code.size;
+    const addrMode = this._blockReader._root.addrLookup[code.mode];
+    let size = addrMode.size;
     
     if (size === AsmReader.VARIABLE_SIZE_INDICATOR || code.mode === 'Immediate') {
       if((code.code & AsmReader.PROCESSOR_FLAG_MASK) === 0xC2){

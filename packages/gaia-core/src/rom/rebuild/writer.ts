@@ -11,7 +11,7 @@ import {
   LocationWrapper
 } from '@gaialabs/shared';
 import { RomProcessor as RebuildProcessor } from './processor';
-import { Op } from '../../assembly/Op';
+import { Op } from '@gaialabs/shared';
 
 /**
  * ROM writer (binary)

@@ -1,0 +1,209 @@
+{
+  "Absolute": {
+    "shorthand": "abs",
+    "operandType": "Absolute",
+    "size": 3,
+    "formatString": "${0:X4}",
+    "parseRegex": "^\\$([A-Fa-f0-9]{4}|&[A-Za-z0-9-+_]+)$"
+  },
+
+  "AbsoluteIndexedX": {
+    "shorthand": "abs_x",
+    "operandType": "Absolute",
+    "size": 3,
+    "formatString": "${0:X4}, X",
+    "parseRegex": "^(\\$[A-Fa-f0-9]{4}|\\$?&[A-Za-z0-9-+_]+),\\s?[Xx]$"
+  },
+
+  "AbsoluteIndexedY": {
+    "shorthand": "abs_y",
+    "operandType": "Absolute",
+    "size": 3,
+    "formatString": "${0:X4}, Y",
+    "parseRegex": "^(\\$[A-Fa-f0-9]{4}|\\$?&[A-Za-z0-9-+_]+),\\s?[Yy]$"
+  },
+
+  "AbsoluteIndirect": {
+    "shorthand": "abs_ind",
+    "operandType": "Absolute",
+    "size": 3,
+    "formatString": "(${0})",
+    "parseRegex": "^\\((\\$[A-Fa-f0-9]{4}|\\$?&[A-Za-z0-9-+_]+)\\)$"
+  },
+
+  "AbsoluteIndirectLong": {
+    "shorthand": "abs_indl",
+    "operandType": "Absolute",
+    "size": 3,
+    "formatString": "[${0}]",
+    "parseRegex": "^\\[(\\$[A-Fa-f0-9]{4}|\\$?&[A-Za-z0-9-+_]+)\\]$"
+  },
+
+  "AbsoluteIndexedIndirect": {
+    "shorthand": "abs_x_ind",
+    "operandType": "Absolute",
+    "size": 3,
+    "formatString": "(${0}, X)",
+    "parseRegex": "^\\((\\$[A-Fa-f0-9]{4}|\\$?&[A-Za-z0-9-+_]+),\\s*[Xx]\\)$"
+  },
+
+  "AbsoluteLong": {
+    "shorthand": "long",
+    "operandType": "AbsoluteLong",
+    "size": 4,
+    "formatString": "${0:X6}",
+    "parseRegex": "^\\$([A-Fa-f0-9]{6}|\\@[A-Za-z0-9-+_]+)$"
+  },
+
+  "AbsoluteLongIndexedX": {
+    "shorthand": "long_x",
+    "operandType": "AbsoluteLong",
+    "size": 4,
+    "formatString": "${0:X6}, X",
+    "parseRegex": "^(\\$[A-Fa-f0-9]{6}|\\$?@[A-Za-z0-9-+_]+),\\s?[Xx]$"
+  },
+
+  "DirectPage": {
+    "shorthand": "dp",
+    "operandType": "Direct",
+    "size": 2,
+    "formatString": "${0:X2}",
+    "parseRegex": "^\\$([A-Fa-f0-9]{2})$"
+  },
+
+  "DirectPageIndexedX": {
+    "shorthand": "dp_x",
+    "operandType": "Direct",
+    "size": 2,
+    "formatString": "${0:X2}, X",
+    "parseRegex": "^\\$([A-Fa-f0-9]{2}),\\s?[Xx]$"
+  },
+
+  "DirectPageIndexedY": {
+    "shorthand": "dp_y",
+    "operandType": "Direct",
+    "size": 2,
+    "formatString": "${0:X2}, Y",
+    "parseRegex": "^\\$([A-Fa-f0-9]{2}),\\s?[Yy]$"
+  },
+
+  "DirectPageIndirect": {
+    "shorthand": "dp_ind",
+    "operandType": "Direct",
+    "size": 2,
+    "formatString": "(${0:X2})",
+    "parseRegex": "^\\(\\$([A-Fa-f0-9]{2})\\)$"
+  },
+
+  "DirectPageIndirectLong": {
+    "shorthand": "dp_indl",
+    "operandType": "Direct",
+    "size": 2,
+    "formatString": "[${0:X2}]",
+    "parseRegex": "^\\[\\$([A-Fa-f0-9]{2})\\]$"
+  },
+
+  "DirectPageIndexedIndirectX": {
+    "shorthand": "dp_x_ind",
+    "operandType": "Direct",
+    "size": 2,
+    "formatString": "(${0:X2}, X)",
+    "parseRegex": "^\\(\\$([A-Fa-f0-9]{2}),\\s?[Xx]\\)$"
+  },
+
+  "DirectPageIndirectIndexedY": {
+    "shorthand": "dp_ind_y",
+    "operandType": "Direct",
+    "size": 2,
+    "formatString": "(${0:X2}), Y",
+    "parseRegex": "^\\(\\$([A-Fa-f0-9]{2})\\),\\s?[Yy]$"
+  },
+
+  "DirectPageIndirectLongIndexedY": {
+    "shorthand": "dp_indl_y",
+    "operandType": "Direct",
+    "size": 2,
+    "formatString": "[${0:X2}], Y",
+    "parseRegex": "^\\[\\$([A-Fa-f0-9]{2})\\],\\s?[Yy]$"
+  },
+
+  "Immediate": {
+    "shorthand": "imm",
+    "operandType": "Immediate",
+    "size": 2,
+    "formatString": "#${0:X2}",
+    "parseRegex": "^#(\\$[A-Fa-f0-9]{2,4}|\\$?[&^*][A-Za-z0-9-+_]+)$"
+  },
+
+  "Implied": {
+    "shorthand": "imp",
+    "operandType": null,
+    "size": 1,
+    "formatString": null,
+    "parseRegex": null
+  },
+
+  "Accumulator": {
+    "shorthand": "acc",
+    "operandType": null,
+    "size": 1,
+    "formatString": null,
+    "parseRegex": null
+  },
+
+  "PCRelative": {
+    "shorthand": "rel",
+    "operandType": "Label",
+    "size": 2,
+    "formatString": "{0}",
+    "parseRegex": "^([A-Za-z_][A-Za-z0-9_]*|\\$[A-Fa-f0-9]{2})$"
+  },
+
+  "PCRelativeLong": {
+    "shorthand": "rel16",
+    "operandType": "Label",
+    "size": 3,
+    "formatString": "{0}",
+    "parseRegex": "^([A-Za-z_][A-Za-z0-9_]*|\\$[A-Fa-f0-9]{4})$"
+  },
+
+  "StackRelative": {
+    "shorthand": "stkr",
+    "operandType": "Byte",
+    "size": 2,
+    "formatString": "${0:X2}, S",
+    "parseRegex": "^\\$([A-Fa-f0-9]{2}),\\s?[Ss]$"
+  },
+
+  "StackRelativeIndirectIndexedY": {
+    "shorthand": "stkr_ind_y",
+    "operandType": "Byte",
+    "size": 2,
+    "formatString": "(${0:X2}, S), Y",
+    "parseRegex": "^\\(\\$([A-Fa-f0-9]{2}),\\s?[Ss]\\),\\s?[Yy]$"
+  },
+
+  "BlockMove": {
+    "shorthand": "src_dest",
+    "operandType": "BankPair",
+    "size": 3,
+    "formatString": "#${0:X2}, #${1:X2}",
+    "parseRegex": "^#\\$([A-Fa-f0-9]{2}|\\^[A-Za-z0-9-+_]+),\\s?#\\$([A-Fa-f0-9]{2}|\\^[A-Za-z0-9-+_]+)$"
+  },
+
+  "StackInterrupt": {
+    "shorthand": "stk_int",
+    "operandType": "InterruptVector",
+    "size": 2,
+    "formatString": "#${0:X2}",
+    "parseRegex": "^#\\$([A-Fa-f0-9]{2})$"
+  },
+
+  "Stack": {
+    "shorthand": "stk",
+    "operandType": null,
+    "size": 1,
+    "formatString": null,
+    "parseRegex": null
+  }
+}

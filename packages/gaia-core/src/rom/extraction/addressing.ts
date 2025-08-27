@@ -1,4 +1,4 @@
-import { OpCode, Registers } from '../../assembly';
+import { Registers } from '../../assembly';
 import {
   AddressType,
   AddressSpace,
@@ -12,7 +12,7 @@ import { RomDataReader } from './reader';
 import { StackOperations } from './stack';
 import { TransformProcessor } from './transforms';
 import { CopCommandProcessor } from './cop';
-import type { DbRoot, CopDef } from '@gaialabs/shared';
+import type { DbRoot, CopDef, OpCode } from '@gaialabs/shared';
 import type { BlockReader } from './blocks';
 
 /**

@@ -41,28 +41,34 @@ export class RomProcessingConstants {
    * @throws Error when unable to determine size
    */
   public static getSize(obj: unknown): number {
-    if (obj && typeof obj === 'object') {
-      if ('size' in obj) {
-        return (obj as { size: number }).size;
-      }
-      if ('_tag' in obj) {
-        switch ((obj as { _tag: string })._tag) {
-          case 'Byte':
-            return 1;
-          case 'Word':
-            return 2;
+    if(obj === undefined || obj === null) return 0;
+    switch(typeof obj) {
+      case 'object':
+        if(Array.isArray(obj)) {
+          return obj.reduce((acc, x) => acc + RomProcessingConstants.getSize(x), 0);
         }
-      }
-    } else if (obj instanceof Uint8Array) {
-      return obj.length;
-    } else if (typeof obj === 'number') {
-      // Determine size based on value range
-      if (obj <= 0xFF) return 1;
-      if (obj <= 0xFFFF) return 2;
-      if (obj <= 0xFFFFFF) return 3;
-      return 4;
-    } else if (typeof obj === 'string') {
-      if (obj.length > 0) {
+        if ('size' in obj) return obj.size as number;
+        if ('length' in obj) return obj.length as number;
+        if ('_tag' in obj) {
+          switch ((obj as { _tag: string })._tag) {
+            case 'Byte':
+              return 1;
+            case 'Word':
+              return 2;
+          }
+        }
+        break;
+
+      case 'number':
+        // Determine size based on value range
+        if (obj <= 0xFF) return 1;
+        if (obj <= 0xFFFF) return 2;
+        if (obj <= 0xFFFFFF) return 3;
+        return 4;
+
+      case 'string':
+        if(!obj.length) return 0;
+
         switch (obj[0]) {
           case '@':
             return 3;
@@ -83,10 +89,11 @@ export class RomProcessingConstants {
           case "Address":
             return 3;
         }
-      }
+        
+        return obj.length;
     }
 
-    throw new Error(`Unable to get size for operand '${obj}'`);
+    return 0;
   }
 }
 

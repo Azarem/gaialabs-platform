@@ -1,4 +1,4 @@
-import { Op } from '../../assembly/Op';
+import { Op } from '@gaialabs/shared';
 import { AsmBlock, ChunkFile, ChunkFileUtils, TypedNumber } from '@gaialabs/shared';
 import { 
   DbRoot,

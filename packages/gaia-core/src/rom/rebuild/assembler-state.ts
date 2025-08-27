@@ -1,8 +1,8 @@
 import { DbRoot, DbStruct, RomProcessingConstants } from '@gaialabs/shared';
 import { AsmBlock } from '@gaialabs/shared';
-import { OpCode } from '../../assembly/OpCode';
-import { Op } from '../../assembly/Op';
+import { Op, OpCode } from '@gaialabs/shared';
 import type { AssemblerContext } from './assembler-context';
+import { AsmReader } from '../extraction/asm';
 
 /**
  * Assembler state machine for processing assembly text
@@ -348,9 +348,9 @@ export class AssemblerState {
 
           // Regex parse operand based on addressing mode
           const addrMode = this.root.addrLookup[code.mode]; 
-          const regex = addrMode.regex;
+          const regex = addrMode.parseRegex;
           if (regex) {
-            const match = regex.exec(operand);
+            const match = new RegExp(regex).exec(operand);
             if (match) {
               // Keep the current code
               opCode = code;
@@ -397,8 +397,9 @@ export class AssemblerState {
 
         const opnd1 = this.context.parseOperand(operand!);
 
-        let size = opCode.size;
-        if (size === -2) {
+        const addrMode = this.root.addrLookup[opCode.mode];
+        let size = addrMode.size;
+        if (size === AsmReader.VARIABLE_SIZE_INDICATOR || opCode.mode === 'Immediate') {
           size = operand?.startsWith('^') || typeof opnd1 === 'number' && opnd1 <= 0xFF ? 2 : 3;
         }
 

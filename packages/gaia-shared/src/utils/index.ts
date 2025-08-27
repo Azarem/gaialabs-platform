@@ -5,6 +5,7 @@
 
 // File utilities
 export * from './file';
+export * from './crc';
 
 /**
  * Convert bytes to hex string

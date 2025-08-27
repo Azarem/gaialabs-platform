@@ -17,3 +17,4 @@ export * from './sfx';
 export * from './strings';
 export * from './structs';
 export * from './transforms'; 
+export * from './opcode';

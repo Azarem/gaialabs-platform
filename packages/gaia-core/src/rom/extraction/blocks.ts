@@ -1,4 +1,5 @@
-import { Op, Registers } from '../../assembly';
+import { Registers } from '../../assembly';
+import { Op } from '@gaialabs/shared';
 import { RomDataReader } from './reader';
 import { ProcessorStateManager } from './processor';
 import { ReferenceManager } from './references';
@@ -192,9 +193,7 @@ export class BlockReader {
    */
   public noteType(loc: number, type: string, silent: boolean = false, reg?: Registers): string {
     this._referenceManager.tryAddStruct(loc, type);
-if(loc === 101636){
-  console.log('ok');
-}
+
     const nameResult = this._referenceManager.tryGetName(loc);
     let name: string;
     

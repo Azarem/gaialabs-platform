@@ -13,882 +13,210 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// -------------------
-// Master Game Data
-// Contains the canonical definition of all assets for a game,
-// independent of any specific release.
-// -------------------
+model Platform {
+  id   String @id @default(cuid())
+  name String @unique
+  meta Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branches   PlatformBranch[]
+  regions    Region[]
+  developers Developer[]
+  games      Game[]
+}
+
+model PlatformBranch {
+  id       String  @id @default(cuid())
+  name     String?
+  version  Int?
+  isPublic Boolean @default(false)
+  meta     Json?
+
+  platform   Platform @relation(fields: [platformId], references: [id])
+  platformId String
+
+  addressingModes Json?
+  instructionSet  Json?
+  vectors         Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gameBranches GameRomBranch[]
+  //baseBranches BaseRomBranch[]
+
+  @@unique([platformId, name, version])
+  @@index([platformId])
+}
+
+model Developer {
+  id   String @id @default(cuid())
+  name String
+  meta Json?
+
+  platform   Platform @relation(fields: [platformId], references: [id])
+  platformId String
+
+  games Game[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([platformId, name])
+  @@index([platformId])
+}
+
+model Region {
+  id   String @id @default(cuid())
+  name String
+  meta Json?
+
+  platform   Platform @relation(fields: [platformId], references: [id])
+  platformId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roms GameRom[]
+
+  @@unique([platformId, name])
+  @@index([platformId])
+}
 
 model Game {
-  id           String @id @default(cuid())
-  title        String @unique
-  description  String?
-  platform     String // e.g., "SNES", "Genesis"
-  meta         Json?  // For any other metadata
+  id   String @id @default(cuid())
+  name String
+  meta Json?
 
-  // Default ROM characteristics (from a "master" or common version)
-  romDeveloper Int?
-  romMode      Int?
-  romChipset   Int?
-  romSize      Int?
-  ramSize      Int?
+  platform   Platform @relation(fields: [platformId], references: [id])
+  platformId String
 
-  files    GameFile[]
-  blocks   GameBlock[]
-  releases Release[]
-  
-  // Game-specific data structures
-  mnemonics   GameMnemonic[]
-  cops        GameCop[]
-  gameStrings GameString[]
-  structs     GameStruct[]
+  developer   Developer? @relation(fields: [developerId], references: [id])
+  developerId String?
 
-  // Audit fields
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime? // For soft deletes
-  createdById String?   // Optional: Link to a User model
-  updatedById String?   // Optional: Link to a User model
-  deletedById String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  createdBy User? @relation("CreatedGames", fields: [createdById], references: [id])
-  updatedBy User? @relation("UpdatedGames", fields: [updatedById], references: [id])
-  deletedBy User? @relation("DeletedGames", fields: [deletedById], references: [id])
+  gameRoms GameRom[]
+  baseRoms BaseRom[]
+
+  @@unique([platformId, name])
+  @@index([platformId])
+  @@index([developerId])
 }
 
-model GameFile {
+model GameRom {
+  id   String @id @default(cuid())
+  crc  Int    @unique
+  meta Json?
+
+  game   Game   @relation(fields: [gameId], references: [id])
+  gameId String
+
+  region   Region? @relation(fields: [regionId], references: [id])
+  regionId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branches GameRomBranch[]
+  baseRoms BaseRom[]
+
+  @@index([gameId])
+  @@index([regionId])
+}
+
+model GameRomBranch {
+  id       String  @id @default(cuid())
+  name     String?
+  version  Int?
+  isPublic Boolean @default(false)
+
+  gameRom   GameRom @relation(fields: [gameRomId], references: [id])
+  gameRomId String
+
+  platformBranch   PlatformBranch @relation(fields: [platformBranchId], references: [id])
+  platformBranchId String
+
+  coplib Json?
+  config Json?
+  files  Json?
+  blocks Json?
+  fixups Json?
+  types  Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  baseBranches BaseRomBranch[]
+
+  @@unique([gameRomId, name, version])
+  @@index([gameRomId])
+}
+
+model BaseRom {
+  id   String @id @default(cuid())
+  name String @unique
+
+  game   Game   @relation(fields: [gameId], references: [id])
+  gameId String
+
+  gameRom   GameRom @relation(fields: [gameRomId], references: [id])
+  gameRomId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branches BaseRomBranch[]
+  files    BaseRomFile[]
+
+  @@unique([gameId, name])
+  @@index([gameId])
+  @@index([gameRomId])
+}
+
+model BaseRomBranch {
+  id       String  @id @default(cuid())
+  name     String?
+  version  Int?
+  isPublic Boolean @default(false)
+
+  baseRom   BaseRom @relation(fields: [baseRomId], references: [id])
+  baseRomId String
+
+  gameRomBranch   GameRomBranch @relation(fields: [gameRomBranchId], references: [id])
+  gameRomBranchId String
+
+  fileCrcs Int[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([baseRomId, name, version])
+  @@index([gameRomBranchId])
+  @@index([baseRomId])
+}
+
+model BaseRomFile {
   id      String @id @default(cuid())
   name    String
-  type    String? // e.g., "Graphics", "Text", "Code"
-  group   String? // For logical grouping
-  scene   String? // e.g., "Intro", "World Map"
-  compressed Boolean?
-  upper Boolean @default(false)
+  type    String
+  version Int?
+  crc     Int?
+  meta    Json?
 
-  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  gameId String
+  baseRom   BaseRom @relation(fields: [baseRomId], references: [id])
+  baseRomId String
 
-  releaseFiles ReleaseFile[]
+  data Bytes
 
-  // Audit fields
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
-  deletedById String?
-
-  createdBy User? @relation("CreatedGameFiles", fields: [createdById], references: [id])
-  updatedBy User? @relation("UpdatedGameFiles", fields: [updatedById], references: [id])
-  deletedBy User? @relation("DeletedGameFiles", fields: [deletedById], references: [id])
-
-  @@unique([gameId, name])
-}
-
-model GameBlock {
-  id    String  @id @default(cuid())
-  name  String
-  group String?
-  scene String?
-  movable Boolean @default(false)
-
-  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  gameId String
-
-  parts         GamePart[]
-  releaseBlocks ReleaseBlock[]
-
-  // Audit fields
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
-  deletedById String?
-
-  createdBy User? @relation("CreatedGameBlocks", fields: [createdById], references: [id])
-  updatedBy User? @relation("UpdatedGameBlocks", fields: [updatedById], references: [id])
-  deletedBy User? @relation("DeletedGameBlocks", fields: [deletedById], references: [id])
-
-  @@unique([gameId, name])
-}
-
-model GamePart {
-  id     String  @id @default(cuid())
-  name   String
-  struct String? // Describes the data structure, e.g., "PlayerStats"
-  order  Int     @default(0) // Order within the block
-
-  block       GameBlock @relation(fields: [gameBlockId], references: [id], onDelete: Cascade)
-  gameBlockId String
-
-  releaseParts ReleasePart[]
-
-  // Audit fields
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
-  deletedById String?
-
-  createdBy User? @relation("CreatedGameParts", fields: [createdById], references: [id])
-  updatedBy User? @relation("UpdatedGameParts", fields: [updatedById], references: [id])
-  deletedBy User? @relation("DeletedGameParts", fields: [deletedById], references: [id])
-
-  @@unique([gameBlockId, name])
-}
-
-
-// -------------------
-// Release-Specific Data
-// Contains overrides and location-specific information for a
-// particular game release (e.g., US v1.0, JP v1.1).
-// -------------------
-
-model Release {
-  id           String @id @default(cuid())
-  romVersion   Int // e.g., 0 for "1.0"
-  romRegion    Int // e.g., 1 for "US"
-  romTitle     String?
-  romCode      String?
-  romCrc       Int?    // e.g. 0x1C3848C0
-
-  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  gameId String
-
-  files  ReleaseFile[]
-  blocks ReleaseBlock[]
-  parts  ReleasePart[]
-  
-  // Release-specific data structures
-  overrides     ReleaseOverride[]
-  rewrites      ReleaseRewrite[]
-  transforms    ReleaseTransform[]
-  labels        ReleaseLabel[]
-  releaseStrings ReleaseString[]
-  structs       ReleaseStruct[]
-
-  // Audit fields
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
-  deletedById String?
-
-  createdBy User? @relation("CreatedReleases", fields: [createdById], references: [id])
-  updatedBy User? @relation("UpdatedReleases", fields: [updatedById], references: [id])
-  deletedBy User? @relation("DeletedReleases", fields: [deletedById], references: [id])
-
-  @@unique([gameId, romVersion, romRegion])
-}
-
-// Override table for GameFile
-model ReleaseFile {
-  id String @id @default(cuid())
-
-  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
-  releaseId String
-
-  gameFile   GameFile @relation(fields: [gameFileId], references: [id], onDelete: Cascade)
-  gameFileId String
-
-  // --- Overridable fields ---
-  name  String?
-  type  String?
-  group String?
-  scene String?
-  compressed Boolean?
-  upper Boolean?
-
-  // --- Release-specific fields ---
-  romLocation Int?
-  romSize     Int?
-
-  // Audit fields
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
-  deletedById String?
-
-  createdBy User? @relation("CreatedReleaseFiles", fields: [createdById], references: [id])
-  updatedBy User? @relation("UpdatedReleaseFiles", fields: [updatedById], references: [id])
-  deletedBy User? @relation("DeletedReleaseFiles", fields: [deletedById], references: [id])
-
-  @@unique([releaseId, gameFileId])
-}
-
-// Override table for GameBlock
-model ReleaseBlock {
-  id String @id @default(cuid())
-  
-  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
-  releaseId String
-
-  gameBlock   GameBlock @relation(fields: [gameBlockId], references: [id], onDelete: Cascade)
-  gameBlockId String
-
-  // --- Overridable fields ---
-  name  String?
-  group String?
-  scene String?
-  movable Boolean?
-  postProcess String?
-  
-  // A ReleaseBlock is an organizational unit and does not have a direct location.
-  // Its Parts define the content and locations.
-
-  // Audit fields
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
-  deletedById String?
-
-  createdBy User? @relation("CreatedReleaseBlocks", fields: [createdById], references: [id])
-  updatedBy User? @relation("UpdatedReleaseBlocks", fields: [updatedById], references: [id])
-  deletedBy User? @relation("DeletedReleaseBlocks", fields: [deletedById], references: [id])
-
-  // Reverse relationships
-  transforms ReleaseTransform[]
-
-  @@unique([releaseId, gameBlockId])
-}
-
-// Override table for GamePart
-model ReleasePart {
-  id String @id @default(cuid())
-
-  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
-  releaseId String
-
-  gamePart   GamePart @relation(fields: [gamePartId], references: [id], onDelete: Cascade)
-  gamePartId String
-
-  // --- Overridable fields ---
-  name   String?
-  struct String?
-  order  Int?
-
-  // --- Release-specific fields ---
-  romLocation Int? // The address of the part in the ROM
-  romSize     Int?
-  bank        Int?
-
-  // Audit fields
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
-  deletedById String?
-
-  createdBy User? @relation("CreatedReleaseParts", fields: [createdById], references: [id])
-  updatedBy User? @relation("UpdatedReleaseParts", fields: [updatedById], references: [id])
-  deletedBy User? @relation("DeletedReleaseParts", fields: [deletedById], references: [id])
-
-  @@unique([releaseId, gamePartId])
-}
-
-// -------------------
-// Authentication & User Models
-// Based on the standard NextAuth.js Prisma Adapter schema for flexibility.
-// -------------------
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  role          UserRole  @default(USER)
-
-  accounts Account[]
-  sessions Session[]
-
-  // Audit fields
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  // --- Relations for tracking user actions ---
-  createdGames        Game[]         @relation("CreatedGames")
-  updatedGames        Game[]         @relation("UpdatedGames")
-  deletedGames        Game[]         @relation("DeletedGames")
-
-  createdGameFiles    GameFile[]     @relation("CreatedGameFiles")
-  updatedGameFiles    GameFile[]     @relation("UpdatedGameFiles")
-  deletedGameFiles    GameFile[]     @relation("DeletedGameFiles")
-
-  createdGameBlocks   GameBlock[]    @relation("CreatedGameBlocks")
-  updatedGameBlocks   GameBlock[]    @relation("UpdatedGameBlocks")
-  deletedGameBlocks   GameBlock[]    @relation("DeletedGameBlocks")
-
-  createdGameParts    GamePart[]     @relation("CreatedGameParts")
-  updatedGameParts    GamePart[]     @relation("UpdatedGameParts")
-  deletedGameParts    GamePart[]     @relation("DeletedGameParts")
-
-  createdReleases     Release[]      @relation("CreatedReleases")
-  updatedReleases     Release[]      @relation("UpdatedReleases")
-  deletedReleases     Release[]      @relation("DeletedReleases")
-
-  createdReleaseFiles ReleaseFile[]  @relation("CreatedReleaseFiles")
-  updatedReleaseFiles ReleaseFile[]  @relation("UpdatedReleaseFiles")
-  deletedReleaseFiles ReleaseFile[]  @relation("DeletedReleaseFiles")
-
-  createdReleaseBlocks ReleaseBlock[] @relation("CreatedReleaseBlocks")
-  updatedReleaseBlocks ReleaseBlock[] @relation("UpdatedReleaseBlocks")
-  deletedReleaseBlocks ReleaseBlock[] @relation("DeletedReleaseBlocks")
-
-  createdReleaseParts ReleasePart[]  @relation("CreatedReleaseParts")
-  updatedReleaseParts ReleasePart[]  @relation("UpdatedReleaseParts")
-  deletedReleaseParts ReleasePart[]  @relation("DeletedReleaseParts")
-
-  createdGameStrings    GameString[]    @relation("CreatedGameStrings")
-  updatedGameStrings    GameString[]    @relation("UpdatedGameStrings")
-  deletedGameStrings    GameString[]    @relation("DeletedGameStrings")
-
-  createdGameStructs    GameStruct[]    @relation("CreatedGameStructs")
-  updatedGameStructs    GameStruct[]    @relation("UpdatedGameStructs")
-  deletedGameStructs    GameStruct[]    @relation("DeletedGameStructs")
-
-  createdReleaseStrings ReleaseString[] @relation("CreatedReleaseStrings")
-  updatedReleaseStrings ReleaseString[] @relation("UpdatedReleaseStrings")
-  deletedReleaseStrings ReleaseString[] @relation("DeletedReleaseStrings")
-
-  createdReleaseStructs ReleaseStruct[] @relation("CreatedReleaseStructs")
-  updatedReleaseStructs ReleaseStruct[] @relation("UpdatedReleaseStructs")
-  deletedReleaseStructs ReleaseStruct[] @relation("DeletedReleaseStructs")
-
-  createdReleaseStringCommands ReleaseStringCommand[] @relation("CreatedReleaseStringCommands")
-  updatedReleaseStringCommands ReleaseStringCommand[] @relation("UpdatedReleaseStringCommands")
-  deletedReleaseStringCommands ReleaseStringCommand[] @relation("DeletedReleaseStringCommands")
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
-enum UserRole {
-  USER
-  MODERATOR
-  ADMIN
-}
-
-// =====================================================
-// 65C816 PROCESSOR INSTRUCTION SET MODELS
-// =====================================================
-
-enum ProcessorFlag {
-  N  // Negative
-  V  // Overflow
-  M  // Memory/Accumulator width
-  X  // Index register width
-  D  // Decimal mode
-  I  // Interrupt disable
-  Z  // Zero
-  C  // Carry
-  B  // Break
-  E  // Emulation mode
-  WILDCARD @map("*") // Special wildcard flag
-}
-
-
-
-enum InstructionCategory {
-  LoadStore
-  Arithmetic
-  Logical
-  Shift
-  ControlFlow
-  Branch
-  System
-  Interrupt
-  Flags
-  Stack
-  Transfer
-  BlockMove
-  Special
-}
-
-enum OperandType {
-  Absolute
-  AbsoluteLong
-  Direct
-  Immediate
-  None
-  Label
-  Byte
-  BankPair
-  InterruptVector
-}
-
-model InstructionSet {
-  id               String   @id @default(cuid())
-  name             String   @unique
-  version          String
-  description      String?
-  baseProcessor    String?
-  generatedFrom    String?
-  totalInstructions Int
-  totalVariants    Int
-  
-  // JSON fields for complex metadata
-  cycleNotation    Json     // Cycle timing notation and examples
-  metadata         Json?    // Additional metadata
-  
-  // Relationships
-  instructionGroups InstructionGroup[]
-  addressingModes   AddressingMode[]
-  validationRules   ValidationRule[]
-  
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-}
-
-model InstructionGroup {
-  id             String              @id @default(cuid())
-  name           String              
-  category       InstructionCategory
-  description    String?
-  
-  // Relationships
-  instructionSet InstructionSet      @relation(fields: [instructionSetId], references: [id], onDelete: Cascade)
-  instructionSetId String
-  instructions   Instruction[]
-  
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  
-  @@unique([instructionSetId, name])
-}
-
-model Instruction {
-  id              String              @id @default(cuid())
-  mnemonic        String              // e.g., "LDA", "STA"
-  description     String
-  affectedFlags   ProcessorFlag[]     // Flags affected by this instruction
-  
-  // Relationships
-  instructionGroup InstructionGroup   @relation(fields: [instructionGroupId], references: [id], onDelete: Cascade)
-  instructionGroupId String
-  variants        InstructionVariant[]
-  
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  
-  @@unique([instructionGroupId, mnemonic])
-}
-
-model InstructionVariant {
-  id               String            @id @default(cuid())
-  opcode           Int               @unique // 0-255 opcode value
-  size             Int?              // Size in bytes, null for flag-dependent
-  isFlagDependent  Boolean           @default(false) // True if size depends on processor flags
-  
-  // Cycle timing stored as JSON for complex conditional logic
-  cycleTiming      Json              // CycleTiming object with base, penalties, description, etc.
-  
-  // Relationships
-  instruction      Instruction       @relation(fields: [instructionId], references: [id], onDelete: Cascade)
-  instructionId    String
-  addressingMode   AddressingMode    @relation(fields: [addressingModeId], references: [id])
-  addressingModeId String
-  
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-}
-
-model AddressingMode {
-  id                  String               @id @default(cuid())
-  mode                String               
-  shorthand           String               // e.g., "abs", "imm"
-  name                String               // Official name, same as mode
-  operandType         OperandType
-  description         String
-  length              Int                  // Instruction length in bytes
-  format              String               // Format pattern like "$OP $LL $HH"
-  formatString        String               // Format string like "${0:X4}"
-  parseRegex          String               // Regex for parsing assembly
-  operandSize         Int                  // Size of operand in bytes
-  supportsSymbols     Boolean              @default(false)
-  bankWrapping        Boolean              @default(false)
-  pageWrapping        Boolean              @default(false)
-  
-  // JSON fields for complex validation and configuration
-  validationPatterns  Json                 // Validation regex patterns
-  examples            Json                 // Example usage patterns
-  
-  // Relationships
-  instructionSet      InstructionSet       @relation(fields: [instructionSetId], references: [id], onDelete: Cascade)
-  instructionSetId    String
-  instructionVariants InstructionVariant[]
-  
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  
-  @@unique([instructionSetId, mode])
-  @@unique([instructionSetId, shorthand])
-}
-
-model ValidationRule {
-  id                String         @id @default(cuid())
-  name              String
-  category          String         // e.g., "operandSizeValidation", "instructionValidation"
-  
-  // JSON field to store complex validation logic
-  rules             Json           // Complete validation rule object
-  
-  // Relationships
-  instructionSet    InstructionSet @relation(fields: [instructionSetId], references: [id], onDelete: Cascade)
-  instructionSetId  String
-  
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-  
-  @@unique([instructionSetId, name, category])
-}
-
-// =====================================================
-// GAME-SPECIFIC DATA MODELS
-// =====================================================
-
-model GameMnemonic {
-  id    String @id @default(cuid())
-  key   Int    // Memory address key
-  value String // Mnemonic name/value
-  
-  // Relationships
-  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  gameId String
-  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  @@unique([gameId, key])
-}
 
-model GameCop {
-  id    String  @id @default(cuid())
-  code  Int     // COP operation code
-  mnem  String  // Mnemonic representation  
-  size  Int     // Size in bytes
-  halt  Boolean // Whether this operation halts execution
-  parts Json    // Array of parts/parameters
-  
-  // Relationships
-  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  gameId String
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@unique([gameId, code])
-}
-
-model GameStruct {
-  id String @id @default(cuid())
-  
-  // Relationships
-  game   Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  gameId String
-  
-  // Base struct properties from structs.json
-  name           String  // e.g., "h_actor", "sprite_group"
-  types          Json?   // Array of type strings like ["Byte", "Byte", "Byte"]
-  delimiter      Int?    // Optional delimiter value
-  descriminator  Int?    // Optional descriminator value  
-  parent         String? // Optional parent struct name
-  parts          Json?   // Optional array of part names
-  
-  // Relationships
-  releaseStructs ReleaseStruct[]
-  
-  // Audit fields
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
-  deletedById String?
-  
-  createdBy User? @relation("CreatedGameStructs", fields: [createdById], references: [id])
-  updatedBy User? @relation("UpdatedGameStructs", fields: [updatedById], references: [id])
-  deletedBy User? @relation("DeletedGameStructs", fields: [deletedById], references: [id])
-  
-  @@unique([gameId, name])
-}
-
-// =====================================================
-// RELEASE-SPECIFIC DATA MODELS
-// =====================================================
-
-model ReleaseOverride {
-  id       String @id @default(cuid())
-  data     Json   // Override data structure (flexible for different override types)
-  
-  // Relationships
-  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
-  releaseId String
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model ReleaseRewrite {
-  id       String @id @default(cuid())
-  data     Json   // Rewrite data structure (flexible for different rewrite types)
-  
-  // Relationships
-  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
-  releaseId String
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model ReleaseTransform {
-  id         String @id @default(cuid())
-  transforms Json   // Array of key-value transform rules
-  
-  // Relationships
-  release       Release      @relation(fields: [releaseId], references: [id], onDelete: Cascade)
-  releaseId     String
-  releaseBlock  ReleaseBlock @relation(fields: [releaseBlockId], references: [id], onDelete: Cascade)
-  releaseBlockId String
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@unique([releaseId, releaseBlockId])
-}
-
-model ReleaseStruct {
-  id String @id @default(cuid())
-  
-  // Relationships
-  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
-  releaseId String
-  
-  gameStruct   GameStruct @relation(fields: [gameStructId], references: [id], onDelete: Cascade)
-  gameStructId String
-  
-  // --- Overridable fields ---
-  name           String? // Override the struct name for this release
-  types          Json?   // Override types array
-  delimiter      Int?    // Override delimiter
-  descriminator  Int?    // Override descriminator
-  parent         String? // Override parent struct name
-  parts          Json?   // Override parts array
-  
-  // Audit fields
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
-  deletedById String?
-  
-  createdBy User? @relation("CreatedReleaseStructs", fields: [createdById], references: [id])
-  updatedBy User? @relation("UpdatedReleaseStructs", fields: [updatedById], references: [id])
-  deletedBy User? @relation("DeletedReleaseStructs", fields: [deletedById], references: [id])
-  
-  @@unique([releaseId, gameStructId])
-}
-
-model ReleaseLabel {
-  id       String @id @default(cuid())
-  location Int    // Memory location/address
-  label    String // Label name
-  
-  // Relationships
-  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
-  releaseId String
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@unique([releaseId, location])
-}
-
-// =====================================================
-// STRING PROCESSING MODELS
-// =====================================================
-
-// Game-specific string type definition (replaces StringType)
-model GameString {
-  id String @id @default(cuid())
-  
-  // Relationships
-  game   Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  gameId String
-  
-  // Base string type properties
-  name        String  // e.g., "ASCIIString", "WideString"
-  delimiter   String  // e.g., "|", "`", "~"
-  shiftType   String? // e.g., "wh2", "h2"
-  terminator  Int     // Terminator byte value
-  greedyTerminator Boolean @default(false)
-  description String? // Optional description of how this string type is used in this game
-  
-  // Relationships
-  commands       GameStringCommand[]
-  releaseStrings ReleaseString[]
-  
-  // Audit fields
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
-  deletedById String?
-  
-  createdBy User? @relation("CreatedGameStrings", fields: [createdById], references: [id])
-  updatedBy User? @relation("UpdatedGameStrings", fields: [updatedById], references: [id])
-  deletedBy User? @relation("DeletedGameStrings", fields: [deletedById], references: [id])
-  
-  @@unique([gameId, name])
-}
-
-// Commands for GameString
-model GameStringCommand {
-  id        String  @id @default(cuid())
-  key       Int     // Command key/code
-  value     String  // Command name/mnemonic
-  types     Json    // Array of parameter types
-  delimiter Int?    // Optional delimiter for ESC commands
-  halt      Boolean @default(false) // Whether this command halts processing
-  
-  // Relationships
-  gameString   GameString @relation(fields: [gameStringId], references: [id], onDelete: Cascade)
-  gameStringId String
-  
-  // Release overrides
-  releaseStringCommands ReleaseStringCommand[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@unique([gameStringId, key])
-}
-
-// Override table for GameString with actual character map and properties
-model ReleaseString {
-  id String @id @default(cuid())
-  
-  // Relationships
-  release   Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
-  releaseId String
-  
-  gameString   GameString @relation(fields: [gameStringId], references: [id], onDelete: Cascade)
-  gameStringId String
-  
-  // --- Overridable fields ---
-  name             String? // Override the string type name for this release
-  delimiter        String? // Override delimiter
-  shiftType        String? // Override shiftType
-  terminator       Int?    // Override terminator
-  greedyTerminator Boolean? // Override greedyTerminator
-  characterMap     Json    // Array of character mappings - THIS IS WHERE THE ACTUAL DATA LIVES
-  description      String? // Override the description for this release
-  
-  // Relationships
-  commands ReleaseStringCommand[]
-  layers   ReleaseStringLayer[]
-  
-  // Audit fields
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
-  deletedById String?
-  
-  createdBy User? @relation("CreatedReleaseStrings", fields: [createdById], references: [id])
-  updatedBy User? @relation("UpdatedReleaseStrings", fields: [updatedById], references: [id])
-  deletedBy User? @relation("DeletedReleaseStrings", fields: [deletedById], references: [id])
-  
-  @@unique([releaseId, gameStringId])
-}
-
-// Override table for GameStringCommand
-model ReleaseStringCommand {
-  id String @id @default(cuid())
-  
-  // Relationships
-  releaseString   ReleaseString @relation(fields: [releaseStringId], references: [id], onDelete: Cascade)
-  releaseStringId String
-  
-  gameStringCommand   GameStringCommand @relation(fields: [gameStringCommandId], references: [id], onDelete: Cascade)
-  gameStringCommandId String
-  
-  // --- Overridable fields ---
-  key       Int?     // Override command key/code
-  value     String?  // Override command name/mnemonic
-  types     Json?    // Override parameter types
-  delimiter Int?     // Override delimiter for ESC commands
-  halt      Boolean? // Override whether this command halts processing
-  
-  // Audit fields
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  createdById String?
-  updatedById String?
-  deletedById String?
-  
-  createdBy User? @relation("CreatedReleaseStringCommands", fields: [createdById], references: [id])
-  updatedBy User? @relation("UpdatedReleaseStringCommands", fields: [updatedById], references: [id])
-  deletedBy User? @relation("DeletedReleaseStringCommands", fields: [deletedById], references: [id])
-  
-  @@unique([releaseStringId, gameStringCommandId])
-}
-
-// Layers for ReleaseString
-model ReleaseStringLayer {
-  id   String @id @default(cuid())
-  base Int    // Base offset for the layer
-  map  Json   // Array of character mappings for this layer
-  
-  // Relationships
-  releaseString   ReleaseString @relation(fields: [releaseStringId], references: [id], onDelete: Cascade)
-  releaseStringId String
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@unique([baseRomId, name, version])
+  @@index([baseRomId, crc])
+  @@index([baseRomId])
+  @@index([crc])
 }

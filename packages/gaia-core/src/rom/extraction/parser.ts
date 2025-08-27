@@ -1,4 +1,5 @@
-import { Op, Registers } from '../../assembly';
+import { Op } from '@gaialabs/shared';
+import { Registers } from '../../assembly';
 import { RomDataReader } from './reader';
 import { StringReader } from './strings';
 import { ReferenceManager } from './references';

@@ -1,5 +1,30 @@
 import { ChunkFile } from "./files";
-import { TableEntry } from "./tables";
+import { CopDef } from "../database/cop";
+import { OpCode } from "../database/opcode";
+
+
+/**
+ * Represents a single assembly operation/instruction
+ */
+export class Op {
+  public code: OpCode;
+  public location: number;
+  public operands: unknown[];
+  public size: number;
+  public copDef?: CopDef;
+
+  constructor(
+    code: OpCode,
+    location: number = 0,
+    operands: unknown[] = [],
+    size: number = 1
+  ) {
+    this.code = code;
+    this.location = location;
+    this.operands = operands;
+    this.size = size;
+  }
+}
 
 /**
  * Represents a block of assembly code or data

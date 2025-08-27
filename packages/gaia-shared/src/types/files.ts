@@ -142,7 +142,7 @@ function enrichWithPartsFromDbBlock(chunkFile: ChunkFile, block: DbBlock): void 
       part.struct || undefined,
       part.bank
     );
-    chunkFile.size += part.size;
+    chunkFile.size += asmBlock.size;
     chunkFile.parts.push(asmBlock);
   }
 }

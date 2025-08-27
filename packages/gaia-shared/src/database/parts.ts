@@ -6,7 +6,7 @@
 export interface DbPart {
   name: string;
   start: number;
-  //end: number;
+  end: number;
   struct: string;
   bank?: number;
   block: string;

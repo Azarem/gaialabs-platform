@@ -118,7 +118,7 @@ export class ProjectRoot {
     // Load database and ROM data
     const root = await DbRootUtils.fromFolder(this.databasePath!, this.systemPath!);
     const rom = await readFileAsBinary(this.romPath);
-    root.paths = this.resources;
+    //root.paths = this.resources;
 
     const chunkReader = new BlockReader(rom, root);
     const chunkFiles = chunkReader.analyzeAndResolve();
