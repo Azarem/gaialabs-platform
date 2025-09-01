@@ -8,7 +8,7 @@ import { ICompressionProvider } from './compression';
  * Chunk file for ROM processing
  * Converted from GaiaLib/Types/ChunkFile.cs
  */
-export interface ChunkFile {
+export class ChunkFile {
   //path: string;
   name: string;
   size: number;
@@ -26,24 +26,32 @@ export interface ChunkFile {
   postProcess?: string;
   mnemonics: Record<number, string>;
   group?: string;
+
+  constructor(name: string, size: number, location: number, type: BinType) {
+    this.name = name;
+    this.size = size;
+    this.location = location;
+    this.type = type;
+    this.mnemonics = {};
+  }
 }
 
-/**
- * Creates a new ChunkFile
- */
-export function createChunkFile(name: string, size: number, location: number, type: BinType): ChunkFile {
-  return {
-    name,
-    size,
-    location,
-    type,
-    mnemonics: {}
-  };
-}
+// /**
+//  * Creates a new ChunkFile
+//  */
+// export function createChunkFile(name: string, size: number, location: number, type: BinType): ChunkFile {
+//   return {
+//     name,
+//     size,
+//     location,
+//     type,
+//     mnemonics: {}
+//   };
+// }
 
 export function createChunkFileFromDbFile(rom: Uint8Array, compression: ICompressionProvider, dbFile: DbFile): ChunkFile {
   // Create ChunkFile with the DbFile's type
-  const chunkFile = createChunkFile(dbFile.name, dbFile.end - dbFile.start, dbFile.start, dbFile.type);
+  const chunkFile = new ChunkFile(dbFile.name, dbFile.end - dbFile.start, dbFile.start, dbFile.type);
   chunkFile.compressed = dbFile.compressed;
   chunkFile.upper = dbFile.upper;
   
@@ -55,7 +63,7 @@ export function createChunkFileFromDbFile(rom: Uint8Array, compression: ICompres
 
 export function createChunkFileFromDbBlock(block: DbBlock): ChunkFile {
   // Create assembly ChunkFile
-  const chunkFile = createChunkFile(block.name, 0, 0, BinType.Assembly);
+  const chunkFile = new ChunkFile(block.name, 0, 0, BinType.Assembly);
   chunkFile.group = block.group;
   
   // Enrich with AsmBlock parts

@@ -6,7 +6,7 @@
  */
 
 import { getSupabaseClient } from './client';
-import { base64ToUint8Array } from './utils';
+import { decodeDataString } from './utils';
 import {
   BaseRomPayload,
   BaseRomBranchData,
@@ -363,18 +363,18 @@ async function loadBaseRomFiles(
       );
     }
     
-    // Convert base64 data to Uint8Array for each file
+    // Convert data to Uint8Array for each file (handles both hex and base64 formats)
     const convertedFiles: BaseRomFileData[] = filesData.map((file: BaseRomFileRaw) => {
       try {
-        const binaryData = base64ToUint8Array(file.data);
-        
+        const binaryData = decodeDataString(file.data);
+
         return {
           ...file,
           data: binaryData,
         } as BaseRomFileData;
       } catch (error) {
         throw new SupabaseFromError(
-          `Failed to convert base64 data for file ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `Failed to convert data for file ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
           SupabaseErrorCode.INVALID_DATA,
           { file, error }
         );

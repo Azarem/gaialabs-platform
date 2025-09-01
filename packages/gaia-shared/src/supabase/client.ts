@@ -131,27 +131,27 @@ export function resetSupabaseClient(): void {
   supabaseClient = null;
 }
 
-/**
- * Test the Supabase connection by performing a simple query
- * @returns Promise that resolves to true if connection is successful
- * @throws Error if connection fails
- */
-export async function testSupabaseConnection(): Promise<boolean> {
-  try {
-    const client = getSupabaseClient();
+// /**
+//  * Test the Supabase connection by performing a simple query
+//  * @returns Promise that resolves to true if connection is successful
+//  * @throws Error if connection fails
+//  */
+// export async function testSupabaseConnection(): Promise<boolean> {
+//   try {
+//     const client = getSupabaseClient();
     
-    // Perform a simple query to test the connection
-    const { data, error } = await client
-      .from('BaseRom')
-      .select('id')
-      .limit(1);
+//     // Perform a simple query to test the connection
+//     const { data, error } = await client
+//       .from('BaseRom')
+//       .select('id')
+//       .limit(1);
     
-    if (error) {
-      throw new Error(`Supabase connection test failed: ${error.message}`);
-    }
+//     if (error) {
+//       throw new Error(`Supabase connection test failed: ${error.message}`);
+//     }
     
-    return true;
-  } catch (error) {
-    throw new Error(`Failed to connect to Supabase: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-}
+//     return true;
+//   } catch (error) {
+//     throw new Error(`Failed to connect to Supabase: ${error instanceof Error ? error.message : 'Unknown error'}`);
+//   }
+// }

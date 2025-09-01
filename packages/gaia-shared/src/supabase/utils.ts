@@ -57,6 +57,53 @@ export function base64ToUint8Array(base64: string): Uint8Array {
 }
 
 /**
+ * Convert hex-encoded string to Uint8Array
+ * @param hexString - Hex encoded string (with or without \x prefix)
+ * @returns Uint8Array containing the binary data
+ */
+export function hexToUint8Array(hexString: string): Uint8Array {
+  try {
+    // Remove \x prefixes and any whitespace
+    let cleanHex = hexString.replace(/\\x/g, '').replace(/\s/g, '');
+
+    // Ensure even length
+    if (cleanHex.length % 2 !== 0) {
+      throw new Error('Hex string must have even length');
+    }
+
+    const bytes = new Uint8Array(cleanHex.length / 2);
+    for (let i = 0; i < cleanHex.length; i += 2) {
+      const hexByte = cleanHex.substring(i, i + 2);
+      const byte = parseInt(hexByte, 16);
+      if (isNaN(byte)) {
+        throw new Error(`Invalid hex character at position ${i}: ${hexByte}`);
+      }
+      bytes[i / 2] = byte;
+    }
+
+    return bytes;
+  } catch (error) {
+    throw new Error(`Failed to decode hex data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Convert binary data to appropriate format based on the input string
+ * Automatically detects if the input is hex-encoded or base64
+ * @param dataString - Either hex-encoded string (starting with \x) or base64 string
+ * @returns Uint8Array containing the binary data
+ */
+export function decodeDataString(dataString: string): Uint8Array {
+  // Check if it's hex-encoded (starts with \x)
+  if (dataString.startsWith('\\x')) {
+    return hexToUint8Array(dataString);
+  }
+
+  // Otherwise assume it's base64
+  return base64ToUint8Array(dataString);
+}
+
+/**
  * Convert Uint8Array to base64 string
  * @param uint8Array - Binary data as Uint8Array
  * @returns Base64 encoded string

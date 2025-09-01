@@ -90,18 +90,20 @@ export class RomProcessor {
       const inc = asmFiles.filter(x => patch.includes!.has(x.name.toUpperCase()));
       for (let ix = 0; patch.parts && ix < patch.parts.length;) {
         const block = patch.parts[ix];
-        if (!block.label) { ix++; continue; }
         let match: any = null;
-        for (const i of inc) {
-          if (!i.parts) continue;
-          for (let y = 0; y < i.parts.length; y++) {
-            match = i.parts[y];
-            if (match.label === block.label) {
-              file = i; dstIx = y; break;
+        if (block.label) { 
+          for (const i of inc) {
+            if (!i.parts) continue;
+            for (let y = 0; y < i.parts.length; y++) {
+              const check = i.parts[y];
+              if (check.label === block.label) {
+                file = i; 
+                dstIx = y; 
+                match = check;
+                break;
+              }
             }
           }
-          if (file) break;
-          else match = null;
         }
         if (match) {
           file!.parts![dstIx++] = block;

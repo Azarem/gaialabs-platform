@@ -6,8 +6,7 @@ import { OpCode } from "../database/opcode";
 /**
  * Represents a single assembly operation/instruction
  */
-export class Op {
-  public code: OpCode;
+export class Op extends OpCode {
   public location: number;
   public operands: unknown[];
   public size: number;
@@ -19,7 +18,8 @@ export class Op {
     operands: unknown[] = [],
     size: number = 1
   ) {
-    this.code = code;
+    super(code.code, code.mnem, code.mode);
+    this.code = code.code;
     this.location = location;
     this.operands = operands;
     this.size = size;

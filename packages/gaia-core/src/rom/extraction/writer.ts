@@ -169,7 +169,7 @@ export class BlockWriter {
       if(op.size === 3){
 
       }
-      if (op.code.mode === 'Immediate') {
+      if (op.mode === 'Immediate') {
         return obj;
       }
 
@@ -205,7 +205,7 @@ export class BlockWriter {
         return obj;
       }
 
-      if (typeof typed.value === 'number' && op.code.mode !== 'Immediate') {
+      if (typeof typed.value === 'number' && op.mode !== 'Immediate') {
         const resolved = this._blockReader.resolveName(typed.value, AddressType.Address, isBranch);
         return { ...typed, value: resolved };
       }
@@ -400,7 +400,7 @@ export class BlockWriter {
         }
       }
 
-      let opLine = `    ${op.code.mnem} `;
+      let opLine = `    ${op.mnem} `;
 
       if (op.copDef) {
         // Handle COP instructions specially
@@ -417,7 +417,7 @@ export class BlockWriter {
         }
       } else if (op.operands && op.operands.length > 0) {
         // Special handling for different instruction types
-        if (op.code.mnem === 'COP') {
+        if (op.mnem === 'COP') {
           // COP instructions without copDef - handle as simple operand
           const operand = op.operands[0];
           if (typeof operand === 'number') {
@@ -426,17 +426,17 @@ export class BlockWriter {
             opLine += `[${operand}]`;
           }
         } else {
-          const isBr = op.code.mnem[0] === 'J' || 
-                      op.code.mode === 'PCRelative' ||
-                      op.code.mode === 'PCRelativeLong';
+          const isBr = op.mnem[0] === 'J' || 
+                      op.mode === 'PCRelative' ||
+                      op.mode === 'PCRelativeLong';
   
           // Regular instruction formatting
           const resolvedOperand = this.resolveOperand(op, op.operands[0], isBr);
-          const format = this._root.addrLookup[op.code.mode]?.formatString; // || this._root.config.asmFormats?.[op.code.mode];
+          const format = this._root.addrLookup[op.mode]?.formatString; // || this._root.config.asmFormats?.[op.code.mode];
           
           if (format) {
             let actualFormat = format;
-            if (op.code.mode === 'Immediate' && op.size === 3) {
+            if (op.mode === 'Immediate' && op.size === 3) {
               actualFormat = format.replace('X2', 'X4');
             }
             opLine += this.formatOperand(actualFormat, [resolvedOperand, ...op.operands.slice(1)]);

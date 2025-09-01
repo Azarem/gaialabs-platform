@@ -5,7 +5,7 @@ import * as fs from 'fs';
 //import * as path from 'path';
 import * as path from 'path';
 import { readFileSync } from 'fs';
-import type { CopDef, DbBlock, DbFile, DbLabel, DbMnemonic, DbOverride, DbPart, DbRewrite, DbStringCommand, DbStringLayer, DbStringType, DbStruct, DbTransform } from '@gaialabs/shared';
+import type { CopDef, DbBlock, DbConfig, DbFile, DbLabel, DbMnemonic, DbOverride, DbPart, DbRewrite, DbStringCommand, DbStringLayer, DbStringType, DbStruct, DbTransform } from '@gaialabs/shared';
 import { crc32_buffer, readFileAsBinary, OpCode } from '@gaialabs/shared';
 
 const prisma = new PrismaClient();
@@ -174,7 +174,14 @@ async function main() {
       config: {
         sfxLocation: 327680,
         sfxCount: 60,
-        compression: 'QuintetLZ'
+        compression: 'QuintetLZ',
+        entryPoints: [
+          { "location": 65508, "name": "native_mode_cop_008007" },
+          { "location": 65510, "name": "native_mode_irq_00800F" },
+          { "location": 65514, "name": "native_mode_nmi_00800B" },
+          { "location": 65518, "name": "native_mode_irq_00800F" },
+          { "location": 65532, "name": "emulation_mode_reset_008000" }
+        ]
       },
       coplib: await createCopLib(),
       files: await createIogFiles(),
@@ -184,6 +191,7 @@ async function main() {
     },
   });
 
+  console.log('Creating baseRom');
   const baseRom = await prisma.baseRom.create({
     data: {
       name: "GaiaLabs BaseROM",
@@ -192,32 +200,46 @@ async function main() {
     },
   });
 
+  const asmCrcs = await createBaseRomFiles(baseRom.id, "Assembly", "asm", "asm", [
+    "itemcomp_table_01EB0F", "system_strings", "table_17D000", "table_178000", "table_179000"
+  ]);
+
+  const graphicsCrcs = await createBaseRomFiles(baseRom.id, "Graphics", "graphics", "bin", [
+    "gfx_boot_exprite", "gfx_boot_logos", "gfx_credits_font", "gfx_fonts", "gfx_inventory_sprites", "gfx_item_exprite"
+  ]);
+
+  const paletteCrcs = await createBaseRomFiles(baseRom.id, "Palette", "palettes", "pal", [
+    "fx_palette_198000", "pal_boot_logos", "pal_item_exprite", "pal_item_exprite2", "pal_sc02_main_characters"
+  ]);
+  
+  const spritemapCrcs = await createBaseRomFiles(baseRom.id, "Spritemap", "spritemaps", "bin", [
+    "spm_boot_logos", "spm_sc02_main_characters", "sprite_1A554C"
+  ]);
+  
+  const patchCrcs = await createBaseRomFiles(baseRom.id, "Patch", "patches", "asm", [
+    "AccentMap", "APUWaitFixes", "BitmapPatch", "BootMetaFix", "Cop51Patch", "EquippedIcon", "ExpriteLoader",
+    "InventoryCounters", "InventoryManagement", "ItemSwapping", "MenuBGPatch", "MusicTransitions", "NewGamePlus",
+    "NGPEpilogueSwitch", "PixelConverter", "RunButton", "SceneLoadPatch", "SFXTable", "SouthCapeDeliveryman",
+    "SpritemapPatch", "Teleporter", "TilemapPatch", "TilesetPatch", "Utils"
+  ]);
+
+  console.log('Creating baseRomBranch');
   const baseRomBranch = await prisma.baseRomBranch.create({
     data: {
       baseRomId: baseRom.id,
+      fileCrcs: [...asmCrcs, ...graphicsCrcs, ...paletteCrcs, ...spritemapCrcs, ...patchCrcs],
       //platformBranchId: platformBranch.id,
       gameRomBranchId: romBranch.id,
     },
   });
 
-  await createBaseRomFile(baseRom.id, "gfx_boot_exprite", "graphics/gfx_boot_exprite.bin", "graphics");
-  await createBaseRomFile(baseRom.id, "gfx_boot_logos", "graphics/gfx_boot_logos.bin", "graphics");
-  await createBaseRomFile(baseRom.id, "gfx_credits_font", "graphics/gfx_credits_font.bin", "graphics");
-  await createBaseRomFile(baseRom.id, "gfx_fonts", "graphics/gfx_fonts.bin", "graphics");
-  
-
-  await createBaseRomFile(baseRom.id, "fx_palette_198000", "palettes/fx_palette_198000.pal", "palette");
-  await createBaseRomFile(baseRom.id, "pal_boot_logos", "palettes/pal_boot_logos.pal", "palette");
-  await createBaseRomFile(baseRom.id, "pal_item_exprite", "palettes/pal_item_exprite.pal", "palette");
-  await createBaseRomFile(baseRom.id, "pal_item_exprite2", "palettes/pal_item_exprite2.pal", "palette");
-  await createBaseRomFile(baseRom.id, "pal_sc02_main_characters", "palettes/pal_sc02_main_characters.pal", "palette");
-
   console.log('Seed process finished successfully.');
 }
 
-async function createBaseRomFile(baseRomId: string, name: string, path: string, type: string) {
-  const data = await loadBinaryData(BR_PATH, path);
+async function createBaseRomFile(baseRomId: string, type: string, folder: string, extension: string, name: string) {
+  const data = await loadBinaryData(BR_PATH, path.join(folder, name + '.' + extension));
   const crc = crc32_buffer(data);
+  console.log('Creating baseRomFile for ' + name + ' with crc ' + crc);
   await prisma.baseRomFile.create({
     data: {
       baseRomId,
@@ -227,6 +249,16 @@ async function createBaseRomFile(baseRomId: string, name: string, path: string, 
       data,
     },
   });
+  return crc;
+}
+
+async function createBaseRomFiles(baseRomId: string, type: string, folder: string, extension: string, names: string[]) {
+  console.log('Creating baseRomFiles for ' + type + ' type');
+  const fileCrcs: number[] = [];
+  for (const name of names) {
+    fileCrcs.push(await createBaseRomFile(baseRomId, type, folder, extension, name));
+  }
+  return fileCrcs;
 }
 
 

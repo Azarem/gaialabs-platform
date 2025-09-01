@@ -19,29 +19,31 @@ import { Op } from '@gaialabs/shared';
  */
 export class RomWriter {
   public bpsPath?: string;
-  private outBuffer: Uint8Array | null = null
+  public readonly outBuffer: Uint8Array;
   public readonly entryPoints: DbEntryPoint[];
-  public cartName: string = '';
-  public makerCode: string = '01JG';
+  public readonly cartName: string;
+  public readonly makerCode: string;
 
-  constructor(entryPoints: DbEntryPoint[]) {
+  constructor(entryPoints: DbEntryPoint[], cartName: string, makerCode: string) {
+    this.cartName = cartName;
+    this.makerCode = makerCode;
     this.entryPoints = entryPoints;
+    //There needs to be a way to determine the rom size and makeup
+    this.outBuffer = new Uint8Array(0x400000);
   }
 
   public async repack(files: ChunkFile[]): Promise<Uint8Array> {
-    // Create 4MB ROM image
-    this.outBuffer = new Uint8Array(0x400000);
-
     const processor = new RebuildProcessor(this);
     await processor.repack(files);
 
     this.writeHeader();
+    this.writeEntryPoints(files.filter(x => !!x.parts));
 
     //await this.generatePatch();
     return this.outBuffer;
   }
 
-  private writeHeader(): void {
+  public writeHeader(): void {
     const buf = this.outBuffer!;
     // Maker/game code at 0xFFB0
     let pos = 0xFFB0;
@@ -82,6 +84,21 @@ export class RomWriter {
   //     p.on('close', () => resolvePromise());
   //   });
   // }
+
+  public writeEntryPoints(asmFiles: ChunkFile[]): void {
+    const buf = this.outBuffer!;
+    
+    // Entry point fixups
+    const entryBlocks = (asmFiles
+      .filter(x => (x.bank ?? -1) === 0)
+      .flatMap(x => x.parts || [])
+      .filter(b => !!b.label)) as { label?: string; location: number }[];
+
+    for (const ep of this.entryPoints) {
+      const match = entryBlocks.find(b => b.label === ep.name);
+      if (match) this.writeTransform(ep.location, match.location & 0xFFFF);
+    }
+  }
 
   public writeTransform(location: number, value: number, size?: number): void {
     const buf = this.outBuffer!;
@@ -231,7 +248,7 @@ export class RomWriter {
             continue;
           } else if (currentObj instanceof Op) {
             const op = currentObj as Op;
-            buf[position] = op.code.code & 0xFF;
+            buf[position] = op.code & 0xFF;
             position++;
             opos += op.size;
 
@@ -262,8 +279,8 @@ export class RomWriter {
 
             let loc: number;
             const isRelative = parentOp && 
-              (parentOp.code.mode === 'PCRelative' || 
-               parentOp.code.mode === 'PCRelativeLong');
+              (parentOp.mode === 'PCRelative' || 
+               parentOp.mode === 'PCRelativeLong');
 
             const operatorIdx = this.indexOfAny(label, RomProcessingConstants.OPERATORS);
             let offset: number | null = null;
@@ -370,16 +387,18 @@ export class RomWriter {
             continue; // goto Top
           } else if (typeof currentObj === 'number') {
             const num = currentObj as number;
-            if (num <= 0xFF) {
+            const size = parentOp?.size ?? 0;
+            
+            if (num <= 0xFF && size <= 2) {
               // byte
               buf[position] = num & 0xFF;
               position++;
-            } else if (num <= 0xFFFF) {
+            } else if (num <= 0xFFFF && size <= 3) {
               // ushort
               buf[position] = num & 0xFF;
               buf[position + 1] = (num >> 8) & 0xFF;
               position += 2;
-            } else if (num <= 0xFFFFFF) {
+            } else if (num <= 0xFFFFFF && size <= 4) {
               // 3-byte
               buf[position] = num & 0xFF;
               buf[position + 1] = (num >> 8) & 0xFF;

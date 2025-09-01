@@ -505,6 +505,7 @@ h_sp58_actor_068111 [
   h_actor < #00, #02, #18 >
     LDA #$4000
     TSB $09EC
+    COP [4F] ( $7F0200, #$7800, #$0100 ) ;For some reason there is a situation where the BG3 data isn't refreshed
 ]
 
 ------------------------------------------------------
@@ -553,11 +554,35 @@ code_02B9C0 {
     JSR $&sub_02C21C
 }
 
+;Fix for copied palette during dark friar
+code_02BB77 {
+    COP [50] ( @fx_palette_198070, #00, #F0, #10 )
+    COP [3B] ( #4A, @func_00B519 )
+    COP [48]
+    AND #$0003
+    STA $0000
+    COP [D9] ( #$0000, &code_list_02BB93 )
+}
+
 ------------------------------------------------------
 ?INCLUDE 'func_02ED02'
 ------------------------------------------------------
-;Fix for copied palette during aura barrier
 
+;Fix for copied palette during dark friar
+code_02EED2 {
+    DEC 
+    BNE code_02EEF0
+    LDX #$4400
+    STX $VMADDL
+    LDX #$&misc_fx_1CC000
+    LDA #$^misc_fx_1CC000
+    LDY #$0480
+    JSL $@func_0283A2
+    COP [50] ( @fx_palette_198070, #00, #F0, #10 )
+    RTS 
+}
+
+;Fix for copied palette during aura barrier
 code_02EEF0 {
     LDX #$4400
     STX $VMADDL
@@ -568,6 +593,7 @@ code_02EEF0 {
     COP [50] ( @fx_palette_198090, #00, #F9, #07 )
     RTS 
 }
+
 
 ------------------------------------------------------
 ?INCLUDE 'table_17A000'
@@ -592,3 +618,4 @@ sprite_group_17A483 [
     sprite_part < #01, #13, #00, #35, #01, #$0029 >   ;0D
   ] >   ;00
 ]
+

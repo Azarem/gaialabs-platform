@@ -25,7 +25,7 @@ import type { DbFile, StringWrapper } from '@gaialabs/shared';
 import type { DbRoot } from '@gaialabs/shared';
 import type { DbBlock } from '@gaialabs/shared';
 import type { DbPart } from '@gaialabs/shared';
-import { ChunkFile, createChunkFile, ChunkFileUtils } from '@gaialabs/shared';
+import { ChunkFile, ChunkFileUtils } from '@gaialabs/shared';
 import { indexOfAny } from '../../utils';
 import { registerCompressionProviders } from '../../compression/registry'
 
@@ -387,7 +387,7 @@ export class BlockReader {
       }
       pos = end;
 
-      const chunk = createChunkFile(`sfx${i.toString(16).toUpperCase().padStart(2, '0')}`, size + 2, startPos, BinType.Sound);
+      const chunk = new ChunkFile(`sfx${i.toString(16).toUpperCase().padStart(2, '0')}`, size + 2, startPos, BinType.Sound);
       chunk.rawData = data;
       this._enrichedChunks.push(chunk);
     }
@@ -544,9 +544,9 @@ export class BlockReader {
    * Checks if an operation is a branch operation
    */
   private isBranchOperation(op: Op): boolean {
-    return op.code.mode === 'PCRelative' ||
-           op.code.mode === 'PCRelativeLong' ||
-           op.code.mnem[0] === 'J';
+    return op.mode === 'PCRelative' ||
+           op.mode === 'PCRelativeLong' ||
+           op.mnem[0] === 'J';
   }
 
   /**

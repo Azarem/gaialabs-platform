@@ -197,7 +197,7 @@ export interface DirectoryEntry {
  * @returns Promise<DirectoryEntry[]>
  */
 export async function listDirectory(
-  dirPath: string, 
+  dirPath: string,
   options: {
     recursive?: boolean;
     filter?: (entry: DirectoryEntry) => boolean;
@@ -207,44 +207,44 @@ export async function listDirectory(
   if (isNode) {
     const { readdir, stat } = await import('fs/promises');
     const pathModule = await import('path');
-    
+
     const { recursive = false, filter, extension } = options;
     const fullPath = pathModule.resolve(dirPath);
-    
+
     try {
       const entries: DirectoryEntry[] = [];
       const items = await readdir(fullPath);
-      
+
       for (const item of items) {
         const itemPath = pathModule.join(fullPath, item);
         const stats = await stat(itemPath);
-        
+
         const entry: DirectoryEntry = {
           name: item,
           path: itemPath,
           isDirectory: stats.isDirectory(),
           isFile: stats.isFile()
         };
-        
+
         // Apply extension filter
         if (extension && entry.isFile && !entry.name.endsWith(extension)) {
           continue;
         }
-        
+
         // Apply custom filter
         if (filter && !filter(entry)) {
           continue;
         }
-        
+
         entries.push(entry);
-        
+
         // Recurse into subdirectories if requested
         if (recursive && entry.isDirectory) {
           const subEntries = await listDirectory(itemPath, options);
           entries.push(...subEntries);
         }
       }
-      
+
       return entries;
     } catch (error: any) {
       if (error.code === 'ENOENT') {
@@ -255,4 +255,62 @@ export async function listDirectory(
   } else {
     throw new Error('listDirectory is not supported in the browser environment.');
   }
-} 
+}
+
+/**
+ * Save text content to a file
+ * This is a Node.js-specific operation.
+ * @param path File path where to save the content
+ * @param text Text content to save
+ * @returns Promise<void>
+ */
+export async function saveFileAsText(path: string, text: string): Promise<void> {
+  if (isNode) {
+    const { writeFile, mkdir } = await import('fs/promises');
+    const pathModule = await import('path');
+
+    const fullPath = pathModule.resolve(path);
+    const dirPath = pathModule.dirname(fullPath);
+
+    try {
+      // Ensure parent directories exist
+      await mkdir(dirPath, { recursive: true });
+
+      // Write the file with UTF-8 encoding
+      await writeFile(fullPath, text, { encoding: 'utf8' });
+    } catch (error: any) {
+      throw new Error(`Failed to save file: ${fullPath} - ${error.message}`);
+    }
+  } else {
+    throw new Error('saveFileAsText is not supported in the browser environment.');
+  }
+}
+
+/**
+ * Save binary data to a file
+ * This is a Node.js-specific operation.
+ * @param path File path where to save the data
+ * @param data Binary data as Uint8Array to save
+ * @returns Promise<void>
+ */
+export async function saveFileAsBinary(path: string, data: Uint8Array): Promise<void> {
+  if (isNode) {
+    const { writeFile, mkdir } = await import('fs/promises');
+    const pathModule = await import('path');
+
+    const fullPath = pathModule.resolve(path);
+    const dirPath = pathModule.dirname(fullPath);
+
+    try {
+      // Ensure parent directories exist
+      await mkdir(dirPath, { recursive: true });
+
+      // Write the binary data directly
+      await writeFile(fullPath, data);
+    } catch (error: any) {
+      throw new Error(`Failed to save file: ${fullPath} - ${error.message}`);
+    }
+  } else {
+    throw new Error('saveFileAsBinary is not supported in the browser environment.');
+  }
+}

@@ -84,7 +84,7 @@ export class RomLayout {
       // Assembly preference and constraints
       if (file.parts) {
         if (!asmMode) {
-          if (!this.currentUpper || file.bank !== undefined || file.bank !== null) continue;
+          if (!this.currentUpper || ((file.bank ?? -1) >= 0)) continue;
         } else if (file.bank !== this.currentBank) {
           continue;
         }

@@ -1,5 +1,5 @@
 import { BinType } from '../types/resources';
-import { readJsonFile } from '../utils';
+import { readJsonFile, binaryToUtf8String } from '../utils';
 import type { ICompressionProvider } from '../types/compression';
 import { CompressionRegistry } from '../types/compression-registry';
 import type { DbBlock } from './blocks';
@@ -15,10 +15,11 @@ import type { DbStruct } from './structs';
 import type { DbStringType, DbStringCommand, DbStringLayer } from './strings';
 import type { CopDef } from './cop';
 import type { DbTransform } from './transforms';
-import type { BaseRomPayload, FromSupabaseByNameOptions } from '../supabase/types';
+import type { BaseRomFileData, BaseRomPayload, FromSupabaseByNameOptions } from '../supabase/types';
 import { OpCode } from './opcode';
 import { fromSupabaseByName, fromSupabaseById } from '../supabase/rom-loader';
 import { RomProcessingConstants } from '../types/constants';
+import { ChunkFile } from '../types/files';
 
 
 /**
@@ -45,6 +46,7 @@ export interface DbRoot {
   opLookup: Record<string, any[]>; // OpCode[] type (from gaia-core/assembly)
   addrLookup: Record<string, any>; // AddressingMode lookup by name
   compression: ICompressionProvider;
+  chunkPatches?: ChunkFile[];
 }
 
 /**
@@ -313,6 +315,22 @@ export class DbRootUtils {
       return block;
     }).sort((a: any, b: any) => a.parts[0].location - b.parts[0].location);
     
+    const chunkPatches : ChunkFile[] = payload.files && payload.files.map((file: BaseRomFileData) => {
+      const chunkFile = new ChunkFile(
+        file.name, 
+        file.data.length, 
+        0, 
+        BinType[file.type as keyof typeof BinType] || BinType.Unknown
+      );
+      if(chunkFile.type === BinType.Assembly || chunkFile.type === BinType.Patch) {
+        chunkFile.textData = binaryToUtf8String(file.data);
+      } else {
+        chunkFile.rawData = file.data;
+        chunkFile.size = file.data.length;
+      }
+      return chunkFile;
+    });
+
     // Extract other data from the JSON structures
     const mnemonics = romFixups.mnemonics || {};
     const opCodes = this.extractOpCodesFromInstructionSet(instructionSet);
@@ -326,7 +344,7 @@ export class DbRootUtils {
     //const stringCommands = romTypes.stringCommands || {};
     //const stringLayers = Array.isArray(romTypes.stringLayers) ? romTypes.stringLayers : [];
     //const copDef = Array.isArray(romTypes.copDef) ? romTypes.copDef : [];
-    const entryPoints = Array.isArray(vectors.entryPoints) ? vectors.entryPoints : [];
+    const entryPoints = Array.isArray(config.entryPoints) ? config.entryPoints : [];
     
     // // Process parts and connect them to blocks
     // for (const block of blocks) {
@@ -383,7 +401,7 @@ export class DbRootUtils {
     
     
     const opLookup = Object.entries(instructionSet).reduce((acc: any, x: any) => {
-      acc[x[0]] = Object.entries(x[1]).map((y: any) => new OpCode(y[1], x[0], y[0], addressingModes[y[0]].size));
+      acc[x[0]] = Object.entries(x[1]).map((y: any) => new OpCode(y[1], x[0], y[0]));
       return acc;
     }, {});
 
@@ -448,6 +466,7 @@ export class DbRootUtils {
       files,
       copDef: copDefLookup as Record<number, CopDef>,
       copLookup,
+      chunkPatches,
       config,
       opCodes,
       opLookup,

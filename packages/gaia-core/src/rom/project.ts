@@ -102,14 +102,14 @@ export class ProjectRoot {
     return new ProjectRoot(defaultConfig);
   }
 
-  /**
-   * Build the ROM (simplified)
-   */
-  public async build(files: ChunkFile[], entryPoints: DbEntryPoint[]): Promise<void> {
-    // Build ROM using rebuild writer
-    const writer = new RomWriter(entryPoints);
-    await writer.repack(files);
-  }
+  // /**
+  //  * Build the ROM (simplified)
+  //  */
+  // public async build(files: ChunkFile[], entryPoints: DbEntryPoint[]): Promise<void> {
+  //   // Build ROM using rebuild writer
+  //   const writer = new RomWriter(entryPoints, this.config.cartName, this.config.makerCode);
+  //   await writer.repack(files);
+  // }
 
   /**
    * Dump database and extract ROM data with comprehensive assembly processing

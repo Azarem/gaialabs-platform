@@ -34,7 +34,7 @@ export class AssemblerState {
           x.name.toLowerCase() === this.dbStruct!.parent.toLowerCase()
         ) || null;
 
-    this.discriminator = this.parentStruct?.discriminator || null;
+    this.discriminator = this.parentStruct?.discriminator ?? null;
     this.delimiter = this.dbStruct?.delimiter || null;
     this.memberOffset = 0;
     this.dataOffset = 0;
@@ -303,12 +303,8 @@ export class AssemblerState {
 
         // No operand instructions
         if (!operand) {
-          this.context.currentBlock!.objList.push(new Op(
-            codes.find(x => x.size === 1)!,
-            0,
-            [],
-            1
-          ));
+          const opCode = codes.find(x => this.root.addrLookup[x.mode].size === 1);
+          this.context.currentBlock!.objList.push(new Op (opCode, 0,[], 1));
           this.context.currentBlock!.size++;
           continue;
         }
@@ -326,12 +322,7 @@ export class AssemblerState {
             throw new Error(`Unknown COP command ${parts[0]}`);
           }
 
-          this.context.currentBlock!.objList.push(new Op(
-            opCode,
-            0,
-            [cop.code, ...parts.slice(1)],
-            cop.size + 2
-          ));
+          this.context.currentBlock!.objList.push(new Op(opCode, 0, [cop.code, ...parts.slice(1)], cop.size + 2));
 
           this.context.currentBlock!.size += cop.size + 2;
 
@@ -400,17 +391,12 @@ export class AssemblerState {
         const addrMode = this.root.addrLookup[opCode.mode];
         let size = addrMode.size;
         if (size === AsmReader.VARIABLE_SIZE_INDICATOR || opCode.mode === 'Immediate') {
-          size = operand?.startsWith('^') || typeof opnd1 === 'number' && opnd1 <= 0xFF ? 2 : 3;
+          size = operand?.startsWith('^') || operand?.length === 2 ? 2 : 3;
         }
 
-        const opnds: unknown[] = operand2 != null ? [opnd1, this.context.parseOperand(operand2)] : [opnd1];
+        const operands: unknown[] = operand2 != null ? [opnd1, this.context.parseOperand(operand2)] : [opnd1];
 
-        this.context.currentBlock!.objList.push(new Op(
-          opCode,
-          0,
-          opnds,
-          size
-        ));
+        this.context.currentBlock!.objList.push(new Op(opCode, 0, operands, size));
 
         this.context.currentBlock!.size += size;
       }
