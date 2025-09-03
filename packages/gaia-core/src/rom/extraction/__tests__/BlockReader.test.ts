@@ -36,14 +36,14 @@ describe('BlockReader', () => {
     });
 
     crc = crc32_buffer(data);
-    const dbRoot2 = await DbRootUtils.fromFolder(
-      '../../ext/GaiaLib/db/us',
-      '../../ext/GaiaLib/db/snes'
-    );
+    // const dbRoot2 = await DbRootUtils.fromFolder(
+    //   '../../ext/GaiaLib/db/us',
+    //   '../../ext/GaiaLib/db/snes'
+    // );
     const dbRoot = await DbRootUtils.fromSupabase();
     reader = new BlockReader(data, dbRoot);
     writer = new BlockWriter(reader);
-    romWriter = new RomWriter(dbRoot.entryPoints, "GAIALABS", "01JGGL");
+    romWriter = new RomWriter(dbRoot.entryPoints, "GAIALABS", "01JG  ");
   }, 30000);
 
   describe('BlockReader class', () => {
@@ -79,34 +79,26 @@ describe('BlockReader', () => {
     });
   });
 
-  describe('BlockReader ASM content', () => {
-    it('should pass multiple sources of truth', async () => {
+  describe('Convert graph with BlockWriter', () => {
+    it('should be able to generate ASM from blocks', async () => {
       for(const block of asmFiles) {
-        const asm = writer.generateAsm(block);
-        block.textData = asm;
+        if(!block.textData) block.textData = writer.generateAsm(block);
+        expect(block.textData?.length).toBeGreaterThan(0);
+      }
+    }, 30000);
+    
+    it('should be able to pass multiple sources of truth', async () => {
+      for(const block of asmFiles) {
         const truthPath = `../../truth/asm/${block.group ? (block.group + '/') : ''}${block.name}.asm`;
         console.log(`Validating content of "${truthPath}" vs "${truthPath.replace('truth', 'working')}"`);
         const truthContent = await readFileAsText(truthPath);
-        expect(asm).toEqual(truthContent);
-      }
-    }, 30000);
-  });
-  
-  describe('Assembler process', () => {
-    it('Should be able to assemble code', () => {
-      for(const block of asmFiles) {
-        const assembler = new Assembler(reader._root, block.textData!);
-        const { blocks, includes, reqBank } = assembler.parseAssembly();
-        block.parts = blocks;
-        block.includes = includes;
-        block.bank = reqBank ?? undefined;
-        expect(blocks.length).toBeGreaterThan(0);
+        expect(block.textData).toEqual(truthContent);
       }
     }, 30000);
   });
 
-  describe('Patching process', () => {
-    it('Should be able to process patch files', async () => {
+  describe('File replacement process', () => {
+    it('Should be able to process chunk patch files', async () => {
       expect(reader._root.chunkPatches).toBeDefined();
       expect(reader._root.chunkPatches?.length).toBeGreaterThan(0);
 
@@ -117,17 +109,9 @@ describe('BlockReader', () => {
         const existing = chunkFiles.find(x => x.name === chunkFile.name);
 
         if(chunkFile.type === BinType.Patch || chunkFile.type === BinType.Assembly) {
-          const assembler = new Assembler(reader._root, chunkFile.textData!);
-          const { blocks, includes, reqBank } = assembler.parseAssembly();
-          
-          expect(blocks.length).toBeGreaterThan(0);
-
-          const target = existing ?? chunkFile;
-          target.parts = blocks;
-          target.includes = includes;
-          target.bank = reqBank ?? undefined;
-          
-          if(!existing){
+          if(existing){
+            existing.textData = chunkFile.textData;
+          } else {
             if(chunkFile.type === BinType.Patch) {
               patchFiles.push(chunkFile);
             }
@@ -146,23 +130,71 @@ describe('BlockReader', () => {
 
       console.log(`Successfully processed ${patchFiles.length} patch files`);
     }, 60000);
+  });
+  
+  describe('Assembler process', () => {
+    it('Should be able to assemble code', () => {
+      for(const block of asmFiles) {
+        const assembler = new Assembler(reader._root, block.textData!);
+        const { blocks, includes, reqBank } = assembler.parseAssembly();
+        block.parts = blocks;
+        block.includes = includes;
+        block.bank = reqBank ?? undefined;
+        expect(blocks.length).toBeGreaterThan(0);
+      }
+    }, 30000);
+  });
 
+  describe('Assembly patching process', () => {
     it('Should be able to apply assembly patches', async () => {
       RomProcessor.applyPatches(asmFiles, patchFiles);
     }, 10000);
   });
 
   describe("Build process", () => {
-    it("Should be able to calculate sizes", async () => {
-      // Calculate ASM sizes
-      for (const asm of asmFiles) {
+
+    it('should be able to calculate sizes before layout', async () => {
+      for (const asm of chunkFiles) {
         ChunkFileUtils.calculateSize(asm);
       }
+      for (const asm of chunkFiles) {
+        expect(asm.size).toBeGreaterThanOrEqual(0);
+        expect(asm.size).toBeLessThan(0x8000);
+      }
+    });
 
+    it('should organize the files into a ROM layout', async () => {
       // Assign locations
       const layout = new RomLayout(chunkFiles);
+      
+      const preLayoutJson = JSON.stringify({
+        files: layout.unmatchedFiles.map(x => ({
+          name: x.name,
+          type: x.type,
+          location: x.location,
+          size: x.size,
+        })),
+      }, null, 2);
+
       layout.organize();
-  
+
+      const postLayoutJson = JSON.stringify({
+        files: chunkFiles.filter(x => x.size > 0).sort((a, b) => a.location - b.location).map(x => ({
+          name: x.name,
+          type: x.type,
+          location: x.location,
+          size: x.size,
+        })),
+      }, null, 2);
+      
+      const truthPreLayout = (await readFileAsText(`../../working/prelayout.json`)).replace(/\r/g, '');
+      expect(preLayoutJson).toEqual(truthPreLayout);
+
+      const truthPostLayout = (await readFileAsText(`../../working/postlayout.json`)).replace(/\r/g, '');
+      expect(postLayoutJson).toEqual(truthPostLayout);
+    });
+
+    it("Should be able to rebase assembly code", async () => {
       // Rebase assemblies
       for (const file of asmFiles) {
         ChunkFileUtils.rebase(file);
@@ -214,7 +246,7 @@ describe('BlockReader', () => {
       romWriter.writeEntryPoints(asmFiles);
 
       const header = romWriter.outBuffer.subarray(0xFFB0, 0xFFB0 + 6);
-      expect(header).toEqual(new Uint8Array(Buffer.from('01JGGL')));
+      expect(header).toEqual(new Uint8Array(Buffer.from('01JG  ')));
 
       const title = romWriter.outBuffer.subarray(0xFFB0 + 16, 0xFFB0 + 16 + 21);
       expect(title).toEqual(new Uint8Array(Buffer.from('GAIALABS             ')));

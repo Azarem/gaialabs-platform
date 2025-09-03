@@ -1,6 +1,6 @@
 import { DbRoot, DbStruct, RomProcessingConstants } from '@gaialabs/shared';
 import { AsmBlock } from '@gaialabs/shared';
-import { Op, OpCode } from '@gaialabs/shared';
+import { Op, OpCode, Byte } from '@gaialabs/shared';
 import type { AssemblerContext } from './assembler-context';
 import { AsmReader } from '../extraction/asm';
 
@@ -95,12 +95,15 @@ export class AssemblerState {
       const vix = operand.lastIndexOf('$', ix) + 1;
 
       const valueStr = operand.substring(vix, ix);
-      const value = parseInt(valueStr, 16);
-      if (!isNaN(value)) {
-        const endIx = operand.substring(ix + 1).search(/[^\da-fA-F]/);
-        const actualEndIx = endIx < 0 ? operand.length : ix + 1 + endIx;
-
-        const number = parseInt(operand.substring(ix + 1, actualEndIx), 16);
+      if (valueStr.match(/^[a-fA-F0-9]+$/)) {
+        const value = parseInt(valueStr, 16);
+        
+        let endIx = operand.substring(ix + 1).search(RomProcessingConstants.SYMBOL_SPACE_REGEX);
+        if(endIx < 0) {
+          endIx = operand.length;
+        }
+        
+        const number = parseInt(operand.substring(ix + 1, endIx), 16);
 
         let result: number;
         if (op === '-') {
@@ -111,7 +114,7 @@ export class AssemblerState {
 
         const len = (ix - vix) <= 2 ? 2 : (ix - vix) <= 4 ? 4 : 6;
 
-        operand = operand.substring(0, vix) + result.toString(16).toUpperCase().padStart(len, '0') + operand.substring(actualEndIx);
+        operand = operand.substring(0, vix) + result.toString(16).toUpperCase().padStart(len, '0') + operand.substring(endIx);
       }
     }
     return operand;
@@ -274,7 +277,7 @@ export class AssemblerState {
             mnemonic = null;
             continue;
           }
-
+          
           this.context.lineBuffer = operand;
         } else {
           mnemonic = this.context.lineBuffer;
@@ -304,7 +307,7 @@ export class AssemblerState {
         // No operand instructions
         if (!operand) {
           const opCode = codes.find(x => this.root.addrLookup[x.mode].size === 1);
-          this.context.currentBlock!.objList.push(new Op (opCode, 0,[], 1));
+          this.context.currentBlock!.objList.push(new Op (opCode, 0, [], 1));
           this.context.currentBlock!.size++;
           continue;
         }
@@ -316,13 +319,14 @@ export class AssemblerState {
         let opCode: OpCode | null = codes[0];
         if (opCode?.mnem === 'COP') {
           const parts = operand.split(/[\s\t,()[\]$#]/).filter(p => p.length > 0);
+          const cmd = parts[0];
 
-          const cop = this.root.copLookup[parts[0]];
+          const cop = this.root.copLookup[cmd];
           if (!cop) {
-            throw new Error(`Unknown COP command ${parts[0]}`);
+            throw new Error(`Unknown COP command ${cmd}`);
           }
 
-          this.context.currentBlock!.objList.push(new Op(opCode, 0, [cop.code, ...parts.slice(1)], cop.size + 2));
+          this.context.currentBlock!.objList.push(new Op(opCode, 0, [new Byte(cop.code), ...parts.slice(1)], cop.size + 2));
 
           this.context.currentBlock!.size += cop.size + 2;
 

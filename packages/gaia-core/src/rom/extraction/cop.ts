@@ -5,8 +5,8 @@ import {
   AddressSpace,
   LocationWrapper,
   MemberType,
-  createByte,
-  createWord,
+  Byte,
+  Word,
 } from '@gaialabs/shared';
 import type { CopDef } from '@gaialabs/shared';
 import type { DbRoot } from '@gaialabs/shared';
@@ -92,9 +92,9 @@ export class CopCommandProcessor {
   ): unknown {
     switch (memberType) {
       case MemberType.Byte:
-        return createByte(this._romDataReader.readByte());
+        return new Byte(this._romDataReader.readByte());
       case MemberType.Word:
-        return createWord(this._romDataReader.readUShort());
+        return new Word(this._romDataReader.readUShort());
       case MemberType.Offset:
         return this.createCopLocation(this._romDataReader.readUShort(), null, partStr, isPtr, referenceType, addrType);
       case MemberType.Address:
@@ -113,7 +113,7 @@ export class CopCommandProcessor {
     type: AddressType
   ): unknown {
     if (bank === null && offset === 0) {
-      return createWord(offset);
+      return new Word(offset);
     }
 
     const addr = new Address(bank ?? (this._romDataReader.position >> 16), offset);

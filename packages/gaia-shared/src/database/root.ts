@@ -271,7 +271,7 @@ export class DbRootUtils {
     const platformBranch = gameRomBranch.platformBranch;
     const instructionSet = platformBranch.instructionSet;
     const addressingModes = platformBranch.addressingModes;
-    const vectors = platformBranch.vectors;
+    //const vectors = platformBranch.vectors;
 
     const transforms = romFixups.transforms || [];
 
@@ -320,7 +320,7 @@ export class DbRootUtils {
         file.name, 
         file.data.length, 
         0, 
-        BinType[file.type as keyof typeof BinType] || BinType.Unknown
+        file.type as BinType
       );
       if(chunkFile.type === BinType.Assembly || chunkFile.type === BinType.Patch) {
         chunkFile.textData = binaryToUtf8String(file.data);

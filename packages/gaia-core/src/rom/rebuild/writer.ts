@@ -8,7 +8,11 @@ import {
   type AsmBlock, 
   type StringMarker,
   type TableEntry,
-  LocationWrapper
+  LocationWrapper,
+  Byte,
+  Word,
+  Long,
+  TypedNumber
 } from '@gaialabs/shared';
 import { RomProcessor as RebuildProcessor } from './processor';
 import { Op } from '@gaialabs/shared';
@@ -60,7 +64,7 @@ export class RomWriter {
 
     // checksum
     let sum = 0;
-    for (let i = 0; i < buf.length; i++) sum = (sum + buf[i]) & 0xFFFF;
+    for (let i = 0; i < buf.length; i++) sum += buf[i] & 0xFF;
     // checksum at 0xFFDE
     buf[0xFFDE] = sum & 0xFF;
     buf[0xFFDF] = (sum >> 8) & 0xFF;
@@ -148,18 +152,25 @@ export class RomWriter {
 
     if (file.rawData) {
       // Write type-specific headers
+      const data = file.rawData;
       let remain = file.size;
+      let srcPos = 0;
       if (file.type === BinType.Tilemap) {
-        // copy first 2 bytes through
-        // Will be handled after reading file
+        remain -= 2;
+        buf[pos++] = data[srcPos++];
+        buf[pos++] = data[srcPos++];
       } else if (file.type === BinType.Meta17) {
-        // 4-byte header preserved
+        remain -= 4;
+        for (let i = 0; i < 4; i++) buf[pos++] = data[srcPos++];
       } else if (file.type === BinType.Sound) {
         remain -= 2;
         buf[pos++] = remain & 0xFF;
         buf[pos++] = (remain >> 8) & 0xFF;
       }
 
+      //TODO: in the future perhaps we can compress assets, but for now this is not needed
+
+      //Write compression header
       if (file.compressed !== undefined) {
         remain -= 2;
         const inverse = (0 - remain) & 0xFFFF;
@@ -167,21 +178,10 @@ export class RomWriter {
         buf[pos++] = (inverse >> 8) & 0xFF;
       }
 
-      // Now write file contents
-      const data = file.rawData;
-
-      // If tilemap/meta17 need header passthrough first
-      let srcPos = 0;
-      if (file.type === BinType.Tilemap) {
-        buf[pos++] = data[srcPos++];
-        buf[pos++] = data[srcPos++];
-      } else if (file.type === BinType.Meta17) {
-        for (let i = 0; i < 4; i++) buf[pos++] = data[srcPos++];
-      }
-
       // Copy the rest
-      while (pos - start < file.size) {
+      while (remain > 0) {
         buf[pos++] = data[srcPos++];
+        remain--;
       }
     } else {
       // Handle assembly parts
@@ -190,7 +190,7 @@ export class RomWriter {
         if (file.parts[0].location !== file.location && (file.location || 0) !== 0) {
           throw new Error('Assembly was not based properly');
         }
-
+        
         // Parse assembly parts
         this.parseAssembly(file.parts, _chunkLookup, file.includeLookup!);
       }
@@ -248,8 +248,7 @@ export class RomWriter {
             continue;
           } else if (currentObj instanceof Op) {
             const op = currentObj as Op;
-            buf[position] = op.code & 0xFF;
-            position++;
+            buf[position++] = op.code & 0xFF;
             opos += op.size;
 
             for (const operand of op.operands) {
@@ -301,7 +300,7 @@ export class RomWriter {
             // Search local labels first
             const labelUpper = label.toUpperCase();
             let target: AsmBlock | undefined;
-            
+
             if (includeLookup.has(labelUpper)) {
               target = includeLookup.get(labelUpper);
               loc = target!.location;
@@ -321,19 +320,20 @@ export class RomWriter {
                 currentObj = parentOp?.size === 2 ? (off & 0xFF) : (off & 0xFFFF);
                 continue; // goto Top
               } else {
+                let num: number;
                 switch (label.length) {
                   case 1:
                   case 2:
-                    currentObj = parseInt(label, 16) & 0xFF;
-                    continue; // goto Top
+                    currentObj = new Byte(parseInt(label, 16));
+                    continue;
                   case 3:
                   case 4:
-                    currentObj = parseInt(label, 16) & 0xFFFF;
-                    continue; // goto Top
+                    currentObj = new Word(parseInt(label, 16));
+                    continue;
                   case 5:
                   case 6:
-                    currentObj = parseInt(label, 16) & 0xFFFFFF;
-                    continue; // goto Top
+                    currentObj = new Long(parseInt(label, 16));
+                    continue;
                   default:
                     throw new Error(`Invalid operand '${label}'`);
                 }
@@ -369,22 +369,29 @@ export class RomWriter {
 
             switch (type) {
               case AddressType.Offset:
-                currentObj = loc & 0xFFFF;
-                break;
+                currentObj = new Word(loc);
+                continue;
               case AddressType.Bank:
-                currentObj = ((loc >> 16) | ((loc & 0xFFFF) >= 0x8000 ? 0x80 : 0xC0)) & 0xFF;
-                break;
+                currentObj = new Byte(((loc >> 16) | ((loc & 0xFFFF) >= 0x8000 ? 0x80 : 0xC0)));
+                continue;
               case AddressType.WBank:
-                currentObj = ((loc >> 16) | ((loc & 0xFFFF) >= 0x8000 ? 0x80 : 0xC0)) & 0xFFFF;
-                break;
+                currentObj = new Word(((loc >> 16) | ((loc & 0xFFFF) >= 0x8000 ? 0x80 : 0xC0)));
+                continue;
               case AddressType.Address:
-                currentObj = loc | ((loc & 0xFFFF) >= 0x8000 ? 0x800000 : 0xC00000);
-                break;
+                currentObj = new Long(loc | ((loc & 0xFFFF) >= 0x8000 ? 0x800000 : 0xC00000));
+                continue;
               default:
-                currentObj = loc & 0xFF;
-                break;
+                currentObj = new Byte(loc);
+                continue;
             }
-            continue; // goto Top
+            
+          } else if (currentObj instanceof TypedNumber) {
+            let value = currentObj.value;
+            for (let i = 0; i < currentObj.size; i++) {
+              buf[position++] = value & 0xFF;
+              value >>= 8;
+            }
+            break;
           } else if (typeof currentObj === 'number') {
             const num = currentObj as number;
             const size = parentOp?.size ?? 0;
@@ -416,7 +423,6 @@ export class RomWriter {
           } else if (this.isStringMarker(currentObj)) {
             // StringMarker - no operation needed
             break;
-          } else if (this.isLocationWrapper(currentObj)) {
           } else {
             throw new Error(`Unable to process '${currentObj}'`);
           }
@@ -455,10 +461,6 @@ export class RomWriter {
 
   private isTableEntry(obj: unknown): obj is TableEntry {
     return typeof obj === 'object' && obj !== null && 'location' in obj && 'object' in obj;
-  }
-
-  private isLocationWrapper(obj: unknown): obj is LocationWrapper {
-    return typeof obj === 'object' && obj !== null && 'location' in obj && 'type' in obj;
   }
 }
 

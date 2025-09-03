@@ -204,8 +204,8 @@ async function main() {
     "itemcomp_table_01EB0F", "system_strings", "table_17D000", "table_178000", "table_179000"
   ]);
 
-  const graphicsCrcs = await createBaseRomFiles(baseRom.id, "Graphics", "graphics", "bin", [
-    "gfx_boot_exprite", "gfx_boot_logos", "gfx_credits_font", "gfx_fonts", "gfx_inventory_sprites", "gfx_item_exprite"
+  const graphicsCrcs = await createBaseRomFiles(baseRom.id, "Bitmap", "graphics", "bin", [
+    "gfx_boot_exprite", "gfx_boot_logos", "gfx_credits_font", "gfx_fonts", "gfx_inventory_sprites", "gfx_item_exprite", "misc_fx_1CD580"
   ]);
 
   const paletteCrcs = await createBaseRomFiles(baseRom.id, "Palette", "palettes", "pal", [

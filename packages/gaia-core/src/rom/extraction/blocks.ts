@@ -387,7 +387,7 @@ export class BlockReader {
       }
       pos = end;
 
-      const chunk = new ChunkFile(`sfx${i.toString(16).toUpperCase().padStart(2, '0')}`, size + 2, startPos, BinType.Sound);
+      const chunk = new ChunkFile(`sfx${i.toString(16).toUpperCase().padStart(2, '0')}`, size, startPos, BinType.Sound);
       chunk.rawData = data;
       this._enrichedChunks.push(chunk);
     }

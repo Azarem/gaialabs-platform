@@ -164,17 +164,18 @@ export class BlockWriter {
 
   private resolveOperand(op: Op, obj: any, isBranch: boolean = false): any {
 
-    const opType = this.getObjectType(obj);
-    if (typeof obj === 'number') {
-      if(op.size === 3){
+    if(obj instanceof TypedNumber) {
+      const len = obj.size * 2;
+      return obj.value.toString(16).toUpperCase().padStart(len, '0');
+    }
 
-      }
+    if (typeof obj === 'number') {
       if (op.mode === 'Immediate') {
         return obj;
       }
-
       return this._blockReader.resolveName(obj, AddressType.Address, isBranch);
     }
+    
     if (this.getObjectType(obj) === ObjectType.LocationWrapper) {
       const lw = obj as LocationWrapper;
       return this._blockReader.resolveName(lw.location, lw.type, isBranch);
@@ -197,18 +198,18 @@ export class BlockWriter {
     }
 
     // Preserve tag information on typed numbers without resolving names
-    if (obj && typeof obj === 'object' && obj._tag && 'value' in obj) {
-      const typed = obj as { _tag: string; value: any };
+    if (obj && obj instanceof TypedNumber) {
+      // const typed = obj as { _tag: string; value: any };
 
-      // Byte/Word objects should remain untouched
-      if (typed._tag === 'Byte' || typed._tag === 'Word' || typed._tag === 'TypedNumber') {
-        return obj;
-      }
+      // // Byte/Word objects should remain untouched
+      // if (typed._tag === 'Byte' || typed._tag === 'Word' || typed._tag === 'TypedNumber') {
+      //   return obj;
+      // }
 
-      if (typeof typed.value === 'number' && op.mode !== 'Immediate') {
-        const resolved = this._blockReader.resolveName(typed.value, AddressType.Address, isBranch);
-        return { ...typed, value: resolved };
-      }
+      // if (typeof typed.value === 'number' && op.mode !== 'Immediate') {
+      //   const resolved = this._blockReader.resolveName(typed.value, AddressType.Address, isBranch);
+      //   return { ...typed, value: resolved };
+      // }
       return obj;
     }
     return obj;
@@ -221,10 +222,11 @@ export class BlockWriter {
 
     // Check for explicit type tags first
     if (obj._tag) {
-      if (obj._tag === 'Byte' || obj._tag === 'Word') {
-        return ObjectType.TypedNumber;
-      }
       return obj._tag as ObjectType;
+    }
+
+    if (obj instanceof TypedNumber) {
+      return ObjectType.TypedNumber;
     }
 
     // Duck typing fallbacks
@@ -408,42 +410,30 @@ export class BlockWriter {
         if (op.operands && op.operands.length > 1) {
           const operandStrings: string[] = [];
           for (let i = 1; i < op.operands.length; i++) {
-            // Resolve operand names similar to regular instructions (who decided this?)
-            //const resolved = this.resolveOperand(op, op.operands[i]);
             const operandLines = this.writeObject(op.operands[i], depth + 1, false);
             operandStrings.push(operandLines[0]);
           }
           opLine += ` ( ${operandStrings.join(', ')} )`;
         }
       } else if (op.operands && op.operands.length > 0) {
-        // Special handling for different instruction types
-        if (op.mnem === 'COP') {
-          // COP instructions without copDef - handle as simple operand
-          const operand = op.operands[0];
-          if (typeof operand === 'number') {
-            opLine += `[${operand.toString(16).toUpperCase().padStart(2, '0')}]`;
-          } else {
-            opLine += `[${operand}]`;
+        const isBr = op.mnem[0] === 'J' || 
+                    op.mode === 'PCRelative' ||
+                    op.mode === 'PCRelativeLong';
+
+        // Regular instruction formatting
+        const resolvedOperand = this.resolveOperand(op, op.operands[0], isBr);
+        const format = this._root.addrLookup[op.mode]?.formatString; // || this._root.config.asmFormats?.[op.code.mode];
+        
+        if (format) {
+          let actualFormat = format;
+          if (op.mode === 'Immediate' && op.size === 3) {
+            actualFormat = format.replace('X2', 'X4');
           }
+          const resolvedSecondOperand = op.operands.length > 1 ? this.resolveOperand(op, op.operands[1], isBr) : undefined;
+          opLine += this.formatOperand(actualFormat, [resolvedOperand, resolvedSecondOperand]);
         } else {
-          const isBr = op.mnem[0] === 'J' || 
-                      op.mode === 'PCRelative' ||
-                      op.mode === 'PCRelativeLong';
-  
-          // Regular instruction formatting
-          const resolvedOperand = this.resolveOperand(op, op.operands[0], isBr);
-          const format = this._root.addrLookup[op.mode]?.formatString; // || this._root.config.asmFormats?.[op.code.mode];
-          
-          if (format) {
-            let actualFormat = format;
-            if (op.mode === 'Immediate' && op.size === 3) {
-              actualFormat = format.replace('X2', 'X4');
-            }
-            opLine += this.formatOperand(actualFormat, [resolvedOperand, ...op.operands.slice(1)]);
-          } else {
-            // Default formatting based on operand type
-            opLine += this.formatDefaultOperand(resolvedOperand, op.size);
-          }
+          // Default formatting based on operand type
+          opLine += this.formatDefaultOperand(resolvedOperand, op.size);
         }
       }
       
@@ -460,7 +450,7 @@ export class BlockWriter {
       return operand; // Already formatted
     }
 
-    if (operand && typeof operand === 'object' && operand._tag && 'value' in operand) {
+    if (operand && operand instanceof TypedNumber) {
       return this.formatTypedNumber(operand);
     }
 
@@ -585,24 +575,17 @@ export class BlockWriter {
     return [`#$${num.toString(16).toUpperCase().padStart(6, '0')}`];
   }
 
-  private formatTypedNumber(num: TypedNumber | { _tag: string; value: number | string }): string {
-    let size = 1;
-    if ('size' in num) {
-      size = (num as TypedNumber).size;
-    } else if (num._tag === 'Word') {
-      size = 2;
-    }
-
+  private formatTypedNumber(num: TypedNumber): string {
     if (typeof num.value === 'number') {
-      const width = size * 2;
+      const width = num.size * 2;
       const hex = num.value.toString(16).toUpperCase().padStart(width, '0');
-      return size === 1 ? `#${hex}` : `#$${hex}`;
+      return num.size === 1 ? `#${hex}` : `#$${hex}`;
     }
 
     return `#${num.value}`;
   }
 
-  private writeTypedNumber(num: TypedNumber | { _tag: string; value: number | string }): string[] {
+  private writeTypedNumber(num: TypedNumber): string[] {
     return [this.formatTypedNumber(num)];
   }
 

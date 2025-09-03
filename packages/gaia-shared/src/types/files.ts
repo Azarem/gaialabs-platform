@@ -5,6 +5,20 @@ import { DbBlock } from '../database/blocks';
 import { ICompressionProvider } from './compression';
 
 /**
+ * Types that should have a compression header by default but should not be compressed
+ */
+const UNCOMPRESSED_TYPES = ['Bitmap', 'Tilemap', 'Tileset', 'Spritemap', 'Meta17'] as const;
+
+/**
+ * Type guard to check if a type is an uncompressed type
+ * Works with both BinType enum values and string values
+ */
+function isUncompressedType(type: BinType | string): boolean {
+  // Since BinType is a string enum, we can directly check the value
+  return UNCOMPRESSED_TYPES.includes(type as any);
+}
+
+/**
  * Chunk file for ROM processing
  * Converted from GaiaLib/Types/ChunkFile.cs
  */
@@ -33,6 +47,7 @@ export class ChunkFile {
     this.location = location;
     this.type = type;
     this.mnemonics = {};
+    this.compressed = isUncompressedType(type) ? false : undefined;
   }
 }
 
@@ -120,11 +135,11 @@ function enrichWithRawDataFromDbFile(rom: Uint8Array, chunkFile: ChunkFile, comp
     fileData = combineHeader(rom, start, length, header, dbFile.type);
   }
   
-  const hasSizePrefix = chunkFile.compressed !== undefined || dbFile.type === BinType.Sound;
+  //const hasSizePrefix = chunkFile.compressed !== undefined || dbFile.type === BinType.Sound;
 
   // Binary files get rawData
   chunkFile.rawData = fileData;
-  chunkFile.size = fileData.length + (hasSizePrefix ? 2 : 0);
+  chunkFile.size = fileData.length;// + (hasSizePrefix ? 2 : 0);
 }
 
 /**
@@ -187,6 +202,8 @@ export class ChunkFileUtils {
    */
   static calculateSize(chunkFile: ChunkFile): number {
     if (!chunkFile.parts) {
+      if (typeof chunkFile.compressed === 'boolean' || chunkFile.type == BinType.Sound)
+        chunkFile.size += 2;
       return chunkFile.size;
     }
 

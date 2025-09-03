@@ -11,8 +11,8 @@ import {
   LocationWrapper,
   MemberType,
   StructDef,
-  createByte,
-  createWord,
+  Byte,
+  Word,
 } from '@gaialabs/shared';
 import type { DbRoot, DbBlock, DbPart } from '@gaialabs/shared';
 import type { DbStruct } from '@gaialabs/shared';
@@ -62,9 +62,9 @@ export class TypeParser {
     if (mType !== null) {
       switch (mType) {
         case MemberType.Byte:
-          return createByte(this._romDataReader.readByte());
+          return new Byte(this._romDataReader.readByte());
         case MemberType.Word:
-          return createWord(this.parseWordSafe() as number);
+          return new Word(this.parseWordSafe());
         case MemberType.Offset:
           return this.parseLocation(this._romDataReader.readUShort(), bank, null, AddressType.Offset);
         case MemberType.Address:
@@ -168,7 +168,7 @@ export class TypeParser {
     return null;
   }
 
-  private parseWordSafe(): unknown {
+  private parseWordSafe(): number {
     return this._referenceManager.containsStruct(this._romDataReader.position + 1)
       ? this._romDataReader.readByte()
       : this._romDataReader.readUShort();
@@ -200,7 +200,7 @@ export class TypeParser {
   private parseLocation(offset: number, bank: number | undefined, typeName: string | null, addrType: AddressType): unknown {
     // If bank is not provided and offset is 0, it should resolve to #$0000
     if ((bank === undefined || bank === null) && offset === 0) {
-      return createWord(offset);
+      return new Word(offset);
     }
 
     // Bank cannot be null, instead use bank from current position

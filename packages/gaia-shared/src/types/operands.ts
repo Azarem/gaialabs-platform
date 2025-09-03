@@ -1,23 +1,27 @@
-export interface TypedNumber {
-  _tag: 'TypedNumber';
+export class TypedNumber {
   value: number;
-  size: number; // byte size
+  size: number;
+
+  constructor(value: number, size: number) {
+    this.value = value;
+    this.size = size;
+  }
 }
 
-export interface Byte {
-  _tag: 'Byte';
-  value: number;
+export class Byte extends TypedNumber {
+  constructor(value: number) {
+    super(value & 0xFF, 1);
+  }
 }
 
-export interface Word {
-  _tag: 'Word';
-  value: number;
+export class Word extends TypedNumber {
+  constructor(value: number) {
+    super(value & 0xFFFF, 2);
+  }
 }
 
-export function createTypedNumber(value: number, size: number): TypedNumber {
-  return { _tag: 'TypedNumber', value, size };
+export class Long extends TypedNumber {
+  constructor(value: number) {
+    super(value & 0xFFFFFF, 3);
+  }
 }
-
-export const createByte = (v: number): Byte => ({ _tag: 'Byte', value: v & 0xff });
-
-export const createWord = (v: number): Word => ({ _tag: 'Word', value: v & 0xffff });

@@ -911,7 +911,7 @@ event_def_0C8221 [
     actor < #0E, #06, #01, @h_dark_space2 >   ;21
     actor < #00, #01, #00, @h_overworld_exit >   ;22
     actor < #08, #0C, #03, @h_hidden_red_jewel >
-    ;actor < #0C, #2F, #00, @SouthCapeDeliveryman >   ;23
+    actor < #0C, #2F, #00, @SouthCapeDeliveryman >   ;23
   ], `[LU1:47]Cape` >   ;00
 ]
 

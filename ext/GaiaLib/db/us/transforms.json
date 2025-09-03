@@ -317,7 +317,7 @@
     "transforms": [
       {
         "key": "actor < #08, #0C, #03, @h_hidden_red_jewel >",
-        "value": "$&\r\n    ;actor < #0C, #2F, #00, @SouthCapeDeliveryman >"
+        "value": "$&\r\n    actor < #0C, #2F, #00, @SouthCapeDeliveryman >"
       },
       {
         "key": "actor < #12, #38, #11, @h_hidden_red_jewel >",

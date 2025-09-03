@@ -5,8 +5,8 @@ import {
   Address,
   LocationWrapper,
   StatusFlags,
-  createByte,
-  createWord,
+  Byte,
+  Word,
 } from '@gaialabs/shared';
 import { RomDataReader } from './reader';
 import { StackOperations } from './stack';
@@ -119,8 +119,8 @@ export class AddressingModeHandler {
 
   private readImmediateOperand(size: number) {
     return size === 3
-      ? createWord(this._dataReader.readUShort())
-      : createByte(this._dataReader.readByte());
+      ? new Word(this._dataReader.readUShort())
+      : new Byte(this._dataReader.readByte());
   }
 
   private updateRegisterForImmediateInstruction(
@@ -189,13 +189,13 @@ export class AddressingModeHandler {
   }
 
   private handleBlockMoveMode(operands: unknown[], context: OperationContext): void {
-    operands.push(createByte(this._dataReader.readByte()));
+    operands.push(new Byte(this._dataReader.readByte()));
     context.xForm2 = this._transformProcessor.getTransform();
-    operands.push(createByte(this._dataReader.readByte()));
+    operands.push(new Byte(this._dataReader.readByte()));
   }
 
   private handleDirectPageMode(operands: unknown[]): void {
-    operands.push(createByte(this._dataReader.readByte()));
+    operands.push(new Byte(this._dataReader.readByte()));
   }
 
   private handlePCRelativeMode(operands: unknown[], nextAddress: number, reg: Registers, isLong: boolean): void {
@@ -208,12 +208,12 @@ export class AddressingModeHandler {
   }
 
   private handleStackRelativeMode(operands: unknown[]): void {
-    operands.push(createByte(this._dataReader.readByte()));
+    operands.push(new Byte(this._dataReader.readByte()));
   }
 
   private handleStackInterruptMode(mnemonic: string, operands: unknown[], context: OperationContext): void {
     const cmd = this._dataReader.readByte();
-    operands.push(cmd);
+    operands.push(new Byte(cmd));
 
     if (mnemonic === 'COP') {
       const copDef = this._blockReader._root.copDef[cmd];

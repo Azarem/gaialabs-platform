@@ -1,4 +1,4 @@
-import { DbRoot, RomProcessingConstants } from '@gaialabs/shared';
+import { DbRoot, RomProcessingConstants, Word, Byte, Long } from '@gaialabs/shared';
 import { AsmBlock } from '@gaialabs/shared';
 import { StringProcessor } from './string-processor';
 import { SortedMap } from './sorted-map';
@@ -213,22 +213,19 @@ export class Assembler implements AssemblerContext {
 
   public parseOperand(opnd: string): unknown {
     if (!opnd) return null;
-    switch (opnd.length) {
-      case 2: {
-        const b = parseInt(opnd, 16);
-        return isNaN(b) ? opnd : b;
+
+    if(opnd.match(/^[a-fA-F0-9]{2,6}$/)){
+      switch(opnd.length){
+        case 2:
+          return new Byte(parseInt(opnd, 16));
+        case 4:
+          return new Word(parseInt(opnd, 16));
+        case 6:
+          return new Long(parseInt(opnd, 16));
       }
-      case 4: {
-        const s = parseInt(opnd, 16);
-        return isNaN(s) ? opnd : s;
-      }
-      case 6: {
-        const i = parseInt(opnd, 16);
-        return isNaN(i) ? opnd : i;
-      }
-      default:
-        return opnd;
     }
+
+    return opnd;
   }
 
   public processRawData(): void {
@@ -263,7 +260,7 @@ export class Assembler implements AssemblerContext {
       } else {
         const data = this.hexStringToBytes(hex);
         if (data.length === 1) {
-          this.currentBlock!.objList.push(data[0]);
+          this.currentBlock!.objList.push(new Byte(data[0]));
           this.currentBlock!.size++;
         } else {
           if (reverse) {
@@ -272,7 +269,7 @@ export class Assembler implements AssemblerContext {
 
           // Explicitly change two-byte data into number for easier processing later
           if (data.length === 2) {
-            this.currentBlock!.objList.push((data[0] | (data[1] << 8)));
+            this.currentBlock!.objList.push(new Word(data[0] | (data[1] << 8)));
             this.currentBlock!.size += 2;
           } else {
             this.currentBlock!.objList.push(data);

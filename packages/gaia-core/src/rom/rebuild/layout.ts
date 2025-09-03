@@ -8,7 +8,7 @@ import { RomProcessingConstants } from '@gaialabs/shared';
 export class RomLayout {
   private static readonly MIN_ACCEPTED_REMAINING = 0x20;
 
-  private readonly unmatchedFiles: ChunkFile[];
+  public readonly unmatchedFiles: ChunkFile[];
   private readonly bestResult: number[] = new Array(0x200).fill(0);
   private readonly bestSample: number[] = new Array(0x200).fill(0);
 

@@ -1,6 +1,6 @@
 import { ChunkFile, DbBlock } from '@gaialabs/shared';
 import { TableEntry } from '@gaialabs/shared';
-import { StructDef, createWord } from '@gaialabs/shared';
+import { StructDef, Word } from '@gaialabs/shared';
 import { BlockReader } from './blocks';
 import { ReferenceManager } from './references';
 
@@ -109,7 +109,7 @@ export class PostProcessor {
       this._referenceManager.nameTable.set(loc, name);
 
       while (newList.length <= key) {
-        newList.push(createWord(0));
+        newList.push(new Word(0));
       }
 
       newList[key] = `&${name}`;
