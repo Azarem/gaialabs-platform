@@ -114,18 +114,18 @@ export class ProjectRoot {
   /**
    * Dump database and extract ROM data with comprehensive assembly processing
    */
-  public async dumpDatabase(): Promise<ChunkFile[]> {
-    // Load database and ROM data
-    const root = await DbRootUtils.fromFolder(this.databasePath!, this.systemPath!);
-    const rom = await readFileAsBinary(this.romPath);
-    //root.paths = this.resources;
+  // public async dumpDatabase(): Promise<ChunkFile[]> {
+  //   // Load database and ROM data
+  //   const root = await DbRootUtils.fromFolder(this.databasePath!, this.systemPath!);
+  //   const rom = await readFileAsBinary(this.romPath);
+  //   //root.paths = this.resources;
 
-    const chunkReader = new BlockReader(rom, root);
-    const chunkFiles = chunkReader.analyzeAndResolve();
+  //   const chunkReader = new BlockReader(rom, root);
+  //   const chunkFiles = chunkReader.analyzeAndResolve();
 
-    const blockWriter = new BlockWriter(chunkReader);
-    const writtenFiles = blockWriter.generateAllAsm(chunkFiles);
+  //   const blockWriter = new BlockWriter(chunkReader);
+  //   const writtenFiles = blockWriter.generateAllAsm(chunkFiles);
 
-    return chunkFiles;
-  }
+  //   return chunkFiles;
+  // }
 } 

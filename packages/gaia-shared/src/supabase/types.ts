@@ -179,6 +179,101 @@ export type SupabaseResult<T> = {
 };
 
 /**
+ * Project information
+ */
+export interface ProjectData {
+  id: string;
+  name: string;
+  meta: any | null; // JSON field
+  gameId: string;
+  baseRomId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Project branch with complete relationship chain
+ */
+export interface ProjectBranchData {
+  id: string;
+  name: string | null;
+  version: number | null;
+  projectId: string;
+  baseRomBranchId: string;
+  fileCrcs: number[];
+  modules: any[]; // JSON array
+  isPublic: boolean;
+  project: ProjectData;
+  baseRomBranch: BaseRomBranchData;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Project file containing binary data
+ */
+export interface ProjectFileData {
+  id: string;
+  name: string;
+  type: string;
+  module: string | null;
+  version: number | null;
+  crc: number | null;
+  meta: any | null; // JSON field
+  projectId: string;
+  data: Uint8Array; // Converted from base64
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Raw ProjectFile data as returned from Supabase (before conversion)
+ */
+export interface ProjectFileRaw {
+  id: string;
+  name: string;
+  type: string;
+  module: string | null;
+  version: number | null;
+  crc: number | null;
+  meta: any | null;
+  projectId: string;
+  data: string; // Base64 encoded
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Complete Project payload containing branch data and files
+ */
+export interface ProjectPayload {
+  projectBranch: ProjectBranchData;
+  projectFiles: ProjectFileData[];
+  baseRomBranch: BaseRomBranchData;
+  baseRomFiles: BaseRomFileData[];
+}
+
+/**
+ * Options for loading Project data by name
+ */
+export interface FromSupabaseByProjectOptions {
+  projectName: string;
+  /**
+   * Name of the branch to load
+   * Set to null to load the main/develop branch
+   * Set to undefined to not filter by branch name
+   */
+  branchName?: string | null;
+  
+  /**
+   * Version of the branch to load
+   * Set to null to load the latest/main version
+   * Set to undefined to not filter by version
+   */
+  branchVersion?: number | null;
+}
+
+/**
  * Query statistics for performance monitoring
  */
 export interface QueryStats {

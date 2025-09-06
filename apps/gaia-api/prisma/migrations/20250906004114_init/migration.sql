@@ -139,6 +139,53 @@ CREATE TABLE "BaseRomFile" (
     CONSTRAINT "BaseRomFile_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Project" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "meta" JSONB,
+    "gameId" TEXT NOT NULL,
+    "baseRomId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Project_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProjectBranch" (
+    "id" TEXT NOT NULL,
+    "name" TEXT,
+    "version" INTEGER,
+    "isPublic" BOOLEAN NOT NULL DEFAULT false,
+    "projectId" TEXT NOT NULL,
+    "baseRomBranchId" TEXT NOT NULL,
+    "fileCrcs" INTEGER[],
+    "modules" JSONB[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "gameRomBranchId" TEXT,
+
+    CONSTRAINT "ProjectBranch_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProjectFile" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "module" TEXT,
+    "version" INTEGER,
+    "crc" INTEGER,
+    "meta" JSONB,
+    "projectId" TEXT NOT NULL,
+    "data" BYTEA NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ProjectFile_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Platform_name_key" ON "Platform"("name");
 
@@ -217,6 +264,33 @@ CREATE INDEX "BaseRomFile_crc_idx" ON "BaseRomFile"("crc");
 -- CreateIndex
 CREATE UNIQUE INDEX "BaseRomFile_baseRomId_name_version_key" ON "BaseRomFile"("baseRomId", "name", "version");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Project_name_key" ON "Project"("name");
+
+-- CreateIndex
+CREATE INDEX "Project_gameId_idx" ON "Project"("gameId");
+
+-- CreateIndex
+CREATE INDEX "ProjectBranch_projectId_idx" ON "ProjectBranch"("projectId");
+
+-- CreateIndex
+CREATE INDEX "ProjectBranch_baseRomBranchId_idx" ON "ProjectBranch"("baseRomBranchId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProjectBranch_projectId_name_version_key" ON "ProjectBranch"("projectId", "name", "version");
+
+-- CreateIndex
+CREATE INDEX "ProjectFile_projectId_crc_idx" ON "ProjectFile"("projectId", "crc");
+
+-- CreateIndex
+CREATE INDEX "ProjectFile_projectId_idx" ON "ProjectFile"("projectId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProjectFile_projectId_module_name_version_key" ON "ProjectFile"("projectId", "module", "name", "version");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProjectFile_projectId_module_crc_key" ON "ProjectFile"("projectId", "module", "crc");
+
 -- AddForeignKey
 ALTER TABLE "PlatformBranch" ADD CONSTRAINT "PlatformBranch_platformId_fkey" FOREIGN KEY ("platformId") REFERENCES "Platform"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -259,6 +333,24 @@ ALTER TABLE "BaseRomBranch" ADD CONSTRAINT "BaseRomBranch_gameRomBranchId_fkey" 
 -- AddForeignKey
 ALTER TABLE "BaseRomFile" ADD CONSTRAINT "BaseRomFile_baseRomId_fkey" FOREIGN KEY ("baseRomId") REFERENCES "BaseRom"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+-- AddForeignKey
+ALTER TABLE "Project" ADD CONSTRAINT "Project_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "Game"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Project" ADD CONSTRAINT "Project_baseRomId_fkey" FOREIGN KEY ("baseRomId") REFERENCES "BaseRom"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectBranch" ADD CONSTRAINT "ProjectBranch_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectBranch" ADD CONSTRAINT "ProjectBranch_baseRomBranchId_fkey" FOREIGN KEY ("baseRomBranchId") REFERENCES "BaseRomBranch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectBranch" ADD CONSTRAINT "ProjectBranch_gameRomBranchId_fkey" FOREIGN KEY ("gameRomBranchId") REFERENCES "GameRomBranch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectFile" ADD CONSTRAINT "ProjectFile_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
 DO $$
 BEGIN
   -- Check if we're in a Supabase/production environment by looking for specific extensions
@@ -278,6 +370,9 @@ BEGIN
     GRANT SELECT ON TABLE public."BaseRom" TO anon;
     GRANT SELECT ON TABLE public."BaseRomBranch" TO anon;
     GRANT SELECT ON TABLE public."BaseRomFile" TO anon;
+    GRANT SELECT ON TABLE public."Project" TO anon;
+    GRANT SELECT ON TABLE public."ProjectBranch" TO anon;
+    GRANT SELECT ON TABLE public."ProjectFile" TO anon;
 
     -- Enable Row Level Security on all tables
     ALTER TABLE "Game" ENABLE ROW LEVEL SECURITY;
@@ -290,6 +385,9 @@ BEGIN
     ALTER TABLE "BaseRom" ENABLE ROW LEVEL SECURITY;
     ALTER TABLE "BaseRomBranch" ENABLE ROW LEVEL SECURITY;
     ALTER TABLE "BaseRomFile" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "Project" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "ProjectBranch" ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE "ProjectFile" ENABLE ROW LEVEL SECURITY;
 
     -- Create anonymous SELECT policies for all tables
     CREATE POLICY "Anonymous can read games" ON "Game" FOR SELECT TO anon USING (true);
@@ -302,6 +400,9 @@ BEGIN
     CREATE POLICY "Anonymous can read instruction groups" ON "PlatformBranch" FOR SELECT TO anon USING (true);
     CREATE POLICY "Anonymous can read developers" ON "Developer" FOR SELECT TO anon USING (true);
     CREATE POLICY "Anonymous can read instruction variants" ON "Region" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read projects" ON "Project" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read project branches" ON "ProjectBranch" FOR SELECT TO anon USING (true);
+    CREATE POLICY "Anonymous can read project files" ON "ProjectFile" FOR SELECT TO anon USING (true);
 
     RAISE NOTICE 'Applied RLS policies and grants for production environment';
   ELSE

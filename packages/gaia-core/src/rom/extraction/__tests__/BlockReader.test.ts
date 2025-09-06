@@ -19,6 +19,8 @@ describe('BlockReader', () => {
   let crc: number;
   let blockLookup: Map<string, number> = new Map();
   let romWriter: RomWriter;
+  let moduleLookup: Map<string, ChunkFile[]> = new Map();
+  let moduleList = ['jp-viper'];
 
   beforeAll(async () => {
     const data = await new Promise<Buffer>((resolve, reject) => {
@@ -40,7 +42,7 @@ describe('BlockReader', () => {
     //   '../../ext/GaiaLib/db/us',
     //   '../../ext/GaiaLib/db/snes'
     // );
-    const dbRoot = await DbRootUtils.fromSupabase();
+    const dbRoot = await DbRootUtils.fromSupabaseProject({ projectName: 'Illusion of Gaia: Retranslated' });
     reader = new BlockReader(data, dbRoot);
     writer = new BlockWriter(reader);
     romWriter = new RomWriter(dbRoot.entryPoints, "GAIALABS", "01JG  ");
@@ -97,39 +99,75 @@ describe('BlockReader', () => {
     }, 30000);
   });
 
+  function applyPatchFile(chunkFile: ChunkFile): void {
+    console.log(`Processing patch: ${chunkFile.name}`);
+    const existing = chunkFiles.find(x => x.name === chunkFile.name);
+
+    if(chunkFile.type === BinType.Patch || chunkFile.type === BinType.Assembly) {
+      if(existing){
+        existing.textData = chunkFile.textData;
+      } else {
+        if(chunkFile.type === BinType.Patch) {
+          patchFiles.push(chunkFile);
+        }
+        asmFiles.push(chunkFile);
+        chunkFiles.push(chunkFile);
+      }
+    } else {
+      if(existing){
+        existing.rawData = chunkFile.rawData;
+        existing.size = chunkFile.size;
+      } else {
+        chunkFiles.push(chunkFile);
+      }
+    }
+  }
+
   describe('File replacement process', () => {
     it('Should be able to process chunk patch files', async () => {
-      expect(reader._root.chunkPatches).toBeDefined();
-      expect(reader._root.chunkPatches?.length).toBeGreaterThan(0);
+      expect(reader._root.baseRomFiles).toBeDefined();
+      expect(reader._root.baseRomFiles?.length).toBeGreaterThan(0);
 
-      for (const chunkFile of reader._root.chunkPatches!) {
+      for (const chunkFile of reader._root.baseRomFiles!) {
+        // Parse the patch file with the assembler
+        applyPatchFile(chunkFile);
+      }
+    }, 60000);
+
+    it('Should be able to process project files', async () => {
+      expect(reader._root.projectFiles).toBeDefined();
+      expect(reader._root.projectFiles?.length).toBeGreaterThan(0);
+
+      //Run a single pass to collect all the module files
+      for (const chunkFile of reader._root.projectFiles!) {
         // Parse the patch file with the assembler
         console.log(`Processing patch: ${chunkFile.name}`);
 
-        const existing = chunkFiles.find(x => x.name === chunkFile.name);
-
-        if(chunkFile.type === BinType.Patch || chunkFile.type === BinType.Assembly) {
-          if(existing){
-            existing.textData = chunkFile.textData;
+        //ChunkFile.group is the module name
+        if(chunkFile.group){
+          let modArray: ChunkFile[];
+          if(!moduleLookup.has(chunkFile.group)){
+            moduleLookup.set(chunkFile.group, modArray = []);
           } else {
-            if(chunkFile.type === BinType.Patch) {
-              patchFiles.push(chunkFile);
-            }
-            asmFiles.push(chunkFile);
-            chunkFiles.push(chunkFile);
+            modArray = moduleLookup.get(chunkFile.group)!;
           }
+          //
+          modArray!.push(chunkFile);
         } else {
-          if(existing){
-            existing.rawData = chunkFile.rawData;
-            existing.size = chunkFile.size;
-          } else {
-            chunkFiles.push(chunkFile);
-          }
+          //If chunk file is not part of a group, apply it now
+          applyPatchFile(chunkFile);
         }
       }
 
-      console.log(`Successfully processed ${patchFiles.length} patch files`);
     }, 60000);
+
+    it('should be able to apply a module list', async () => {
+      for(const module of moduleList) {
+        for(const file of moduleLookup.get(module)!) {
+          applyPatchFile(file);
+        }
+      }
+    });
   });
   
   describe('Assembler process', () => {
@@ -244,14 +282,20 @@ describe('BlockReader', () => {
 
       romWriter.writeHeader();
       romWriter.writeEntryPoints(asmFiles);
+      romWriter.writeChecksum();
 
+      await saveFileAsBinary('../../../GaiaLabs.smc', romWriter.outBuffer);
+    });
+
+    it('Should be able to pass validation checks', async () => {
       const header = romWriter.outBuffer.subarray(0xFFB0, 0xFFB0 + 6);
       expect(header).toEqual(new Uint8Array(Buffer.from('01JG  ')));
 
       const title = romWriter.outBuffer.subarray(0xFFB0 + 16, 0xFFB0 + 16 + 21);
       expect(title).toEqual(new Uint8Array(Buffer.from('GAIALABS             ')));
 
-      await saveFileAsBinary('../../../GaiaLabs.smc', romWriter.outBuffer);
+      const crc = crc32_buffer(romWriter.outBuffer);
+      expect(crc).toEqual(765557309);
     });
   });
 }); 

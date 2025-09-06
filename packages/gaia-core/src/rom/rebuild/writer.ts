@@ -42,6 +42,7 @@ export class RomWriter {
 
     this.writeHeader();
     this.writeEntryPoints(files.filter(x => !!x.parts));
+    this.writeChecksum();
 
     //await this.generatePatch();
     return this.outBuffer;
@@ -61,7 +62,10 @@ export class RomWriter {
     buf[pos++] = 0x01; // country
     buf[pos++] = 0x33; // dev id
     buf[pos++] = 0x00; // version
+  }
 
+  public writeChecksum(): void {
+    const buf = this.outBuffer!;
     // checksum
     let sum = 0;
     for (let i = 0; i < buf.length; i++) sum += buf[i] & 0xFF;

@@ -15,9 +15,9 @@ import type { DbStruct } from './structs';
 import type { DbStringType, DbStringCommand, DbStringLayer } from './strings';
 import type { CopDef } from './cop';
 import type { DbTransform } from './transforms';
-import type { BaseRomFileData, BaseRomPayload, FromSupabaseByNameOptions } from '../supabase/types';
+import type { BaseRomFileData, BaseRomPayload, FromSupabaseByNameOptions, FromSupabaseByProjectOptions, ProjectFileData, ProjectPayload } from '../supabase/types';
 import { OpCode } from './opcode';
-import { fromSupabaseByName, fromSupabaseById } from '../supabase/rom-loader';
+import { fromSupabaseByName, fromSupabaseById, fromSupabaseByProject } from '../supabase/rom-loader';
 import { RomProcessingConstants } from '../types/constants';
 import { ChunkFile } from '../types/files';
 
@@ -46,7 +46,8 @@ export interface DbRoot {
   opLookup: Record<string, any[]>; // OpCode[] type (from gaia-core/assembly)
   addrLookup: Record<string, any>; // AddressingMode lookup by name
   compression: ICompressionProvider;
-  chunkPatches?: ChunkFile[];
+  baseRomFiles?: ChunkFile[];
+  projectFiles?: ChunkFile[]
 }
 
 /**
@@ -56,143 +57,143 @@ export class DbRootUtils {
   /**
    * JSON serialization options
    */
-  public static readonly JSON_OPTIONS = {
-    propertyNamingPolicy: 'camelCase',
-    readCommentHandling: 'skip',
-    writeIndented: true
-  };
+  // public static readonly JSON_OPTIONS = {
+  //   propertyNamingPolicy: 'camelCase',
+  //   readCommentHandling: 'skip',
+  //   writeIndented: true
+  // };
 
   /**
    * Load database from a single file
    */
-  public static async fromFile(dbFilePath: string): Promise<DbRoot> {
-    return await readJsonFile<DbRoot>(dbFilePath);
-  }
+  // public static async fromFile(dbFilePath: string): Promise<DbRoot> {
+  //   return await readJsonFile<DbRoot>(dbFilePath);
+  // }
 
   /**
    * Load database from folder structure
    */
-  public static async fromFolder(folderPath: string, systemPath: string): Promise<DbRoot> {
-    // Load all the JSON files
-    const [
-      mnemonics,
-      overrides,
-      rewrites,
-      blocks,
-      parts,
-      files,
-      config,
-      labels,
-      structs,
-      copdef,
-      opCodes,
-      addressingModes,
-      stringTypes,
-      stringCommands,
-      stringLayers,
-      transforms
-    ] = await Promise.all([
-      readJsonFile<DbMnemonic[]>(`${folderPath}/mnemonics_old.json`),
-      readJsonFile<DbOverride[]>(`${folderPath}/overrides.json`),
-      readJsonFile<DbRewrite[]>(`${folderPath}/rewrites.json`),
-      readJsonFile<DbBlock[]>(`${folderPath}/blocks.json`),
-      readJsonFile<DbPart[]>(`${folderPath}/parts.json`),
-      readJsonFile<DbFile[]>(`${folderPath}/files.json`),
-      readJsonFile<DbConfig[]>(`${folderPath}/config.json`),
-      readJsonFile<DbLabel[]>(`${folderPath}/labels.json`),
-      readJsonFile<DbStruct[]>(`${folderPath}/structs.json`),
-      readJsonFile<CopDef[]>(`${folderPath}/copdef.json`),
-      readJsonFile<OpCode[]>(`${systemPath}/opCodes.json`), // OpCode type (from gaia-core/assembly)
-      readJsonFile<any[]>(`${systemPath}/addressingModes.json`),
-      readJsonFile<DbStringType[]>(`${folderPath}/stringTypes.json`),
-      readJsonFile<DbStringCommand[]>(`${folderPath}/stringCommands.json`),
-      readJsonFile<DbStringLayer[]>(`${folderPath}/stringLayers.json`),
-      readJsonFile<DbTransform[]>(`${folderPath}/transforms.json`)
-    ]);
+  // public static async fromFolder(folderPath: string, systemPath: string): Promise<DbRoot> {
+  //   // Load all the JSON files
+  //   const [
+  //     mnemonics,
+  //     overrides,
+  //     rewrites,
+  //     blocks,
+  //     parts,
+  //     files,
+  //     config,
+  //     labels,
+  //     structs,
+  //     copdef,
+  //     opCodes,
+  //     addressingModes,
+  //     stringTypes,
+  //     stringCommands,
+  //     stringLayers,
+  //     transforms
+  //   ] = await Promise.all([
+  //     readJsonFile<DbMnemonic[]>(`${folderPath}/mnemonics_old.json`),
+  //     readJsonFile<DbOverride[]>(`${folderPath}/overrides.json`),
+  //     readJsonFile<DbRewrite[]>(`${folderPath}/rewrites.json`),
+  //     readJsonFile<DbBlock[]>(`${folderPath}/blocks.json`),
+  //     readJsonFile<DbPart[]>(`${folderPath}/parts.json`),
+  //     readJsonFile<DbFile[]>(`${folderPath}/files.json`),
+  //     readJsonFile<DbConfig[]>(`${folderPath}/config.json`),
+  //     readJsonFile<DbLabel[]>(`${folderPath}/labels.json`),
+  //     readJsonFile<DbStruct[]>(`${folderPath}/structs.json`),
+  //     readJsonFile<CopDef[]>(`${folderPath}/copdef.json`),
+  //     readJsonFile<OpCode[]>(`${systemPath}/opCodes.json`), // OpCode type (from gaia-core/assembly)
+  //     readJsonFile<any[]>(`${systemPath}/addressingModes.json`),
+  //     readJsonFile<DbStringType[]>(`${folderPath}/stringTypes.json`),
+  //     readJsonFile<DbStringCommand[]>(`${folderPath}/stringCommands.json`),
+  //     readJsonFile<DbStringLayer[]>(`${folderPath}/stringLayers.json`),
+  //     readJsonFile<DbTransform[]>(`${folderPath}/transforms.json`)
+  //   ]);
 
-    // Process blocks and parts
-    for (const block of blocks) {
-      block.parts = parts.filter(p => p.block === block.name);
-      block.transforms = transforms.find(t => t.block === block.name)?.transforms;
-      // for (const part of block.parts) {
-      //   (part as any)._block = block;
-      // }
-    }
+  //   // Process blocks and parts
+  //   for (const block of blocks) {
+  //     block.parts = parts.filter(p => p.block === block.name);
+  //     block.transforms = transforms.find(t => t.block === block.name)?.transforms;
+  //     // for (const part of block.parts) {
+  //     //   (part as any)._block = block;
+  //     // }
+  //   }
 
-    const cfg = config[0];
+  //   const cfg = config[0];
 
-    // Process string types
-    for (const strType of stringTypes) {
-      strType.commands = stringCommands
-        .filter(x => x.set === strType.name)
-        .reduce((acc, x) => {
-          acc[x.key] = x;
-          return acc;
-        }, {} as Record<number, any>);
-      strType.layers = stringLayers.filter(x => x.type === strType.name);
-    }
+  //   // Process string types
+  //   for (const strType of stringTypes) {
+  //     strType.commands = stringCommands
+  //       .filter(x => x.set === strType.name)
+  //       .reduce((acc, x) => {
+  //         acc[x.key] = x;
+  //         return acc;
+  //       }, {} as Record<number, any>);
+  //     strType.layers = stringLayers.filter(x => x.type === strType.name);
+  //   }
 
-    const compression = CompressionRegistry.get(cfg.compression || 'QuintetLZ');
+  //   const compression = CompressionRegistry.get(cfg.compression || 'QuintetLZ');
 
-    // Build the database root
-    const root: DbRoot = {
-      mnemonics: mnemonics.reduce((acc, x) => {
-        acc[x.key] = x.value;
-        return acc;
-      }, {} as Record<number, string>),
-      overrides: overrides.reduce((acc, x) => {
-        acc[x.location] = x;
-        return acc;
-      }, {} as Record<number, DbOverride>),
-      rewrites: rewrites.reduce((acc, x) => {
-        acc[x.location] = x.value;
-        return acc;
-      }, {} as Record<number, number>),
-      labels: labels.reduce((acc, x) => {
-        acc[x.location] = x.label;
-        return acc;
-      }, {} as Record<number, string>),
-      structs: structs.reduce((acc, x) => {
-        acc[x.name] = x;
-        return acc;
-      }, {} as Record<string, DbStruct>),
-      blocks,
-      files,
-      copDef: copdef.reduce((acc, x) => {
-        acc[x.code] = x;
-        return acc;
-      }, {} as Record<number, CopDef>),
-      copLookup: copdef.reduce((acc, x) => {
-        acc[x.mnem] = x;
-        return acc;
-      }, {} as Record<string, CopDef>),
-      config: cfg,
-      opCodes: opCodes.reduce((acc, x) => {
-        acc[x.code] = x;
-        return acc;
-      }, {} as Record<number, any>),
-      opLookup: opCodes.reduce((acc, x) => {
-        if (!acc[x.mnem]) acc[x.mnem] = [];
-        acc[x.mnem].push(x);
-        return acc;
-      }, {} as Record<string, any[]>),
-      addrLookup: addressingModes,
-      entryPoints: cfg.entryPoints,
-      //paths: cfg.paths,
-      stringTypes: stringTypes.reduce((acc, x) => {
-        acc[x.name] = x;
-        return acc;
-      }, {} as Record<string, DbStringType>),
-      stringDelimiters: stringTypes.map(x => x.delimiter),
-      stringCharLookup: stringTypes.reduce((acc, x) => {
-        acc[x.delimiter] = x;
-        return acc;
-      }, {} as Record<string, DbStringType>),
-      compression
-    };
+  //   // Build the database root
+  //   const root: DbRoot = {
+  //     mnemonics: mnemonics.reduce((acc, x) => {
+  //       acc[x.key] = x.value;
+  //       return acc;
+  //     }, {} as Record<number, string>),
+  //     overrides: overrides.reduce((acc, x) => {
+  //       acc[x.location] = x;
+  //       return acc;
+  //     }, {} as Record<number, DbOverride>),
+  //     rewrites: rewrites.reduce((acc, x) => {
+  //       acc[x.location] = x.value;
+  //       return acc;
+  //     }, {} as Record<number, number>),
+  //     labels: labels.reduce((acc, x) => {
+  //       acc[x.location] = x.label;
+  //       return acc;
+  //     }, {} as Record<number, string>),
+  //     structs: structs.reduce((acc, x) => {
+  //       acc[x.name] = x;
+  //       return acc;
+  //     }, {} as Record<string, DbStruct>),
+  //     blocks,
+  //     files,
+  //     copDef: copdef.reduce((acc, x) => {
+  //       acc[x.code] = x;
+  //       return acc;
+  //     }, {} as Record<number, CopDef>),
+  //     copLookup: copdef.reduce((acc, x) => {
+  //       acc[x.mnem] = x;
+  //       return acc;
+  //     }, {} as Record<string, CopDef>),
+  //     config: cfg,
+  //     opCodes: opCodes.reduce((acc, x) => {
+  //       acc[x.code] = x;
+  //       return acc;
+  //     }, {} as Record<number, any>),
+  //     opLookup: opCodes.reduce((acc, x) => {
+  //       if (!acc[x.mnem]) acc[x.mnem] = [];
+  //       acc[x.mnem].push(x);
+  //       return acc;
+  //     }, {} as Record<string, any[]>),
+  //     addrLookup: addressingModes,
+  //     entryPoints: cfg.entryPoints,
+  //     //paths: cfg.paths,
+  //     stringTypes: stringTypes.reduce((acc, x) => {
+  //       acc[x.name] = x;
+  //       return acc;
+  //     }, {} as Record<string, DbStringType>),
+  //     stringDelimiters: stringTypes.map(x => x.delimiter),
+  //     stringCharLookup: stringTypes.reduce((acc, x) => {
+  //       acc[x.delimiter] = x;
+  //       return acc;
+  //     }, {} as Record<string, DbStringType>),
+  //     compression
+  //   };
 
-    return root;
-  }
+  //   return root;
+  // }
 
   // /**
   //  * Get path configuration for a resource type
@@ -221,10 +222,10 @@ export class DbRootUtils {
    * console.log(dbRoot.files.length);
    * ```
    */
-  public static async fromSupabaseById(baseRomBranchId: string): Promise<DbRoot> {
-    const payload = await fromSupabaseById(baseRomBranchId);
-    return this.fromSupabasePayload(payload);
-  }
+  // public static async fromSupabaseById(baseRomBranchId: string): Promise<DbRoot> {
+  //   const payload = await fromSupabaseById(baseRomBranchId);
+  //   return this.fromSupabasePayload(payload);
+  // }
 
   /**
    * Load database from Supabase using name-based lookup
@@ -245,8 +246,13 @@ export class DbRootUtils {
    * });
    * ```
    */
-  public static async fromSupabase(options?: FromSupabaseByNameOptions): Promise<DbRoot> {
-    const payload = await fromSupabaseByName(options);
+  // public static async fromSupabase(options?: FromSupabaseByNameOptions): Promise<DbRoot> {
+  //   const payload = await fromSupabaseByName(options);
+  //   return this.fromSupabasePayload(payload);
+  // }
+
+  public static async fromSupabaseProject(options: FromSupabaseByProjectOptions): Promise<DbRoot> {
+    const payload = await fromSupabaseByProject(options);
     return this.fromSupabasePayload(payload);
   }
 
@@ -256,10 +262,10 @@ export class DbRootUtils {
    * @param payload - The ROM payload from Supabase
    * @returns DbRoot containing the processed database structure
    */
-  private static async fromSupabasePayload(payload: BaseRomPayload): Promise<DbRoot> {
+  private static async fromSupabasePayload(payload: ProjectPayload): Promise<DbRoot> {
     
     // Extract data from the Supabase payload
-    const gameRomBranch = payload.baseRomBranch.gameRomBranch;
+    const gameRomBranch = payload.projectBranch.baseRomBranch.gameRomBranch;
     
     const config = gameRomBranch.config;
     const copDef = gameRomBranch.coplib;
@@ -315,13 +321,30 @@ export class DbRootUtils {
       return block;
     }).sort((a: any, b: any) => a.parts[0].location - b.parts[0].location);
     
-    const chunkPatches : ChunkFile[] = payload.files && payload.files.map((file: BaseRomFileData) => {
+    const baseRomFiles : ChunkFile[] = payload.baseRomFiles && payload.baseRomFiles.map((file: BaseRomFileData) => {
       const chunkFile = new ChunkFile(
         file.name, 
         file.data.length, 
         0, 
         file.type as BinType
       );
+      if(chunkFile.type === BinType.Assembly || chunkFile.type === BinType.Patch) {
+        chunkFile.textData = binaryToUtf8String(file.data);
+      } else {
+        chunkFile.rawData = file.data;
+        chunkFile.size = file.data.length;
+      }
+      return chunkFile;
+    });
+    
+    const projectFiles : ChunkFile[] = payload.projectFiles && payload.projectFiles.map((file: ProjectFileData) => {
+      const chunkFile = new ChunkFile(
+        file.name, 
+        file.data.length, 
+        0, 
+        file.type as BinType
+      );
+      chunkFile.group = file.module ?? undefined;
       if(chunkFile.type === BinType.Assembly || chunkFile.type === BinType.Patch) {
         chunkFile.textData = binaryToUtf8String(file.data);
       } else {
@@ -346,23 +369,6 @@ export class DbRootUtils {
     //const copDef = Array.isArray(romTypes.copDef) ? romTypes.copDef : [];
     const entryPoints = Array.isArray(config.entryPoints) ? config.entryPoints : [];
     
-    // // Process parts and connect them to blocks
-    // for (const block of blocks) {
-    //   //block.parts = parts.filter(p => p.block === block.name);
-    //   block.transforms = transforms.find((t: any) => t.block === block.name)?.transforms;
-    //   // for (const part of block.parts) {
-    //   //   (part as any)._block = block;
-    //   // }
-    // }
-    
-    // // Process string types
-    // for (const strTypeName in stringTypes) {
-    //   const strType = stringTypes[strTypeName];
-    //   if (strType) {
-    //     strType.commands = stringCommands[strTypeName] || {};
-    //     strType.layers = stringLayers.filter((x: any) => x.type === strTypeName);
-    //   }
-    // }
 
     const stringTypes = Object.entries(romTypes.strings).reduce((acc: any, x: any) => {
       const strType = x[1];
@@ -413,30 +419,6 @@ export class DbRootUtils {
       return acc;
     }, {});
     
-    // // Build configuration with defaults
-    // const config = {
-    //   sfxLocation: typesJson.sfxLocation || 0,
-    //   sfxCount: typesJson.sfxCount || 0,
-    //   accentMap: typesJson.accentMap || [],
-    //   compression: typesJson.compression || 'QuintetLZ',
-    //   entryPoints: entryPoints.map((ep: any) => ({
-    //     location: ep.location,
-    //     name: ep.name
-    //   })),
-    //   paths: typesJson.paths || {
-    //     [BinType.Bitmap]: { folder: 'graphics', extension: 'bin' },
-    //     [BinType.Palette]: { folder: 'palettes', extension: 'pal' },
-    //     [BinType.Music]: { folder: 'music', extension: 'bgm' },
-    //     [BinType.Tileset]: { folder: 'tilesets', extension: 'set' },
-    //     [BinType.Tilemap]: { folder: 'tilemaps', extension: 'map' },
-    //     [BinType.Spritemap]: { folder: 'spritemaps', extension: 'bin' },
-    //     [BinType.Assembly]: { folder: 'asm', extension: 'asm' },
-    //     [BinType.Sound]: { folder: 'sfx', extension: 'bin' },
-    //     [BinType.Unknown]: { folder: 'misc', extension: 'bin' },
-    //     [BinType.Patch]: { folder: 'patches', extension: 'asm' },
-    //     [BinType.Transform]: { folder: 'transforms', extension: 'json' }
-    //   }
-    // };
     
     // Build the complete DbRoot structure
     const root: DbRoot = {
@@ -466,7 +448,8 @@ export class DbRootUtils {
       files,
       copDef: copDefLookup as Record<number, CopDef>,
       copLookup,
-      chunkPatches,
+      baseRomFiles,
+      projectFiles,
       config,
       opCodes,
       opLookup,
@@ -482,7 +465,8 @@ export class DbRootUtils {
     console.log('✅ Successfully transformed Supabase payload to DbRoot');
     console.log(`📁 Files: ${files.length}, 🧱 Blocks: ${blocks.length}`);
     console.log(`🎯 ROM: ${payload.baseRomBranch.baseRom.name} (${payload.baseRomBranch.name || 'main'})`);
-    console.log(`💾 Binary files: ${payload.files.length} files, ${payload.files.reduce((sum, f) => sum + f.data.length, 0)} bytes total`);
+    console.log(`💾 BaseRom files: ${payload.baseRomFiles.length} files, ${payload.baseRomFiles.reduce((sum, f) => sum + f.data.length, 0)} bytes total`);
+    console.log(`💾 Project files: ${payload.projectFiles.length} files, ${payload.projectFiles.reduce((sum, f) => sum + f.data.length, 0)} bytes total`);
     
     return root;
   }

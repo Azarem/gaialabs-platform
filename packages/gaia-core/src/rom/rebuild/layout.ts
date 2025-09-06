@@ -27,7 +27,8 @@ export class RomLayout {
         const bAsm = b.parts ? 0 : 1;
         if (aAsm !== bAsm) return aAsm - bAsm;
         if (b.size !== a.size) return b.size - a.size;
-        return a.location - b.location;
+        if (a.location !== b.location) return a.location - b.location;
+        return a.name.localeCompare(b.name);
       });
   }
 
