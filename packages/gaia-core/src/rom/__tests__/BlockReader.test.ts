@@ -1,14 +1,12 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { createReadStream } from 'fs';
-import unzipper from 'unzipper';
-import { readFileAsText, ChunkFile, BinType, listDirectory, DirectoryEntry, ChunkFileUtils, crc32_buffer, saveFileAsBinary } from '@gaialabs/shared';
+import { readFileAsText, ChunkFile, BinType, ChunkFileUtils, crc32_buffer, saveFileAsBinary, readFileAsBinary } from '@gaialabs/shared';
 import { DbRootUtils } from '@gaialabs/shared';
-import { BlockReader } from '../blocks';
-import { BlockWriter } from '../writer';
-import { Assembler } from '../../rebuild/assembler';
-import { RomProcessor } from '../../rebuild/processor';
-import { RomLayout } from '../../rebuild/layout';
-import { RomWriter } from '../../rebuild/writer';
+import { BlockReader } from '../extraction/blocks';
+import { BlockWriter } from '../extraction/writer';
+import { Assembler } from '../rebuild/assembler';
+import { RomProcessor } from '../rebuild/processor';
+import { RomLayout } from '../rebuild/layout';
+import { RomWriter } from '../rebuild/writer';
 
 describe('BlockReader', () => {
   let reader: BlockReader;
@@ -20,22 +18,10 @@ describe('BlockReader', () => {
   let blockLookup: Map<string, number> = new Map();
   let romWriter: RomWriter;
   let moduleLookup: Map<string, ChunkFile[]> = new Map();
-  let moduleList = ['jp-viper'];
+  let moduleList = ['jp-viper', 'title-enhanced'];
 
   beforeAll(async () => {
-    const data = await new Promise<Buffer>((resolve, reject) => {
-      createReadStream('../../truth/stripped.zip')
-        .pipe(unzipper.Parse())
-        .on('entry', async (entry: any) => {
-          if (entry.path === 'stripped.smc') {
-            const buffer = await entry.buffer();
-            resolve(buffer);
-          } else {
-            entry.autodrain();
-          }
-        })
-        .on('error', reject);
-    });
+    const data = await readFileAsBinary('C:/Games/SNES/Illusion of Gaia.smc');
 
     crc = crc32_buffer(data);
     // const dbRoot2 = await DbRootUtils.fromFolder(
