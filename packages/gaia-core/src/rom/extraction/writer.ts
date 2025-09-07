@@ -15,7 +15,7 @@ import { BlockReader } from './blocks';
 import { ReferenceManager } from './references';
 import { PostProcessor } from './postprocessor';
 
-const NEWLINE = process.platform === 'win32' ? '\r\n' : '\n';
+const NEWLINE = process && process.platform === 'win32' ? '\r\n' : '\n';
 
 // Type tags for better object identification
 export enum ObjectType {
