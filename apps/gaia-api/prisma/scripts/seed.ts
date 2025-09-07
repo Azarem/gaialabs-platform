@@ -15,7 +15,7 @@ const DATA_DIR = '../../data/65c816';
 const DB_PATH = '../../ext/GaiaLib/db/us';
 const BR_PATH = '../../working';
 const SYS_PATH = '../../ext/GaiaLib/db/snes';
-const RXLT_PATH = 'C:/Work/IOGRXLT/IOGRetranslation';
+const RXLT_PATH = 'C:/Work/IOGRXLT/IOGRetranslation/modules';
 
 // --- Game and Release Master Data ---
 const GAME_TITLE = 'Illusion of Gaia';
@@ -284,6 +284,9 @@ async function createProject(gameId: string, baseRomId: string, baseRomBranchId:
       name: "Illusion of Gaia: Retranslated",
       gameId: gameId,
       baseRomId: baseRomId,
+      meta: {
+        currentVersion: "1.41"
+      },
     },
   });
 
@@ -293,30 +296,111 @@ async function createProject(gameId: string, baseRomId: string, baseRomBranchId:
     data: {
       projectId: project.id,
       baseRomBranchId: baseRomBranchId,
+      name: 'main',
+      version: null,
+      isPublic: true,
       fileCrcs,
-      //Things will work without the modules definition, this gives us a place to put module meta in the future
+      notes: [
+        'Removed URL from boot logo',
+        'Changed credits URL to QR code',
+        'Added: Option for floating (unboxed) text during ending comet scene',
+        'Added: Jackal / Black Panther name changes depending on language setting',
+        'Added: Option for changing church statue to cross (JP content)',
+        'Added: Support for Portuguese letter accents',
+        'Added: Option for plain borders',
+        'Fixed: Laborers in chapel now display properly',
+        'Fixed: New game plus menu option now highlights properly',
+        'Fixed: Equipped icon and HUD should now be hidden during plane scenes',
+        'Fixed: Freedan\'s Special abilities no longer corrupt the equipped icon palette',
+        'Fixed: Queen\'s crown correctly shows on gold ship',
+        'Many community script changes',
+      ],
       modules: [
-        { name: 'blue-journal' },
-        { name: 'crystal-ring-palette' },
-        { name: 'enhanced-epilogue-text' },
-        { name: 'enhanced-prologue-text' },
-        { name: 'freejia-shortcut' },
-        { name: 'freejia-slave-return' },
-        { name: 'full-health-herb' },
-        { name: 'jp-church-cross' },
-        { name: 'jp-edward-mountains' },
-        { name: 'jp-itory-mountains' },
-        { name: 'jp-prologue-palettes' },
-        { name: 'jp-viper' },
-        { name: 'jp-wall-dunes' },
-        { name: 'plain-borders' },
-        { name: 'pyramid-elevator-speed' },
-        { name: 'pyramid-portal-exit' },
-        { name: 'red-fountain' },
-        { name: 'south-cape-return' },
-        { name: 'thankful-flower' },
-        { name: 'title-alternate' },
-        { name: 'title-enhanced' },
+        { name: '🎨 Title Screen', groups: [
+          { name: null, options: [
+            { name: 'NA Original', module: null, description: 'The original North American title screen' },
+            { name: 'Enhanced', module: 'title-enhanced', description: 'Enhanced NA title screen with JP comet background', default: true },
+            { name: 'Hybrid', module: 'title-alternate', description: 'Hybrid JP title screen with NA title text' }
+          ] }
+        ] },
+        { name: '🏯 JP Content', groups: [
+          { name: 'Edward Castle Background', options: [
+            { name: 'NA', module: null },
+            { name: 'JP', module: 'jp-edward-mountains', default: true },
+          ] },
+          { name: 'Itory Background', options: [
+            { name: 'NA', module: null },
+            { name: 'JP', module: 'jp-itory-mountains', default: true },
+          ] },
+          { name: 'Great Wall Background', options: [
+            { name: 'NA', module: null },
+            { name: 'JP', module: 'jp-wall-dunes', default: true },
+          ] },
+          { name: 'Fountain Color', options: [
+            { name: 'NA (Brown)', module: null },
+            { name: 'JP (Red)', module: 'red-fountain', default: true },
+          ] },
+          { name: 'Viper Boss', options: [
+            { name: 'NA', module: null, default: true },
+            { name: 'JP', module: 'jp-viper' },
+          ] },
+          { name: 'Church Cross/Statue', options: [
+            { name: 'NA (Statue)', module: null },
+            { name: 'JP (Cross)', module: 'jp-church-cross', default: true },
+          ] }
+        ] },
+        { name: '⚡ Quality of Life', groups: [
+          { name: 'Prologue / Overworld Text', options: [
+            { name: 'Enhanced', module: 'enhanced-prologue-text', default: true },
+          ] },
+          { name: 'Epilogue Text (Comet scene)', options: [
+            { name: 'Original (Boxed)', module: null },
+            { name: 'No dialog box/borders', module: 'enhanced-epilogue-text', default: true },
+          ] },
+          { name: 'Herb Heals', options: [
+            { name: '+8 HP', module: null },
+            { name: 'Full HP', module: 'full-health-herb', default: true },
+          ] },
+          { name: 'Pyramid Elevator Speed', options: [
+            { name: '1x', module: null },
+            { name: '2x', module: 'pyramid-elevator-speed', default: true },
+          ] },
+          { name: 'Pyramid Portal Exit', options: [
+            { name: 'Original', module: null },
+            { name: 'Altered', module: 'pyramid-portal-exit', description: 'Portals will take you to the lower main area. Lower portal brings you to the top.', default: true },
+          ] },
+          { name: 'Shortcut from Mines to Freejia', options: [
+            { name: 'No', module: null },
+            { name: 'Yes', module: 'freejia-shortcut', description: 'Sam will offer to take you to Freejia, skipping the return trip.', default: true },
+          ] },
+        ] },
+        { name: '📚 Cut Content', groups: [
+          { name: 'Sky Delivery Man', options: [
+            { name: 'Enable', module: null, description: 'The Sky Deliveryman will appear in Watermia, South Cape, and Freejia.', default: true },
+          ] },
+          { name: 'Blue Journal', options: [
+            { name: 'Disable', module: null },
+            { name: 'Enable', module: 'blue-journal', default: true },
+          ] },
+        ] },
+        { name: '✨ Extras', groups: [
+          { name: 'Thankful Flower', options: [
+            { name: 'Disable', module: null },
+            { name: 'Enable', module: 'thankful-flower', default: true },
+          ] },
+          { name: 'South Cape Return', options: [
+            { name: 'Disable', module: null },
+            { name: 'Enable', module: 'south-cape-return', default: true },
+          ] },
+          { name: 'Crystal Ring Palette', options: [
+            { name: 'Original', module: null },
+            { name: 'New', module: 'crystal-ring-palette', default: true },
+          ] },
+          { name: 'Border Graphics', options: [
+            { name: 'Enhanced', module: null, default: true },
+            { name: 'Plain', module: 'plain-borders' },
+          ] },
+        ] }
       ]
     },
   });

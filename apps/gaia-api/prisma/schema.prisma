@@ -152,7 +152,6 @@ model GameRomBranch {
   updatedAt DateTime @updatedAt
 
   baseBranches    BaseRomBranch[]
-  projectBranches ProjectBranch[]
 
   @@unique([gameRomId, name, version])
   @@index([gameRomId])
@@ -253,6 +252,7 @@ model ProjectBranch {
   name     String?
   version  Int?
   isPublic Boolean @default(false)
+  notes    String[]
 
   project   Project @relation(fields: [projectId], references: [id])
   projectId String
@@ -265,10 +265,8 @@ model ProjectBranch {
 
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
-  GameRomBranch   GameRomBranch? @relation(fields: [gameRomBranchId], references: [id])
-  gameRomBranchId String?
 
-  @@unique([projectId, name, version])
+  @@unique([projectId, version])
   @@index([projectId])
   @@index([baseRomBranchId])
 }
