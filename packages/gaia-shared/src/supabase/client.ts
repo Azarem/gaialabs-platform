@@ -94,10 +94,10 @@ let supabaseClient: SupabaseClient<Database> | null = null;
  */
 export function createSupabaseClient(): SupabaseClient<Database> {
   // Validate required environment variables
-  validateEnvironmentVariables(['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY']);
+  validateEnvironmentVariables(['SUPABASE_URL', 'SUPABASE_ANON_KEY']);
   
-  const supabaseUrl = getEnvVar('VITE_SUPABASE_URL');
-  const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY');
+  const supabaseUrl = getEnvVar('SUPABASE_URL');
+  const supabaseAnonKey = getEnvVar('SUPABASE_ANON_KEY');
   
   return createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
