@@ -1,6 +1,6 @@
 {
   "name": "@gaialabs/core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "GaiaLabs TypeScript Core Library - Universal ROM processing engine",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
