@@ -36,10 +36,35 @@ describe('Supabase Utils', () => {
 
     it('should throw error for empty environment variable', () => {
       process.env.EMPTY_VAR = '';
-      
+
       expect(() => getEnvVar('EMPTY_VAR')).toThrow(
         'Required environment variable EMPTY_VAR is not set'
       );
+    });
+
+    it('should get environment variable with VITE_ prefix from process.env', () => {
+      process.env.VITE_TEST_VAR = 'vite-test-value';
+
+      const result = getEnvVar('TEST_VAR');
+
+      expect(result).toBe('vite-test-value');
+    });
+
+    it('should prefer exact key over VITE_ prefixed key', () => {
+      process.env.TEST_VAR = 'exact-value';
+      process.env.VITE_TEST_VAR = 'vite-value';
+
+      const result = getEnvVar('TEST_VAR');
+
+      expect(result).toBe('exact-value');
+    });
+
+    it('should not add VITE_ prefix if key already starts with VITE_', () => {
+      process.env.VITE_TEST_VAR = 'vite-value';
+
+      const result = getEnvVar('VITE_TEST_VAR');
+
+      expect(result).toBe('vite-value');
     });
   });
 

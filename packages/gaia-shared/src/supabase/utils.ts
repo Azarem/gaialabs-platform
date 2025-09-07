@@ -9,19 +9,38 @@
  * @returns The environment variable value
  */
 export function getEnvVar(key: string): string {
+  let value = '';
+
   // Try different environment variable sources in order of preference
-  const value = 
-    // Browser with Vite (import.meta.env)
-    ((typeof globalThis !== 'undefined' && typeof (globalThis as any).window !== 'undefined') && 
-     (import.meta as any)?.env?.[key]) ||
-    // Node.js (process.env)
-    (typeof process !== 'undefined' && process.env?.[key]) ||
-    '';
-  
+  try {
+    // Browser with Vite (import.meta.env) - check if we're in a browser environment
+    if (typeof globalThis !== 'undefined' &&
+        typeof (globalThis as any).window !== 'undefined' &&
+        typeof import.meta !== 'undefined' &&
+        (import.meta as any).env) {
+      const env = (import.meta as any).env;
+      // Try the exact key first
+      value = env[key] ||
+              // Try with VITE_ prefix if not already prefixed
+              (key.startsWith('VITE_') ? '' : env[`VITE_${key}`]) ||
+              '';
+    }
+  } catch (error) {
+    // import.meta might not be available in all contexts, continue to Node.js fallback
+  }
+
+  // Node.js (process.env) - fallback or primary for server-side
+  if (!value && typeof process !== 'undefined' && process.env) {
+    value = process.env[key] ||
+            // Try with VITE_ prefix if not already prefixed (for Node.js build tools)
+            (key.startsWith('VITE_') ? '' : process.env[`VITE_${key}`]) ||
+            '';
+  }
+
   if (!value) {
     throw new Error(`Required environment variable ${key} is not set`);
   }
-  
+
   return value;
 }
 
@@ -148,7 +167,8 @@ export function validateEnvironmentVariables(requiredVars: string[]): void {
   if (missingVars.length > 0) {
     throw new Error(
       `Missing required environment variables: ${missingVars.join(', ')}\n` +
-      'Make sure to set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment'
+      'For web/Vite environments, use VITE_ prefixed variables (e.g., VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)\n' +
+      'For Node.js environments, use the variable names directly (e.g., SUPABASE_URL, SUPABASE_ANON_KEY)'
     );
   }
 }
