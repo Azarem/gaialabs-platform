@@ -15,7 +15,21 @@ import { BlockReader } from './blocks';
 import { ReferenceManager } from './references';
 import { PostProcessor } from './postprocessor';
 
-const NEWLINE = process && process.platform === 'win32' ? '\r\n' : '\n';
+// Platform detection that works in both Node.js and web environments
+const isWindows = (() => {
+  // Check if we're in Node.js environment
+  if (typeof process !== 'undefined' && process.platform) {
+    return process.platform === 'win32';
+  }
+  // In web environment, check user agent as fallback
+  if (typeof navigator !== 'undefined' && navigator.userAgent) {
+    return navigator.userAgent.includes('Windows');
+  }
+  // Default to Unix-style line endings if we can't determine
+  return false;
+})();
+
+const NEWLINE = isWindows ? '\r\n' : '\n';
 
 // Type tags for better object identification
 export enum ObjectType {
@@ -145,7 +159,7 @@ export class BlockWriter {
       }
     }
 
-    if(process.platform !== 'win32'){
+    if(!isWindows){
       content = content.replace(/\r/g, '');
     }
 

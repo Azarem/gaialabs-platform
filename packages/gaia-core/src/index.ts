@@ -26,7 +26,7 @@ export * from './sprites';
  * - Compression: QuintetLZ compression algorithm
  * - Sprites: Sprite animation system
  */
-export const GAIA_CORE_VERSION = '0.1.3';
+export const GAIA_CORE_VERSION = '0.1.4';
 
 // Platform detection
 export const isPlatformBrowser = typeof window !== 'undefined';
