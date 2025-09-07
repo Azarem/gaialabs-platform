@@ -15,7 +15,8 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "test": "vitest run",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "publish": "tsup && npm publish --access public"
   },
   "dependencies": {
     "@prisma/client": "^6.11.1",
