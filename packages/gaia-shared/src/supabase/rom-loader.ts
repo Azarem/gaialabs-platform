@@ -6,7 +6,7 @@
  */
 
 import { getSupabaseClient } from './client';
-import { decodeDataString } from './utils';
+import { decodeDataString, getEnvVar } from './utils';
 import {
   BaseRomPayload,
   BaseRomBranchData,
@@ -17,7 +17,6 @@ import {
   ProjectBranchData,
   ProjectFileData,
   ProjectFileRaw,
-  FromSupabaseByProjectOptions,
   SupabaseFromError,
   SupabaseErrorCode,
   QueryStats,
@@ -174,10 +173,7 @@ export async function fromSupabaseById(baseRomBranchId: string): Promise<BaseRom
  * ```
  */
 export async function fromSupabaseByName(
-  options: FromSupabaseByNameOptions = {
-    gameName: 'Illusion of Gaia',
-    baseRomName: 'GaiaLabs BaseROM',
-  }
+  options: FromSupabaseByNameOptions
 ): Promise<BaseRomPayload> {
   const {
     gameName,
@@ -520,18 +516,16 @@ async function loadProjectFiles(
  * });
  * ```
  */
-export async function fromSupabaseByProject(
-  options: FromSupabaseByProjectOptions
-): Promise<ProjectPayload> {
-  const {
-    branchName,
-    branchVersion,
-  } = options;
-  
+export async function fromSupabaseByProject(projectName?: string, branchId?: string): Promise<ProjectPayload> {
   const startTime = performance.now();
   let branchQueryTime = 0;
   let fileQueryTime = 0;
   
+  //Use default project name if not provided
+  if(!projectName && !branchId){
+    projectName = getEnvVar('PROJECT_NAME');
+  }
+
   try {
     const client = getSupabaseClient();
     
@@ -544,7 +538,8 @@ export async function fromSupabaseByProject(
         id,
         name,
         version,
-        isPublic,
+        isActive,
+        notes,
         projectId,
         baseRomBranchId,
         fileCrcs,
@@ -558,46 +553,7 @@ export async function fromSupabaseByProject(
           gameId,
           baseRomId,
           createdAt,
-          updatedAt
-        ),
-        baseRomBranch:BaseRomBranch!inner(
-          id,
-          name,
-          version,
-          isPublic,
-          baseRomId,
-          gameRomBranchId,
-          fileCrcs,
-          createdAt,
           updatedAt,
-          gameRomBranch:GameRomBranch!inner(
-            id,
-            name,
-            version,
-            gameRomId,
-            platformBranchId,
-            config,
-            coplib,
-            files,
-            blocks,
-            fixups,
-            types,
-            isPublic,
-            createdAt,
-            updatedAt,
-            platformBranch:PlatformBranch!inner(
-              id,
-              name,
-              version,
-              platformId,
-              addressingModes,
-              instructionSet,
-              vectors,
-              isPublic,
-              createdAt,
-              updatedAt
-            )
-          ),
           baseRom:BaseRom!inner(
             id,
             name,
@@ -610,31 +566,65 @@ export async function fromSupabaseByProject(
               name,
               createdAt,
               updatedAt
+            ),
+            gameRom:GameRom!inner(
+              id,
+              crc,
+              createdAt,
+              updatedAt
+            )
+          )
+        ),
+        baseRomBranch:BaseRomBranch!inner(
+          id,
+          name,
+          version,
+          isActive,
+          notes,
+          baseRomId,
+          gameRomBranchId,
+          fileCrcs,
+          createdAt,
+          updatedAt,
+          gameRomBranch:GameRomBranch!inner(
+            id,
+            name,
+            version,
+            isActive,
+            notes,
+            gameRomId,
+            platformBranchId,
+            config,
+            coplib,
+            files,
+            blocks,
+            fixups,
+            types,
+            createdAt,
+            updatedAt,
+            platformBranch:PlatformBranch!inner(
+              id,
+              name,
+              version,
+              isActive,
+              platformId,
+              addressingModes,
+              instructionSet,
+              vectors,
+              createdAt,
+              updatedAt
             )
           )
         )
       `);
     
+
     // Filter by Project name
-    query = query.eq('project.name', options.projectName);
-    
-    // Filter by branch name if specified
-    if (branchName !== undefined) {
-      if (branchName === null) {
-        query = query.is('name', null);
-      } else {
-        query = query.eq('name', branchName);
-      }
-    }
-    
-    // Filter by branch version if specified
-    if (branchVersion !== undefined) {
-      if (branchVersion === null) {
-        query = query.is('version', null);
-      } else {
-        query = query.eq('version', branchVersion);
-      }
-    }
+    if(projectName) query = query.eq('project.name', projectName);
+
+    // Make sure we use the selected or current active branch
+    if(branchId) query = query.eq('id', branchId);
+    else query = query.eq('isActive', true);
     
     // Execute query - get single result
     const { data: branchData, error: branchError } = await query.single();
@@ -643,9 +633,9 @@ export async function fromSupabaseByProject(
     
     if (branchError || !branchData) {
       throw new SupabaseFromError(
-        `ProjectBranch not found for criteria: projectName="${options.projectName}", branchName=${branchName}, branchVersion=${branchVersion}`,
+        `ProjectBranch not found for criteria: projectName="${projectName}"`,
         SupabaseErrorCode.BRANCH_NOT_FOUND,
-        { options, error: branchError }
+        { projectName, error: branchError }
       );
     }
 
@@ -688,7 +678,120 @@ export async function fromSupabaseByProject(
     throw new SupabaseFromError(
       `Failed to load Project data: ${error instanceof Error ? error.message : 'Unknown error'}`,
       SupabaseErrorCode.NETWORK_ERROR,
-      { options, error }
+      { projectName, error }
+    );
+  }
+}
+
+export async function summaryFromSupabaseByProject(projectName?: string): Promise<ProjectBranchData> {
+  const startTime = performance.now();
+  let branchQueryTime = 0;
+  let fileQueryTime = 0;
+  
+  //Use default project name if not provided
+  if(!projectName){
+    projectName = getEnvVar('PROJECT_NAME');
+  }
+
+  try {
+    const client = getSupabaseClient();
+
+    // Step 1: Build query with filters
+    const branchStart = performance.now();
+    
+    let query = client
+      .from('ProjectBranch')
+      .select(`
+        id,
+        name,
+        version,
+        isActive,
+        notes,
+        projectId,
+        baseRomBranchId,
+        modules,
+        createdAt,
+        updatedAt,
+        project:Project!inner(
+          id,
+          name,
+          meta,
+          gameId,
+          baseRomId,
+          createdAt,
+          updatedAt,
+          baseRom:BaseRom!inner(
+            id,
+            name,
+            gameId,
+            gameRomId,
+            createdAt,
+            updatedAt,
+            game:Game!inner(
+              id,
+              name,
+              createdAt,
+              updatedAt
+            ),
+            gameRom:GameRom!inner(
+              id,
+              crc,
+              createdAt,
+              updatedAt
+            )
+          )
+        )
+      `);
+    
+    // Filter by Project name
+    query = query.eq('project.name', projectName);
+    
+    // Make sure we use the current active branch
+    query = query.eq('isActive', true);
+    
+    // Execute query - get single result
+    const { data: branchData, error: branchError } = await query.single();
+    
+    branchQueryTime = performance.now() - branchStart;
+    
+    if (branchError || !branchData) {
+      throw new SupabaseFromError(
+        `ProjectBranch not found for criteria: projectName="${projectName}"`,
+        SupabaseErrorCode.BRANCH_NOT_FOUND,
+        { projectName, error: branchError }
+      );
+    }
+
+    const projectBranch = branchData as unknown as ProjectBranchData;
+   
+
+    fileQueryTime = performance.now() - branchStart - branchQueryTime;
+    
+    const payload = projectBranch;
+    
+    // Log performance statistics
+    const totalTime = performance.now() - startTime;
+    const stats: QueryStats = {
+      branchQueryTime,
+      fileQueryTime,
+      totalTime,
+      fileCount: 0,
+      totalDataSize: 0,
+    };
+    
+    console.log('Project ROM load stats:', stats);
+    
+    return payload;
+    
+  } catch (error) {
+    if (error instanceof SupabaseFromError) {
+      throw error;
+    }
+    
+    throw new SupabaseFromError(
+      `Failed to load Project data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      SupabaseErrorCode.NETWORK_ERROR,
+      { projectName, error }
     );
   }
 }

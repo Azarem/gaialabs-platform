@@ -50,7 +50,24 @@ export interface BaseRomData {
   gameRomId: string;
   createdAt: string;
   updatedAt: string;
+  game: GameData;
+  gameRom: GameRomData;
 }
+
+export interface GameData {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GameRomData {
+  id: string;
+  crc: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 
 /**
  * Base ROM branch with complete relationship chain
@@ -64,7 +81,6 @@ export interface BaseRomBranchData {
   fileCrcs: number[];
   isPublic: boolean;
   gameRomBranch: GameRomBranchData;
-  baseRom: BaseRomData;
   createdAt: string;
   updatedAt: string;
 }
@@ -189,6 +205,7 @@ export interface ProjectData {
   baseRomId: string;
   createdAt: string;
   updatedAt: string;
+  baseRom: BaseRomData;
 }
 
 /**

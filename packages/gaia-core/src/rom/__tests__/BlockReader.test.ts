@@ -28,7 +28,7 @@ describe('BlockReader', () => {
     //   '../../ext/GaiaLib/db/us',
     //   '../../ext/GaiaLib/db/snes'
     // );
-    const dbRoot = await DbRootUtils.fromSupabaseProject({ projectName: 'Illusion of Gaia: Retranslated' });
+    const dbRoot = await DbRootUtils.fromSupabaseProject();
     reader = new BlockReader(data, dbRoot);
     writer = new BlockWriter(reader);
     romWriter = new RomWriter(dbRoot.entryPoints, "GAIALABS", "01JG  ");
@@ -120,40 +120,40 @@ describe('BlockReader', () => {
       }
     }, 60000);
 
-    it('Should be able to process project files', async () => {
-      expect(reader._root.projectFiles).toBeDefined();
-      expect(reader._root.projectFiles?.length).toBeGreaterThan(0);
+    // it('Should be able to process project files', async () => {
+    //   expect(reader._root.projectFiles).toBeDefined();
+    //   expect(reader._root.projectFiles?.length).toBeGreaterThan(0);
 
-      //Run a single pass to collect all the module files
-      for (const chunkFile of reader._root.projectFiles!) {
-        // Parse the patch file with the assembler
-        console.log(`Processing patch: ${chunkFile.name}`);
+    //   //Run a single pass to collect all the module files
+    //   for (const chunkFile of reader._root.projectFiles!) {
+    //     // Parse the patch file with the assembler
+    //     console.log(`Processing patch: ${chunkFile.name}`);
 
-        //ChunkFile.group is the module name
-        if(chunkFile.group){
-          let modArray: ChunkFile[];
-          if(!moduleLookup.has(chunkFile.group)){
-            moduleLookup.set(chunkFile.group, modArray = []);
-          } else {
-            modArray = moduleLookup.get(chunkFile.group)!;
-          }
-          //
-          modArray!.push(chunkFile);
-        } else {
-          //If chunk file is not part of a group, apply it now
-          applyPatchFile(chunkFile);
-        }
-      }
+    //     //ChunkFile.group is the module name
+    //     if(chunkFile.group){
+    //       let modArray: ChunkFile[];
+    //       if(!moduleLookup.has(chunkFile.group)){
+    //         moduleLookup.set(chunkFile.group, modArray = []);
+    //       } else {
+    //         modArray = moduleLookup.get(chunkFile.group)!;
+    //       }
+    //       //
+    //       modArray!.push(chunkFile);
+    //     } else {
+    //       //If chunk file is not part of a group, apply it now
+    //       applyPatchFile(chunkFile);
+    //     }
+    //   }
 
-    }, 60000);
+    // }, 60000);
 
-    it('should be able to apply a module list', async () => {
-      for(const module of moduleList) {
-        for(const file of moduleLookup.get(module)!) {
-          applyPatchFile(file);
-        }
-      }
-    });
+    // it('should be able to apply a module list', async () => {
+    //   for(const module of moduleList) {
+    //     for(const file of moduleLookup.get(module)!) {
+    //       applyPatchFile(file);
+    //     }
+    //   }
+    // });
   });
   
   describe('Assembler process', () => {

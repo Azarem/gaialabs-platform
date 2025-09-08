@@ -114,6 +114,9 @@ async function main() {
   const platformBranch = await prisma.platformBranch.create({
     data: {
       platformId: platform.id,
+      name: '1.0',
+      version: 1,
+      isActive: true,
       addressingModes: await createAddressingModes(),
       instructionSet: await createInstructionSet(),
       vectors: await createSnesVectors(),
@@ -243,9 +246,11 @@ async function createBaseRom(gameId: string, romId: string, romBranchId: string)
   const baseRomBranch = await prisma.baseRomBranch.create({
     data: {
       baseRomId: baseRom.id,
-      fileCrcs: [...asmCrcs, ...graphicsCrcs, ...paletteCrcs, ...spritemapCrcs, ...patchCrcs],
-      //platformBranchId: platformBranch.id,
       gameRomBranchId: romBranchId,
+      name: '2.0',
+      version: 1,
+      isActive: true,
+      fileCrcs: [...asmCrcs, ...graphicsCrcs, ...paletteCrcs, ...spritemapCrcs, ...patchCrcs],
     },
   });
 
@@ -296,9 +301,9 @@ async function createProject(gameId: string, baseRomId: string, baseRomBranchId:
     data: {
       projectId: project.id,
       baseRomBranchId: baseRomBranchId,
-      name: 'main',
-      version: null,
-      isPublic: true,
+      name: '1.41',
+      version: 1,
+      isActive: true,
       fileCrcs,
       notes: [
         'Removed URL from boot logo',

@@ -31,8 +31,8 @@ model PlatformBranch {
   id       String  @id @default(cuid())
   name     String?
   version  Int?
-  isPublic Boolean @default(false)
-  meta     Json?
+  isActive Boolean?
+  notes    String[]
 
   platform   Platform @relation(fields: [platformId], references: [id])
   platformId String
@@ -47,7 +47,12 @@ model PlatformBranch {
   gameBranches GameRomBranch[]
   //baseBranches BaseRomBranch[]
 
-  @@unique([platformId, name, version])
+  @@unique([platformId, name])
+  @@unique([platformId, version])
+  @@unique([platformId, isActive])
+  @@index([platformId, name])
+  @@index([platformId, version])
+  @@index([platformId, isActive])
   @@index([platformId])
 }
 
@@ -133,7 +138,8 @@ model GameRomBranch {
   id       String  @id @default(cuid())
   name     String?
   version  Int?
-  isPublic Boolean @default(false)
+  isActive Boolean?
+  notes    String[]
 
   gameRom   GameRom @relation(fields: [gameRomId], references: [id])
   gameRomId String
@@ -153,8 +159,14 @@ model GameRomBranch {
 
   baseBranches    BaseRomBranch[]
 
-  @@unique([gameRomId, name, version])
+  @@unique([gameRomId, name])
+  @@unique([gameRomId, version])
+  @@unique([gameRomId, isActive])
+  @@index([gameRomId, name])
+  @@index([gameRomId, version])
+  @@index([gameRomId, isActive])
   @@index([gameRomId])
+  @@index([platformBranchId])
 }
 
 model BaseRom {
@@ -175,6 +187,7 @@ model BaseRom {
   projects Project[]
 
   @@unique([gameId, name])
+  @@index([gameId, name])
   @@index([gameId])
   @@index([gameRomId])
 }
@@ -183,7 +196,8 @@ model BaseRomBranch {
   id       String  @id @default(cuid())
   name     String?
   version  Int?
-  isPublic Boolean @default(false)
+  isActive Boolean?
+  notes    String[]
 
   baseRom   BaseRom @relation(fields: [baseRomId], references: [id])
   baseRomId String
@@ -198,9 +212,14 @@ model BaseRomBranch {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([baseRomId, name, version])
-  @@index([gameRomBranchId])
+  @@unique([baseRomId, name])
+  @@unique([baseRomId, version])
+  @@unique([baseRomId, isActive])
+  @@index([baseRomId, name])
+  @@index([baseRomId, version])
+  @@index([baseRomId, isActive])
   @@index([baseRomId])
+  @@index([gameRomBranchId])
 }
 
 model BaseRomFile {
@@ -236,11 +255,11 @@ model Project {
   baseRom   BaseRom @relation(fields: [baseRomId], references: [id])
   baseRomId String
 
-  files ProjectFile[]
-
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
-  ProjectBranch ProjectBranch[]
+
+  files    ProjectFile[]
+  branches ProjectBranch[]
 
   @@index([name])
   @@index([gameId])
@@ -251,7 +270,7 @@ model ProjectBranch {
   id       String  @id @default(cuid())
   name     String?
   version  Int?
-  isPublic Boolean @default(false)
+  isActive Boolean?
   notes    String[]
 
   project   Project @relation(fields: [projectId], references: [id])
@@ -266,7 +285,12 @@ model ProjectBranch {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
+  @@unique([projectId, name])
   @@unique([projectId, version])
+  @@unique([projectId, isActive])
+  @@index([projectId, name])
+  @@index([projectId, version])
+  @@index([projectId, isActive])
   @@index([projectId])
   @@index([baseRomBranchId])
 }

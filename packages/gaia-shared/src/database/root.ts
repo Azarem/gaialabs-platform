@@ -10,7 +10,7 @@ import type { DbOverride } from './overrides';
 import type { DbStruct } from './structs';
 import type { DbStringType } from './strings';
 import type { CopDef } from './cop';
-import type { BaseRomFileData, FromSupabaseByProjectOptions, ProjectFileData, ProjectPayload } from '../supabase/types';
+import type { BaseRomFileData, ProjectFileData, ProjectPayload } from '../supabase/types';
 import { OpCode } from './opcode';
 import { fromSupabaseByProject } from '../supabase/rom-loader';
 import { RomProcessingConstants } from '../types/constants';
@@ -246,8 +246,8 @@ export class DbRootUtils {
   //   return this.fromSupabasePayload(payload);
   // }
 
-  public static async fromSupabaseProject(options: FromSupabaseByProjectOptions): Promise<DbRoot> {
-    const payload = await fromSupabaseByProject(options);
+  public static async fromSupabaseProject(projectName?: string, branchId?: string): Promise<DbRoot> {
+    const payload = await fromSupabaseByProject(projectName, branchId);
     return this.fromSupabasePayload(payload);
   }
 
@@ -459,7 +459,7 @@ export class DbRootUtils {
 
     console.log('✅ Successfully transformed Supabase payload to DbRoot');
     console.log(`📁 Files: ${files.length}, 🧱 Blocks: ${blocks.length}`);
-    console.log(`🎯 ROM: ${payload.baseRomBranch.baseRom.name} (${payload.baseRomBranch.name || 'main'})`);
+    console.log(`🎯 ROM: ${payload.projectBranch.project.baseRom.name} (${payload.baseRomBranch.name || 'main'})`);
     console.log(`💾 BaseRom files: ${payload.baseRomFiles.length} files, ${payload.baseRomFiles.reduce((sum, f) => sum + f.data.length, 0)} bytes total`);
     console.log(`💾 Project files: ${payload.projectFiles.length} files, ${payload.projectFiles.reduce((sum, f) => sum + f.data.length, 0)} bytes total`);
     
