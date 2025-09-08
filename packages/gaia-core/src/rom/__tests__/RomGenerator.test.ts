@@ -4,7 +4,24 @@ import { RomGenerator } from '../generator';
 
 describe('RomGenerator', async () => {
   const data = await readFileAsBinary('C:/Games/SNES/Illusion of Gaia.smc');
-  const modules = ['title-enhanced'];
+  const modules = [
+    "title-enhanced",
+    "jp-edward-mountains",
+    "jp-itory-mountains",
+    "jp-wall-dunes",
+    "red-fountain",
+    "jp-church-cross",
+    "enhanced-prologue-text",
+    "enhanced-epilogue-text",
+    "full-health-herb",
+    "pyramid-elevator-speed",
+    "pyramid-portal-exit",
+    "freejia-shortcut",
+    "blue-journal",
+    "thankful-flower",
+    "south-cape-return",
+    "crystal-ring-palette"
+];
   let romGenerator: RomGenerator;
   
   describe('Constructor', () => {

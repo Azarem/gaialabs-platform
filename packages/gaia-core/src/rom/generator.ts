@@ -68,7 +68,7 @@ export class RomGenerator {
     RomProcessor.applyPatches(asmFiles, patchFiles);
 
     //Calculate sizes
-    for (const asm of asmFiles) ChunkFileUtils.calculateSize(asm);
+    for (const asm of chunkFiles) ChunkFileUtils.calculateSize(asm);
 
     //Assign locations
     const layout = new RomLayout(chunkFiles);
