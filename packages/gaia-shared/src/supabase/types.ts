@@ -3,6 +3,14 @@
  * These types represent the structured data returned from ROM database queries
  */
 
+export interface PlatformData {
+  id: string;
+  name: string;
+  meta: any | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /**
  * Platform branch information containing instruction set and addressing modes
  */
@@ -14,9 +22,12 @@ export interface PlatformBranchData {
   addressingModes: any | null; // JSON field
   instructionSet: any | null; // JSON field
   vectors: any | null; // JSON field
-  isPublic: boolean;
+  // Optional metadata commonly present in branch tables
+  isActive?: boolean | null;
+  notes?: string[] | null;
   createdAt: string;
   updatedAt: string;
+  platform: PlatformData;
 }
 
 /**
@@ -34,7 +45,10 @@ export interface GameRomBranchData {
   blocks: any | null; // JSON field
   fixups: any | null; // JSON field
   types: any | null; // JSON field
-  isPublic: boolean;
+  // Optional metadata commonly present in branch tables
+  isActive?: boolean | null;
+  notes?: string[] | null;
+  gameRom: GameRomData;
   platformBranch: PlatformBranchData;
   createdAt: string;
   updatedAt: string;
@@ -50,8 +64,8 @@ export interface BaseRomData {
   gameRomId: string;
   createdAt: string;
   updatedAt: string;
-  game: GameData;
-  gameRom: GameRomData;
+  //game: GameData;
+  //gameRom: GameRomData;
 }
 
 export interface GameData {
@@ -61,11 +75,25 @@ export interface GameData {
   updatedAt: string;
 }
 
+export interface RegionData {
+  id: string;
+  name: string;
+  meta: any | null;
+  platformId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface GameRomData {
   id: string;
   crc: number;
+  meta: any | null;
+  gameId: string;
+  regionId: string;
   createdAt: string;
   updatedAt: string;
+  game: GameData;
+  region: RegionData;
 }
 
 
@@ -79,8 +107,11 @@ export interface BaseRomBranchData {
   baseRomId: string;
   gameRomBranchId: string;
   fileCrcs: number[];
-  isPublic: boolean;
+  // Optional metadata commonly present in branch tables
+  isActive?: boolean | null;
+  notes?: string[] | null;
   gameRomBranch: GameRomBranchData;
+  baseRom: BaseRomData;
   createdAt: string;
   updatedAt: string;
 }
@@ -205,7 +236,7 @@ export interface ProjectData {
   baseRomId: string;
   createdAt: string;
   updatedAt: string;
-  baseRom: BaseRomData;
+  //baseRom: BaseRomData | null;
 }
 
 /**
@@ -219,7 +250,9 @@ export interface ProjectBranchData {
   baseRomBranchId: string;
   fileCrcs: number[];
   modules: any[]; // JSON array
-  isPublic: boolean;
+  // Optional metadata commonly present in branch tables
+  isActive?: boolean | null;
+  notes?: string[] | null;
   project: ProjectData;
   baseRomBranch: BaseRomBranchData;
   createdAt: string;

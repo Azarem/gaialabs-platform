@@ -19,7 +19,7 @@ export class RomGenerator {
 
   public async initialize(){
     var projectData = await summaryFromSupabaseByProject(this.projectName);
-    this.crc = projectData.project.baseRom.gameRom.crc;
+    this.crc = projectData.baseRomBranch.gameRomBranch.gameRom.crc;
     this.branchId = projectData.id;
   }
 

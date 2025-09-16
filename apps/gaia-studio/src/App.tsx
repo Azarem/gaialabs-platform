@@ -4,6 +4,10 @@ import './App.css'
 // Import the new TypeScript core library
 import { GAIA_CORE_VERSION, isPlatformBrowser } from 'gaia-core'
 
+// Import the IDE layout
+import { IDELayout } from './components/IDE/IDELayout'
+import './components/IDE/IDELayout.css'
+
 function App() {
   const [coreLoaded, setCoreLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,49 +32,35 @@ function App() {
     initCore()
   }, [])
 
-  return (
-    <div className="App">
-      <header className="App-header">
-        <h1>GaiaLabs Studio</h1>
-        <p>Universal ROM Editor Platform</p>
-        
-        <div className="status">
-          {coreLoaded ? (
-            <div className="status-success">
-              ✓ TypeScript Core Ready (v{GAIA_CORE_VERSION})
-            </div>
-          ) : error ? (
-            <div className="status-error">
-              ✗ {error}
-            </div>
-          ) : (
-            <div className="status-loading">
-              ⏳ Loading TypeScript Core...
-            </div>
-          )}
+  // Show loading or error state while core is initializing
+  if (!coreLoaded && !error) {
+    return (
+      <div className="app-loading">
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <h2>GaiaLabs Studio</h2>
+          <p>⏳ Loading TypeScript Core v{GAIA_CORE_VERSION}...</p>
         </div>
+      </div>
+    )
+  }
 
-        <div className="quick-start">
-          <h2>Quick Start</h2>
-          <p>Welcome to GaiaLabs Studio - the modern web-based ROM editor!</p>
-          <ul>
-            <li>🎮 SNES ROM Support (Starting with Illusion of Gaia)</li>
-            <li>🎨 Visual Editors (Tilemap, Sprite, Palette)</li>
-            <li>🤝 Collaborative Editing</li>
-            <li>⚡ TypeScript Performance with Web Workers</li>
-            <li>⚛️ React 19 UI Framework</li>
-          </ul>
+  if (error) {
+    return (
+      <div className="app-error">
+        <div className="error-content">
+          <h2>⚠️ Initialization Error</h2>
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()}>
+            Retry
+          </button>
         </div>
+      </div>
+    )
+  }
 
-        <div className="development-info">
-          <h3>Development Status</h3>
-          <p>This is Phase 1 of the GaiaLabs MVP development.</p>
-          <p>Currently implementing: Foundation & Core TypeScript functionality</p>
-          <p>Architecture: TypeScript-focused with React 19 compatibility</p>
-        </div>
-      </header>
-    </div>
-  )
+  // Core is loaded, show the IDE
+  return <IDELayout />
 }
 
 export default App 

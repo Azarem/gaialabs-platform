@@ -12,7 +12,7 @@ import type { DbStringType } from './strings';
 import type { CopDef } from './cop';
 import type { BaseRomFileData, ProjectFileData, ProjectPayload } from '../supabase/types';
 import { OpCode } from './opcode';
-import { fromSupabaseByProject } from '../supabase/rom-loader';
+import { fromSupabaseByProject, fromSupabaseByGameRom } from '../supabase/rom-loader';
 import { RomProcessingConstants } from '../types/constants';
 import { ChunkFile } from '../types/files';
 
@@ -252,6 +252,16 @@ export class DbRootUtils {
   }
 
   /**
+   * Load database from GameRomBranch data (for ROM-only processing)
+   * @param gameRomBranchData - Direct GameRomBranch data from Supabase API
+   * @returns Promise<DbRoot> containing the complete database root
+   */
+  public static async fromSupabaseGameRom(gameRomName?: string, branchId?: string): Promise<DbRoot> {
+    const payload = await fromSupabaseByGameRom(gameRomName, branchId);
+    return this.fromSupabasePayload(payload);
+  }
+
+  /**
    * Convert Supabase payload to DbRoot structure
    * @private
    * @param payload - The ROM payload from Supabase
@@ -260,7 +270,7 @@ export class DbRootUtils {
   private static async fromSupabasePayload(payload: ProjectPayload): Promise<DbRoot> {
     
     // Extract data from the Supabase payload
-    const gameRomBranch = payload.projectBranch.baseRomBranch.gameRomBranch;
+    const gameRomBranch = payload.baseRomBranch.gameRomBranch;
     
     const config = gameRomBranch.config;
     const copDef = gameRomBranch.coplib;
@@ -459,7 +469,7 @@ export class DbRootUtils {
 
     console.log('✅ Successfully transformed Supabase payload to DbRoot');
     console.log(`📁 Files: ${files.length}, 🧱 Blocks: ${blocks.length}`);
-    console.log(`🎯 ROM: ${payload.projectBranch.project.baseRom.name} (${payload.baseRomBranch.name || 'main'})`);
+    console.log(`🎯 ROM: ${payload.baseRomBranch.baseRom.name} (${payload.baseRomBranch.name || 'main'})`);
     console.log(`💾 BaseRom files: ${payload.baseRomFiles.length} files, ${payload.baseRomFiles.reduce((sum, f) => sum + f.data.length, 0)} bytes total`);
     console.log(`💾 Project files: ${payload.projectFiles.length} files, ${payload.projectFiles.reduce((sum, f) => sum + f.data.length, 0)} bytes total`);
     
@@ -484,4 +494,125 @@ export class DbRootUtils {
     
     return opCodes;
   }
+
+  // /**
+  //  * Convert GameRomBranch data directly to DbRoot structure
+  //  * @private
+  //  * @param gameRomBranchData - Direct GameRomBranch data from Supabase API
+  //  * @returns DbRoot containing the processed database structure
+  //  */
+  // private static async fromGameRomBranchData(gameRomBranchData: any): Promise<DbRoot> {
+    
+  //   // Extract data from the GameRomBranch data
+  //   const config = gameRomBranchData.config;
+  //   const copDef = gameRomBranchData.coplib;
+  //   const romFiles = gameRomBranchData.files;
+  //   const romBlocks = gameRomBranchData.blocks;
+  //   const romTypes = gameRomBranchData.types;
+  //   const romFixups = gameRomBranchData.fixups;
+  //   const structs = gameRomBranchData.structs;
+
+  //   // Note: For direct GameRomBranch processing, we won't have platformBranch data
+  //   // So we'll use defaults or extract from what's available
+  //   const instructionSet = {}; // Will be empty for now
+  //   const addressingModes = {}; // Will be empty for now
+    
+  //   const transforms = romFixups?.transforms || [];
+
+  //   // Build configuration from available data
+  //   const compression = CompressionRegistry.get(config?.compression || 'QuintetLZ');
+    
+  //   const files: DbFile[] = romFiles ? Object.entries(romFiles).map((x: any) => {
+  //     const file = x[1];
+  //     file.start = file.location;
+  //     file.end = file.location + file.size;
+  //     file.name = x[0];
+  //     return file;
+  //   }) : [];
+    
+  //   const blocks: DbBlock[] = romBlocks ? Object.entries(romBlocks).map((x: any) => {
+  //     const block = x[1];
+  //     block.name = x[0];
+
+  //     const transform = transforms[block.name];
+  //     block.transforms = transform ? Object.entries(transform).map((t: any) => { return { key: t[0], value: t[1] } }) : [];
+      
+  //     block.parts = Object.entries(block.parts || {})
+  //       .sort((a: any, b: any) => {
+  //         const orderA = a[1].order ?? 0;
+  //         const orderB = b[1].order ?? 0;
+  //         if (orderA !== orderB) {
+  //           return orderA - orderB;
+  //         }
+  //         return a[1].location - b[1].location;
+  //       })
+  //       .map((p: any) => {
+  //         const part = p[1];
+  //         part.name = p[0];
+  //         part.start = part.location;
+  //         part.end = part.location + part.size;
+  //         part.struct = part.type;
+  //         return part;
+  //       });
+
+  //     return block;
+  //   }).sort((a: any, b: any) => a.parts[0]?.location || 0 - b.parts[0]?.location || 0) : [];
+    
+  //   // For GameRomBranch direct processing, we don't have baseRomFiles or projectFiles
+  //   const baseRomFiles: ChunkFile[] = [];
+  //   const projectFiles: ChunkFile[] = [];
+    
+  //   const entryPoints: DbEntryPoint[] = [];
+    
+  //   // Extract overrides from configs (if available)
+  //   const overrides: Record<number, DbOverride> = {};
+    
+  //   // Build OpCode array from instruction set
+  //   const opCodes = this.extractOpCodesFromInstructionSet(instructionSet);
+    
+  //   // Build lookup tables
+  //   const copDefLookup = Object.values(copDef || {}).reduce((acc: any, x: any) => {
+  //     acc[x.code] = x;
+  //     return acc;
+  //   }, {} as Record<number, CopDef>);
+    
+  //   const opLookup = Object.entries(instructionSet).reduce((acc: any, x: any) => {
+  //     acc[x[0]] = Object.entries(x[1]).map((y: any) => new OpCode(y[1], x[0], y[0]));
+  //     return acc;
+  //   }, {});
+
+  //   const stringDelimiters = Object.values(romTypes || {}).map((x: any) => x?.delimiter).filter(Boolean);
+  //   const stringCharLookup = Object.values(romTypes || {}).reduce((acc: any, x: any) => {
+  //     if (x?.delimiter) {
+  //       acc[x.delimiter] = x;
+  //     }
+  //     return acc;
+  //   }, {});
+    
+  //   // Create the root object
+  //   const dbRoot: DbRoot = {
+  //     copDef: copDefLookup as Record<number, CopDef>,
+  //     copLookup: copDef || {},
+  //     stringTypes: romTypes || {},
+  //     stringDelimiters,
+  //     stringCharLookup: stringCharLookup as Record<string, DbStringType>,
+  //     structs: structs || {},
+  //     files,
+  //     blocks,
+  //     entryPoints,
+  //     overrides,
+  //     labels: {},
+  //     rewrites: {},
+  //     compression,
+  //     opCodes,
+  //     opLookup,
+  //     addrLookup: addressingModes,
+  //     mnemonics: {},
+  //     baseRomFiles,
+  //     projectFiles,
+  //     config: config || {}
+  //   };
+    
+  //   return dbRoot;
+  // }
 } 

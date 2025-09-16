@@ -1,7 +1,8 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local", "**/.env"],
-  "globalEnv": ["NODE_ENV", "SUPABASE_URL", "SUPABASE_ANON_KEY"],
+  "globalEnv": ["NODE_ENV", "SUPABASE_URL", "SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "DATABASE_URL", "DIRECT_URL"],
+  "concurrency": "15",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -13,12 +14,12 @@
         "lib/**",
         "out/**"
       ],
-      "env": ["NODE_ENV", "SUPABASE_URL", "SUPABASE_ANON_KEY"]
+      "env": ["NODE_ENV", "SUPABASE_URL", "SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "DATABASE_URL", "DIRECT_URL"]
     },
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["NODE_ENV", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"]
+      "env": ["NODE_ENV", "SUPABASE_URL", "SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "DATABASE_URL", "DIRECT_URL"]
     },
     "lint": {
       "dependsOn": ["^build"],

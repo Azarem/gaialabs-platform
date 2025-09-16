@@ -1,7 +1,5 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { useState, useEffect } from 'react';
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -165,41 +163,42 @@ export function getSystemTheme(): 'light' | 'dark' {
 
 /**
  * Theme hook for React components
+ * Note: This requires React hooks and should be used in client components only
  */
 export function useTheme() {
-  const [theme, setTheme] = useState<'light' | 'dark'>(getSystemTheme())
-
-  useEffect(() => {
-    applyTheme(theme === 'dark')
-
-    // Save preference to localStorage
-    localStorage.setItem('gaia-theme', theme)
-  }, [theme])
-
-  useEffect(() => {
-    // Check for saved preference
-    const savedTheme = localStorage.getItem('gaia-theme') as 'light' | 'dark' | null
-    if (savedTheme) {
-      setTheme(savedTheme)
-    }
-
-    // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const handleChange = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem('gaia-theme')) {
-        setTheme(e.matches ? 'dark' : 'light')
-      }
-    }
-
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
-  }, [])
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light')
-  }
-
-  return { theme, setTheme, toggleTheme }
+  // This function is commented out for static site compatibility
+  // Uncomment and import React hooks when needed in client components
+  throw new Error('useTheme requires React hooks - use in client components with "use client" directive')
+  
+  // const [theme, setTheme] = useState<'light' | 'dark'>(getSystemTheme())
+  //
+  // useEffect(() => {
+  //   applyTheme(theme === 'dark')
+  //   localStorage.setItem('gaia-theme', theme)
+  // }, [theme])
+  //
+  // useEffect(() => {
+  //   const savedTheme = localStorage.getItem('gaia-theme') as 'light' | 'dark' | null
+  //   if (savedTheme) {
+  //     setTheme(savedTheme)
+  //   }
+  //
+  //   const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  //   const handleChange = (e: MediaQueryListEvent) => {
+  //     if (!localStorage.getItem('gaia-theme')) {
+  //       setTheme(e.matches ? 'dark' : 'light')
+  //     }
+  //   }
+  //
+  //   mediaQuery.addEventListener('change', handleChange)
+  //   return () => mediaQuery.removeEventListener('change', handleChange)
+  // }, [])
+  //
+  // const toggleTheme = () => {
+  //   setTheme(prev => prev === 'light' ? 'dark' : 'light')
+  // }
+  //
+  // return { theme, setTheme, toggleTheme }
 }
 
 /**

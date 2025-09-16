@@ -20,6 +20,8 @@ import {
   SupabaseFromError,
   SupabaseErrorCode,
   QueryStats,
+  GameRomBranchData,
+  ProjectData
 } from './types';
 
 /**
@@ -53,7 +55,8 @@ export async function fromSupabaseById(baseRomBranchId: string): Promise<BaseRom
         id,
         name,
         version,
-        isPublic,
+        isActive,
+        notes,
         baseRomId,
         gameRomBranchId,
         fileCrcs,
@@ -63,6 +66,8 @@ export async function fromSupabaseById(baseRomBranchId: string): Promise<BaseRom
           id,
           name,
           version,
+          isActive,
+          notes,
           gameRomId,
           platformBranchId,
           config,
@@ -70,18 +75,18 @@ export async function fromSupabaseById(baseRomBranchId: string): Promise<BaseRom
           blocks,
           fixups,
           types,
-          isPublic,
           createdAt,
           updatedAt,
           platformBranch:PlatformBranch!inner(
             id,
             name,
             version,
+            isActive,
+            notes,
             platformId,
             addressingModes,
             instructionSet,
             vectors,
-            isPublic,
             createdAt,
             updatedAt
           )
@@ -198,7 +203,8 @@ export async function fromSupabaseByName(
         id,
         name,
         version,
-        isPublic,
+        isActive,
+        notes,
         baseRomId,
         gameRomBranchId,
         fileCrcs,
@@ -208,6 +214,8 @@ export async function fromSupabaseByName(
           id,
           name,
           version,
+          isActive,
+          notes,
           gameRomId,
           platformBranchId,
           config,
@@ -216,18 +224,18 @@ export async function fromSupabaseByName(
           blocks,
           fixups,
           types,
-          isPublic,
           createdAt,
           updatedAt,
           platformBranch:PlatformBranch!inner(
             id,
             name,
             version,
+            isActive,
+            notes,
             platformId,
             addressingModes,
             instructionSet,
             vectors,
-            isPublic,
             createdAt,
             updatedAt
           )
@@ -553,27 +561,7 @@ export async function fromSupabaseByProject(projectName?: string, branchId?: str
           gameId,
           baseRomId,
           createdAt,
-          updatedAt,
-          baseRom:BaseRom!inner(
-            id,
-            name,
-            gameId,
-            gameRomId,
-            createdAt,
-            updatedAt,
-            game:Game!inner(
-              id,
-              name,
-              createdAt,
-              updatedAt
-            ),
-            gameRom:GameRom!inner(
-              id,
-              crc,
-              createdAt,
-              updatedAt
-            )
-          )
+          updatedAt
         ),
         baseRomBranch:BaseRomBranch!inner(
           id,
@@ -586,6 +574,14 @@ export async function fromSupabaseByProject(projectName?: string, branchId?: str
           fileCrcs,
           createdAt,
           updatedAt,
+          baseRom:BaseRom!inner(
+            id,
+            name,
+            gameId,
+            gameRomId,
+            createdAt,
+            updatedAt
+          ),
           gameRomBranch:GameRomBranch!inner(
             id,
             name,
@@ -602,17 +598,47 @@ export async function fromSupabaseByProject(projectName?: string, branchId?: str
             types,
             createdAt,
             updatedAt,
+            gameRom:GameRom!inner(
+              id,
+              crc,
+              gameId,
+              regionId,
+              createdAt,
+              updatedAt,
+              game:Game!inner(
+                id,
+                name,
+                createdAt,
+                updatedAt
+              ),
+              region:Region!inner(
+                id,
+                name,
+                meta,
+                platformId,
+                createdAt,
+                updatedAt
+              )
+            ),
             platformBranch:PlatformBranch!inner(
               id,
               name,
               version,
               isActive,
+              notes,
               platformId,
               addressingModes,
               instructionSet,
               vectors,
               createdAt,
-              updatedAt
+              updatedAt,
+              platform:Platform!inner(
+                id,
+                name,
+                meta,
+                createdAt,
+                updatedAt
+              )
             )
           )
         )
@@ -683,6 +709,192 @@ export async function fromSupabaseByProject(projectName?: string, branchId?: str
   }
 }
 
+export async function fromSupabaseByGameRom(gameName?: string, regionName?: string, platformName?: string, branchId?: string): Promise<ProjectPayload> {
+  const startTime = performance.now();
+  let branchQueryTime = 0;
+  let fileQueryTime = 0;
+  
+  //Use default project name if not provided
+  if(!branchId && !gameName && !regionName && !platformName) { 
+    gameName = getEnvVar('GAME_NAME');
+    regionName = getEnvVar('REGION_NAME');
+    platformName = getEnvVar('PLATFORM_NAME');
+  }
+
+  try {
+    const client = getSupabaseClient();
+    
+    // Step 1: Build query with filters
+    const branchStart = performance.now();
+    
+    let query = client
+      .from('GameRomBranch')
+      .select(`
+        id,
+        name,
+        version,
+        isActive,
+        notes,
+        gameRomId,
+        platformBranchId,
+        coplib,
+        config,
+        files,
+        blocks,
+        fixups,
+        types,
+        createdAt,
+        updatedAt,
+        gameRom:GameRom!inner(
+          id,
+          crc,
+          meta,
+          gameId,
+          regionId,
+          createdAt,
+          updatedAt,
+          game:Game!inner(
+            id,
+            name,
+            createdAt,
+            updatedAt
+          ),
+          region:Region!inner(
+            id,
+            name,
+            meta,
+            platformId,
+            createdAt,
+            updatedAt
+          )
+        ),
+        platformBranch:PlatformBranch!inner(
+          id,
+          name,
+          version,
+          isActive,
+          platformId,
+          addressingModes,
+          instructionSet,
+          vectors,
+          createdAt,
+          updatedAt,
+          platform:Platform!inner(
+            id,
+            name,
+            meta,
+            createdAt,
+            updatedAt
+          )
+        )
+      `);
+    
+
+    // Filter by Project name
+    if(gameName) query = query.eq('gameRom.game.name', gameName);
+    if(regionName) query = query.eq('gameRom.region.name', regionName);
+    if(platformName) query = query.eq('platformBranch.platform.name', platformName);
+
+    // Make sure we use the selected or current active branch
+    if(branchId) query = query.eq('id', branchId);
+    else query = query.eq('isActive', true);
+    
+    // Execute query - get single result
+    const { data: branchData, error: branchError } = await query.single();
+    
+    branchQueryTime = performance.now() - branchStart;
+    
+    if (branchError || !branchData) {
+      throw new SupabaseFromError(
+        `GameRomBranch not found for criteria: gameName="${gameName}", regionName="${regionName}", platformName="${platformName}"`,
+        SupabaseErrorCode.BRANCH_NOT_FOUND,
+        { gameName, regionName, platformName, error: branchError }
+      );
+    }
+
+    const gameRomBranch = branchData as unknown as GameRomBranchData;
+
+    // Construct a minimal BaseRomBranch wrapper so downstream code can consume a unified ProjectPayload
+    const baseRomBranch: BaseRomBranchData = {
+      id: '',
+      name: null,
+      version: null,
+      baseRomId: '',
+      gameRomBranchId: gameRomBranch.id,
+      fileCrcs: [],
+      gameRomBranch,
+      baseRom: {
+        id: '',
+        name: '',
+        gameId: '',
+        gameRomId: '',
+        createdAt: '',
+        updatedAt: ''
+      },
+      createdAt: '',
+      updatedAt: ''
+    };
+
+    const project: ProjectData = {
+      id: '',
+      name: '',
+      meta: null,
+      gameId: '',
+      baseRomId: '',
+      createdAt: '',
+      updatedAt: '',
+    };
+
+    const projectBranch: ProjectBranchData = {
+      id: '',
+      name: null,
+      version: null,
+      projectId: '',
+      baseRomBranchId: '',
+      fileCrcs: [],
+      modules: [],
+      project,
+      baseRomBranch,
+      createdAt: '',
+      updatedAt: ''
+    };
+
+    const payload: ProjectPayload = {
+      projectBranch,
+      projectFiles: [],
+      baseRomBranch,
+      baseRomFiles: []
+    };
+
+    fileQueryTime = performance.now() - branchStart - branchQueryTime;
+
+    // Log performance statistics
+    const totalTime = performance.now() - startTime;
+    const stats: QueryStats = {
+      branchQueryTime,
+      fileQueryTime,
+      totalTime,
+      fileCount: 0,
+      totalDataSize: 0,
+    };
+
+    console.log('Game ROM load stats:', stats);
+
+    return payload;
+    
+  } catch (error) {
+    if (error instanceof SupabaseFromError) {
+      throw error;
+    }
+    
+    throw new SupabaseFromError(
+      `Failed to load GameRomBranch data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      SupabaseErrorCode.NETWORK_ERROR,
+      { gameName, regionName, platformName, error }
+    );
+  }
+}
+
 export async function summaryFromSupabaseByProject(projectName?: string): Promise<ProjectBranchData> {
   const startTime = performance.now();
   let branchQueryTime = 0;
@@ -719,6 +931,17 @@ export async function summaryFromSupabaseByProject(projectName?: string): Promis
           gameId,
           baseRomId,
           createdAt,
+          updatedAt
+        ),
+        baseRomBranch:BaseRomBranch!inner(
+          id,
+          name,
+          version,
+          isActive,
+          notes,
+          baseRomId,
+          gameRomBranchId,
+          createdAt,
           updatedAt,
           baseRom:BaseRom!inner(
             id,
@@ -726,18 +949,56 @@ export async function summaryFromSupabaseByProject(projectName?: string): Promis
             gameId,
             gameRomId,
             createdAt,
+            updatedAt
+          ),
+          gameRomBranch:GameRomBranch!inner(
+            id,
+            name,
+            version,
+            isActive,
+            notes,
+            gameRomId,
+            platformBranchId,
+            createdAt,
             updatedAt,
-            game:Game!inner(
-              id,
-              name,
-              createdAt,
-              updatedAt
-            ),
             gameRom:GameRom!inner(
               id,
               crc,
+              gameId,
+              regionId,
               createdAt,
-              updatedAt
+              updatedAt,
+              game:Game!inner(
+                id,
+                name,
+                createdAt,
+                updatedAt
+              ),
+              region:Region!inner(
+                id,
+                name,
+                meta,
+                platformId,
+                createdAt,
+                updatedAt
+              )
+            ),
+            platformBranch:PlatformBranch!inner(
+              id,
+              name,
+              version,
+              isActive,
+              notes,
+              platformId,
+              createdAt,
+              updatedAt,
+              platform:Platform!inner(
+                id,
+                name,
+                meta,
+                createdAt,
+                updatedAt
+              )
             )
           )
         )

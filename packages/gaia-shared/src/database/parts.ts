@@ -11,6 +11,7 @@ export interface DbPart {
   bank?: number;
   block: string;
   size: number;
+  order?: number;
   
   // Internal references (handled by database root)
   //_block?: any; // DbBlock reference

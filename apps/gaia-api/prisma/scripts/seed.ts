@@ -117,6 +117,7 @@ async function main() {
       name: '1.0',
       version: 1,
       isActive: true,
+      notes: [],
       addressingModes: await createAddressingModes(),
       instructionSet: await createInstructionSet(),
       vectors: await createSnesVectors(),
@@ -185,6 +186,10 @@ async function createGameRom(gameId: string, regionId: string, platformBranchId:
     data: {
       gameRomId: rom.id,
       platformBranchId: platformBranchId,
+      name: '1.0',
+      version: 1,
+      isActive: true,
+      notes: [],
       config: {
         sfxLocation: 327680,
         sfxCount: 60,
@@ -250,6 +255,7 @@ async function createBaseRom(gameId: string, romId: string, romBranchId: string)
       name: '2.0',
       version: 1,
       isActive: true,
+      notes: [],
       fileCrcs: [...asmCrcs, ...graphicsCrcs, ...paletteCrcs, ...spritemapCrcs, ...patchCrcs],
     },
   });
@@ -780,7 +786,7 @@ async function createIogTypes() {
   };
 }
 
-async function createIogFixups() {
+async function createIogFixups() : Promise<{}> {
   console.log('🔄 Loading IOG fixups...');
   const labels = await loadJsonData<DbLabel[]>(DB_PATH, 'labels.json');
   const rewrites = await loadJsonData<DbRewrite[]>(DB_PATH, 'rewrites.json');
