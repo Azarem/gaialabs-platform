@@ -1,6 +1,6 @@
 {
   "name": "@gaialabs/shared",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Shared TypeScript types and utilities for GaiaLabs platform",
   "funding": "https://github.com/sponsors/Azarem",
   "main": "dist/index.js",
