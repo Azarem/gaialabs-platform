@@ -23,7 +23,7 @@ function isUncompressedType(type: BinType | string): boolean {
  * Converted from GaiaLib/Types/ChunkFile.cs
  */
 export class ChunkFile {
-  //path: string;
+  id?: string;
   name: string;
   size: number;
   location: number;
