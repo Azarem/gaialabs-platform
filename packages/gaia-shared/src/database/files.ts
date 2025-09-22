@@ -5,6 +5,7 @@ import { BinType } from '../types/resources';
  * Converted from GaiaLib/Database/DbFile.cs
  */
 export interface DbFile {
+  id?: string;
   name: string;
   type: BinType;
   start: number;

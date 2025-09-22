@@ -67,6 +67,7 @@ export class ChunkFile {
 export function createChunkFileFromDbFile(rom: Uint8Array, compression: ICompressionProvider, dbFile: DbFile): ChunkFile {
   // Create ChunkFile with the DbFile's type
   const chunkFile = new ChunkFile(dbFile.name, dbFile.end - dbFile.start, dbFile.start, dbFile.type);
+  chunkFile.id = dbFile.id;
   chunkFile.compressed = dbFile.compressed;
   chunkFile.upper = dbFile.upper;
   
@@ -79,6 +80,7 @@ export function createChunkFileFromDbFile(rom: Uint8Array, compression: ICompres
 export function createChunkFileFromDbBlock(block: DbBlock): ChunkFile {
   // Create assembly ChunkFile
   const chunkFile = new ChunkFile(block.name, 0, 0, BinType.Assembly);
+  chunkFile.id = block.id;
   chunkFile.group = block.group;
   
   // Enrich with AsmBlock parts
