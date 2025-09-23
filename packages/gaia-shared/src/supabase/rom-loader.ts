@@ -6,7 +6,7 @@
  */
 
 import { getSupabaseClient } from './client';
-import { decodeDataString, getEnvVar } from './utils';
+import { decodeDataString } from './utils';
 import {
   BaseRomPayload,
   BaseRomBranchData,
@@ -531,7 +531,7 @@ export async function fromSupabaseByProject(projectName?: string, branchId?: str
   
   //Use default project name if not provided
   if(!projectName && !branchId){
-    projectName = getEnvVar('PROJECT_NAME');
+    throw new Error('Project name or branch ID are required');
   }
 
   try {
@@ -716,9 +716,7 @@ export async function fromSupabaseByGameRom(gameName?: string, regionName?: stri
   
   //Use default project name if not provided
   if(!branchId && !gameName && !regionName && !platformName) { 
-    gameName = getEnvVar('GAME_NAME');
-    regionName = getEnvVar('REGION_NAME');
-    platformName = getEnvVar('PLATFORM_NAME');
+    throw new Error('Game name, region name, and platform name are required');
   }
 
   try {
@@ -902,7 +900,7 @@ export async function summaryFromSupabaseByProject(projectName?: string): Promis
   
   //Use default project name if not provided
   if(!projectName){
-    projectName = getEnvVar('PROJECT_NAME');
+    throw new Error('Project name or branch ID are required');
   }
 
   try {

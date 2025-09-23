@@ -1,6 +1,6 @@
 {
   "name": "@gaialabs/core",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "GaiaLabs TypeScript Core Library - Universal ROM processing engine",
   "funding": "https://github.com/sponsors/Azarem",
   "main": "dist/index.js",
@@ -26,7 +26,7 @@
     "publish": "tsup && npm publish --access public"
   },
   "dependencies": {
-    "@gaialabs/shared": "^0.1.8"
+    "@gaialabs/shared": "^0.1.9"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

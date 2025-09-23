@@ -3,7 +3,6 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { getEnvVar, validateEnvironmentVariables } from './utils';
 
 /**
  * Database interface definitions based on Prisma schema
@@ -94,10 +93,10 @@ let supabaseClient: SupabaseClient<Database> | null = null;
  */
 export function createSupabaseClient(): SupabaseClient<Database> {
   // Validate required environment variables
-  validateEnvironmentVariables(['SUPABASE_URL', 'SUPABASE_ANON_KEY']);
+  //validateEnvironmentVariables(['SUPABASE_URL', 'SUPABASE_ANON_KEY']);
   
-  const supabaseUrl = getEnvVar('SUPABASE_URL');
-  const supabaseAnonKey = getEnvVar('SUPABASE_ANON_KEY');
+  const supabaseUrl = 'https://adwobxutnpmjbmhdxrzx.supabase.co';
+  const supabaseAnonKey = 'sb_publishable_uBZdKmgGql5sDNGpj1DVMQ_opZ2V4kV';
   
   return createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
