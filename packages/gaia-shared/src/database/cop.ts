@@ -7,6 +7,6 @@ export interface CopDef {
   mnem: string;
   code: number;
   parts: string[];
-  halt: boolean;
+  halt?: boolean;
   size: number;
 }

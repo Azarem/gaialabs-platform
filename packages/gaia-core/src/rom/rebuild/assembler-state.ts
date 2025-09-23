@@ -29,9 +29,9 @@ export class AssemblerState {
           x.name.toLowerCase() === structType.toLowerCase()
         ) || null;
 
-    this.parentStruct = this.dbStruct?.parent == null ? null
+    this.parentStruct = !this.dbStruct || !this.dbStruct.parent ? null
       : Object.values(this.root.structs).find(x =>
-          x.name.toLowerCase() === this.dbStruct!.parent.toLowerCase()
+          x.name.toLowerCase() === this.dbStruct!.parent!.toLowerCase()
         ) || null;
 
     this.discriminator = this.parentStruct?.discriminator ?? null;

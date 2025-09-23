@@ -5,7 +5,7 @@
 export interface DbStruct {
   name: string;
   types: string[];
-  parent: string;
+  parent?: string;
   delimiter?: number;
   discriminator?: number;
 } 
