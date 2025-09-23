@@ -6,6 +6,7 @@
 // File utilities
 export * from './file';
 export * from './crc';
+export * from './base64';
 
 /**
  * Convert bytes to hex string
