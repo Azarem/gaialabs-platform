@@ -58,9 +58,12 @@ export class AddressingModeHandler {
         this.handleImmediateMode(code.mnem, context.size, operands, reg);
         break;
 
+      case 'AbsoluteIndexedIndirect':
+        this.handleAbsoluteMode(code.mnem, undefined, context.nextAddress, reg.dataBank, operands, reg, true);
+        break;
+
       case 'AbsoluteIndirect':
       case 'AbsoluteIndirectLong':
-      case 'AbsoluteIndexedIndirect':
       case 'Absolute':
       case 'AbsoluteIndexedX':
       case 'AbsoluteIndexedY':
@@ -237,7 +240,8 @@ export class AddressingModeHandler {
     next: number,
     dataBank: number | undefined,
     operands: unknown[],
-    registers: Registers
+    registers: Registers,
+    isIndexedIndirect: boolean = false
   ): void {
     let refLoc = this._dataReader.readUShort();
 
@@ -246,14 +250,15 @@ export class AddressingModeHandler {
       refLoc++;
     }
 
-    const isJump = isPush || this.isJumpInstruction(mnemonic);
+    const isJump = isPush || isIndexedIndirect || this.isJumpInstruction(mnemonic);
     const bank = xBank1 ?? (isJump ? (this._dataReader.position >> 16) : dataBank ?? 0x81);
 
     const addr = new Address(bank, refLoc);
     if (addr.isROM) {
       const wrapper = new LocationWrapper(addr.toInt(), AddressType.Offset);
       if (isJump) {
-        const name = this._blockReader.noteType(wrapper.location, 'Code', isPush, registers);
+        const type = isIndexedIndirect ? '*Code' : 'Code';
+        const name = this._blockReader.noteType(wrapper.location, type, isPush, registers);
 
         if (isPush) {
           operands.push(`&${name}-1`);
