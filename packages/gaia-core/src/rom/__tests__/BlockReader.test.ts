@@ -28,7 +28,7 @@ describe('BlockReader', () => {
     //   '../../ext/GaiaLib/db/us',
     //   '../../ext/GaiaLib/db/snes'
     // );
-    const dbRoot = await DbRootUtils.fromSupabaseProject();
+    const dbRoot = await DbRootUtils.fromSupabaseProject('Illusion of Gaia: Retranslated');
     reader = new BlockReader(data, dbRoot);
     writer = new BlockWriter(reader);
     romWriter = new RomWriter(dbRoot.entryPoints, "GAIALABS", "01JG  ");
@@ -281,7 +281,7 @@ describe('BlockReader', () => {
       expect(title).toEqual(new Uint8Array(Buffer.from('GAIALABS             ')));
 
       const crc = crc32_buffer(romWriter.outBuffer);
-      expect(crc).toEqual(765557309);
+      expect(crc).toEqual(-1345057874);
     });
   });
 }); 

@@ -8,7 +8,7 @@ import { fromSupabaseByGameRom, fromSupabaseByProject, summaryFromSupabaseByProj
 describe('Rom Loader', () => {
     describe('fromSupabaseProject', () => {
         it('should create DbRoot from Supabase Project', async () => {
-            const data = await fromSupabaseByProject();
+            const data = await fromSupabaseByProject('Illusion of Gaia: Retranslated');
             expect(data).toBeDefined();
             expect(data.projectBranch).toBeDefined();
             expect(data.projectBranch.project).toBeDefined();

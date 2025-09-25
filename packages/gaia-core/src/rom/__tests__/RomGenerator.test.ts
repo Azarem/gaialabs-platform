@@ -26,7 +26,7 @@ describe('RomGenerator', async () => {
   
   describe('Constructor', () => {
     it('should create a rom generator which downloads project summary', () => {
-      romGenerator = new RomGenerator();
+      romGenerator = new RomGenerator("Illusion of Gaia: Retranslated");
       expect(romGenerator).toBeDefined();
     });
 

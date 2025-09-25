@@ -66,14 +66,22 @@ export class RomWriter {
 
   public writeChecksum(): void {
     const buf = this.outBuffer!;
+    
+    // Not sure why this is needed, but it is
+    buf[0xFFDC] = 0xFF;
+    buf[0xFFDD] = 0xFF;
+    buf[0xFFDE] = 0;
+    buf[0xFFDF] = 0;
+
     // checksum
     let sum = 0;
-    for (let i = 0; i < buf.length; i++) sum += buf[i] & 0xFF;
+    for (let i = 0; i < buf.length; i++) sum += buf[i];
+
     // checksum at 0xFFDE
     buf[0xFFDE] = sum & 0xFF;
     buf[0xFFDF] = (sum >> 8) & 0xFF;
     // complement at 0xFFDC
-    const comp = (~sum) & 0xFFFF;
+    const comp = ~sum;
     buf[0xFFDC] = comp & 0xFF;
     buf[0xFFDD] = (comp >> 8) & 0xFF;
   }
