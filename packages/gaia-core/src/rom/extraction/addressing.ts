@@ -59,7 +59,7 @@ export class AddressingModeHandler {
         break;
 
       case 'AbsoluteIndexedIndirect':
-        this.handleAbsoluteMode(code.mnem, undefined, context.nextAddress, reg.dataBank, operands, reg, true);
+        this.handleAbsoluteMode(code.mnem, undefined, context.nextAddress, reg.dataBank, operands, reg, false);
         break;
 
       case 'AbsoluteIndirect':
@@ -67,7 +67,7 @@ export class AddressingModeHandler {
       case 'Absolute':
       case 'AbsoluteIndexedX':
       case 'AbsoluteIndexedY':
-        this.handleAbsoluteMode(code.mnem, undefined, context.nextAddress, reg.dataBank, operands, reg);
+        this.handleAbsoluteMode(code.mnem, undefined, context.nextAddress, reg.dataBank, operands, reg, false);
         break;
 
       case 'AbsoluteLong':
