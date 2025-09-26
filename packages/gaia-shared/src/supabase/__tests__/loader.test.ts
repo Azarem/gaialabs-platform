@@ -29,7 +29,7 @@ describe('Rom Loader', () => {
     
     describe('fromSupabaseByGameRom', () => {
         it('should create DbRoot from Supabase Game Rom', async () => {
-            const data = await fromSupabaseByGameRom();
+            const data = await fromSupabaseByGameRom("Illusion of Gaia", "US", "SNES");
             expect(data).toBeDefined();
             expect(data.baseRomBranch).toBeDefined();
             expect(data.baseRomBranch.baseRom).toBeDefined();
@@ -48,7 +48,7 @@ describe('Rom Loader', () => {
     
     describe('summaryFromSupabaseByProject', () => {
         it('should create summary from Supabase Project', async () => {
-            const data = await summaryFromSupabaseByProject();
+            const data = await summaryFromSupabaseByProject('Illusion of Gaia: Retranslated');
             expect(data).toBeDefined();
             expect(data.project).toBeDefined();
             expect(data.project.name).toBe('Illusion of Gaia: Retranslated');
