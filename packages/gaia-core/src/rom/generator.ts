@@ -34,7 +34,7 @@ export class RomGenerator {
     return false;
   }
 
-  public async generateProject(modules: string[], manualFiles?: ChunkFile[]): Promise<Uint8Array> {
+  public async generateProject(modules: string[], manualFiles?: ChunkFile[], unshiftManualFiles: boolean = false): Promise<Uint8Array> {
     if(!this.dbRoot) throw new Error('Database not initialized');
     if(!this.sourceData) throw new Error('Source data not initialized');
 
@@ -54,13 +54,20 @@ export class RomGenerator {
     //Apply base project files and collect module files
     const moduleLookup = this.applyProjectInit(chunkFiles, asmFiles, patchFiles);
 
+    //Apply manual files (before modules)
+    if(unshiftManualFiles) {
+      for(const file of manualFiles ?? []) this.applyPatchFile(file, chunkFiles, asmFiles, patchFiles);
+    }
+
     //Apply selected modules
     for(const module of modules) {
       for(const file of moduleLookup.get(module)!) this.applyPatchFile(file, chunkFiles, asmFiles, patchFiles);
     }
 
     //Apply manual files
-    for(const file of manualFiles ?? []) this.applyPatchFile(file, chunkFiles, asmFiles, patchFiles);
+    if(!unshiftManualFiles) {
+      for(const file of manualFiles ?? []) this.applyPatchFile(file, chunkFiles, asmFiles, patchFiles);
+    }
     
     this.assembleCodeFromText(asmFiles);
 
