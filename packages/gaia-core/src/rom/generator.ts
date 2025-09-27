@@ -175,7 +175,7 @@ export class RomGenerator {
     const romWriter = new RomWriter(entryPoints, "GAIALABS", "01JG  ");
 
     // Write all files
-    for (const file of chunkFiles.sort((a, b) => a.location - b.location)) await romWriter.writeFile(file, blockLookup);
+    for (const file of chunkFiles) await romWriter.writeFile(file, blockLookup);
 
     //Write header
     romWriter.writeHeader();

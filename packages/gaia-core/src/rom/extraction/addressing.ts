@@ -257,7 +257,7 @@ export class AddressingModeHandler {
     if (addr.isROM) {
       const wrapper = new LocationWrapper(addr.toInt(), AddressType.Offset);
       if (isJump) {
-        const type = isIndexedIndirect ? '*Code' : 'Code';
+        const type = isIndexedIndirect ? '&Code' : 'Code';
         const name = this._blockReader.noteType(wrapper.location, type, isPush, registers);
 
         if (isPush) {
