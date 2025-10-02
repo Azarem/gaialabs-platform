@@ -40,6 +40,7 @@ model PlatformBranch {
   addressingModes Json?
   instructionSet  Json?
   vectors         Json?
+  types           Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -153,6 +154,8 @@ model GameRomBranch {
   blocks Json?
   fixups Json?
   types  Json?
+  strings Json?
+  structs Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

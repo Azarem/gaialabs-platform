@@ -74,7 +74,8 @@ export async function fromSupabaseById(baseRomBranchId: string): Promise<BaseRom
           files,
           blocks,
           fixups,
-          types,
+          strings,
+          structs,
           createdAt,
           updatedAt,
           platformBranch:PlatformBranch!inner(
@@ -87,6 +88,7 @@ export async function fromSupabaseById(baseRomBranchId: string): Promise<BaseRom
             addressingModes,
             instructionSet,
             vectors,
+            types,
             createdAt,
             updatedAt
           )
@@ -223,7 +225,8 @@ export async function fromSupabaseByName(
           files,
           blocks,
           fixups,
-          types,
+          strings,
+          structs,
           createdAt,
           updatedAt,
           platformBranch:PlatformBranch!inner(
@@ -236,6 +239,7 @@ export async function fromSupabaseByName(
             addressingModes,
             instructionSet,
             vectors,
+            types,
             createdAt,
             updatedAt
           )
@@ -595,7 +599,8 @@ export async function fromSupabaseByProject(projectName?: string, branchId?: str
             files,
             blocks,
             fixups,
-            types,
+            strings,
+            structs,
             createdAt,
             updatedAt,
             gameRom:GameRom!inner(
@@ -630,6 +635,7 @@ export async function fromSupabaseByProject(projectName?: string, branchId?: str
               addressingModes,
               instructionSet,
               vectors,
+              types,
               createdAt,
               updatedAt,
               platform:Platform!inner(
@@ -740,7 +746,8 @@ export async function fromSupabaseByGameRom(gameName?: string, regionName?: stri
         files,
         blocks,
         fixups,
-        types,
+        strings,
+        structs,
         createdAt,
         updatedAt,
         gameRom:GameRom!inner(
@@ -775,6 +782,7 @@ export async function fromSupabaseByGameRom(gameName?: string, regionName?: stri
           addressingModes,
           instructionSet,
           vectors,
+          types,
           createdAt,
           updatedAt,
           platform:Platform!inner(

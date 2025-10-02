@@ -22,6 +22,7 @@ export interface PlatformBranchData {
   addressingModes: any | null; // JSON field
   instructionSet: any | null; // JSON field
   vectors: any | null; // JSON field
+  types: any | null; // JSON field
   // Optional metadata commonly present in branch tables
   isActive?: boolean | null;
   notes?: string[] | null;
@@ -44,7 +45,9 @@ export interface GameRomBranchData {
   files: any | null; // JSON field
   blocks: any | null; // JSON field
   fixups: any | null; // JSON field
-  types: any | null; // JSON field
+  //types: any | null; // JSON field
+  strings: any | null; // JSON field
+  structs: any | null; // JSON field
   // Optional metadata commonly present in branch tables
   isActive?: boolean | null;
   notes?: string[] | null;

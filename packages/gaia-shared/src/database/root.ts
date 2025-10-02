@@ -276,7 +276,8 @@ export class DbRootUtils {
     const copDef = gameRomBranch.coplib;
     const romFiles = gameRomBranch.files;
     const romBlocks = gameRomBranch.blocks;
-    const romTypes = gameRomBranch.types;
+    const romStrings = gameRomBranch.strings;
+    const romStructs = gameRomBranch.structs;
     const romFixups = gameRomBranch.fixups;
 
     const platformBranch = gameRomBranch.platformBranch;
@@ -365,7 +366,7 @@ export class DbRootUtils {
     const overrides = romFixups.overrides || {};
     const rewrites = romFixups.rewrites || {};
     const labels = romFixups.labels || {};
-    const structs = romTypes.structs || {};
+    const structs = romStructs || {};
     //const parts: DbPart[] = Array.isArray(typesJson.parts) ? typesJson.parts : [];
     //const transforms: DbTransform[] = Array.isArray(typesJson.transforms) ? typesJson.transforms : [];
     //const stringTypes = romTypes.strings || {};
@@ -375,7 +376,7 @@ export class DbRootUtils {
     const entryPoints = Array.isArray(config.entryPoints) ? config.entryPoints : [];
     
 
-    const stringTypes = Object.entries(romTypes.strings).reduce((acc: any, x: any) => {
+    const stringTypes = Object.entries(romStrings).reduce((acc: any, x: any) => {
       const strType = x[1];
       strType.name = x[0];
 
