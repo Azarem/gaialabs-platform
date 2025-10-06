@@ -30,7 +30,13 @@ export class QuintetLZ implements ICompressionProvider {
     let outPosition = 0;
 
     // First two bytes is decompressed size
-    const dstLen = bitStream.readShort();
+    let dstLen = bitStream.readShort();
+
+    if(dstLen === 0){
+      return srcData.slice(srcPosition + 2, srcStop);
+    } else if(dstLen & 0x8000) {
+      dstLen = 0x10000 - dstLen;
+    }
 
     // Create output buffer with the expected size
     const outBuffer = new Uint8Array(dstLen);
