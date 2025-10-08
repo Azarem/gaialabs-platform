@@ -156,11 +156,13 @@ model GameRomBranch {
   types  Json?
   strings Json?
   structs Json?
+  scenes Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   baseBranches    BaseRomBranch[]
+  assets      GameRomBranchAsset[]
 
   @@unique([gameRomId, name])
   @@unique([gameRomId, version])
@@ -170,6 +172,24 @@ model GameRomBranch {
   @@index([gameRomId, isActive])
   @@index([gameRomId])
   @@index([platformBranchId])
+}
+
+model GameRomBranchAsset {
+  id       String  @id @default(cuid())
+  name     String
+  type     String
+
+  text     String?
+  data     Bytes?
+
+  gameRomBranch   GameRomBranch @relation(fields: [gameRomBranchId], references: [id])
+  gameRomBranchId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([gameRomBranchId, name])
+  @@index([gameRomBranchId])
 }
 
 model BaseRom {

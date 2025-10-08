@@ -48,11 +48,23 @@ export interface GameRomBranchData {
   //types: any | null; // JSON field
   strings: any | null; // JSON field
   structs: any | null; // JSON field
+  scenes: any | null; // JSON field
   // Optional metadata commonly present in branch tables
   isActive?: boolean | null;
   notes?: string[] | null;
   gameRom: GameRomData;
   platformBranch: PlatformBranchData;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GameRomBranchAssetData {
+  id: string;
+  name: string;
+  type: string;
+  gameRomBranchId: string;
+  text?: string;
+  data?: Uint8Array;
   createdAt: string;
   updatedAt: string;
 }

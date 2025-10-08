@@ -1,16 +1,29 @@
 import pkg from '@prisma/client';
 const { PrismaClient } = pkg;
-import * as path from 'path';
-import { crc32_buffer, readFileAsBinary } from '@gaialabs/shared';
+import { crc32_buffer, readFileAsBinary, readFileAsText } from '@gaialabs/shared';
+import { parseSceneMetaFile } from './convert_scene_meta.ts';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const prisma = new PrismaClient();
 
 // --- Database Path Configuration ---
+const ASM_PATH = path.join(__dirname, '../../../../truth/asm');
 const RXLT_PATH = 'C:/Work/IOGRXLT/IOGRetranslation/modules';
 
 async function loadBinaryData(rootPath: string, filePath: string): Promise<Uint8Array> {
   const fullPath = path.resolve(path.join(rootPath, filePath));
   const data = await readFileAsBinary(fullPath);
+  return data;
+}
+
+async function loadTextData(rootPath: string, filePath: string): Promise<string> {
+  const fullPath = path.resolve(path.join(rootPath, filePath));
+  const data = await readFileAsText(fullPath);
   return data;
 }
 
@@ -30,6 +43,33 @@ async function createProjectFile(projectId: string, type: string, folder: string
     },
   });
   return crc;
+}
+
+async function createGameRomBranchAssets(gameRomBranch: any) {
+  const blocks = gameRomBranch.blocks as any;
+  const blockAssets: any[] = [];
+
+  await Promise.all(Object.keys(blocks).map(async (name) => {
+    const block = blocks[name];
+    const rootPath = block.group ? path.join(ASM_PATH, block.group) : ASM_PATH;
+    try{
+      const text = await loadTextData(rootPath, name + '.asm');
+      blockAssets.push({
+        name,
+        type: 'Assembly',
+        gameRomBranchId: gameRomBranch.id,
+        text
+      });
+    } catch (error) {
+      console.error(`Error loading block ${name}: ${error}`);
+    }
+  }));
+
+  await prisma.gameRomBranchAsset.createMany({
+    data: blockAssets
+  });
+
+  console.log(`Created ${blockAssets.length} block assets`);
 }
 
 async function main() {
@@ -57,6 +97,9 @@ async function main() {
       throw new Error('Could not find active GameROM branch for "Illusion of Gaia"');
     }
 
+    const inputPath = path.join(__dirname, '../../../../truth/asm/scene_meta.asm');
+    const sceneData = parseSceneMetaFile(inputPath);
+
     console.log(`✅ Found current active version: ${currentBranch.name} (version ${currentBranch.version})`);
 
     // Step 2: Deactivate the current branch
@@ -68,8 +111,12 @@ async function main() {
       data: {
         strings: (currentBranch.types as any)?.strings ?? undefined,
         structs: (currentBranch.types as any)?.structs ?? undefined,
+        scenes: sceneData
       }
     });
+
+    await prisma.gameRomBranchAsset.deleteMany({});
+    await createGameRomBranchAssets(currentBranch);
 
     await prisma.platformBranch.update({
       where: {

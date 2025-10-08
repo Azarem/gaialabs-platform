@@ -42,10 +42,26 @@ export interface Database {
           isPublic: boolean;
           gameRomId: string;
           platformBranchId: string;
+          coplib: any | null;
+          config: any | null;
           files: any | null;
           blocks: any | null;
           fixups: any | null;
-          types: any | null;
+          strings: any | null;
+          structs: any | null;
+          scenes: any | null;
+          createdAt: string;
+          updatedAt: string;
+        };
+      };
+      GameRomBranchAsset: {
+        Row: {
+          id: string;
+          name: string;
+          type: string;
+          gameRomBranchId: string;
+          text: string | null;
+          data: string | null;
           createdAt: string;
           updatedAt: string;
         };
