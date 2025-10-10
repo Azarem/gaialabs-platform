@@ -48,16 +48,17 @@ function crc32_final(crc: number) {
     return crc & 0xFFFFFFFF;
 }
 
-export function crc32_string(str: string) {
-    var table = crc32_generate()
-    var crc =  crc32_initial()
+// Deprecated
+// export function crc32_string(str: string) {
+//     var table = crc32_generate()
+//     var crc =  crc32_initial()
 
-    for (let i = 0; i < str.length; i++)
-        crc = crc32_add_byte(table, crc, str.charCodeAt(i))
+//     for (let i = 0; i < str.length; i++)
+//         crc = crc32_add_byte(table, crc, str.charCodeAt(i))
 
-    crc = crc32_final(crc)
-    return crc
-}
+//     crc = crc32_final(crc)
+//     return crc
+// }
 
 export function crc32_buffer(data: Uint8Array) {
     var table = crc32_generate()
@@ -68,4 +69,19 @@ export function crc32_buffer(data: Uint8Array) {
 
     crc = crc32_final(crc)
     return crc
+}
+
+export function crc32_text_utf8(text: string): number {
+    const utf8Bytes = new TextEncoder().encode(text);
+    return crc32_buffer(utf8Bytes);
+}
+
+export function crc32_text_utf16(text: string): number {
+    const utf16Bytes = new Uint8Array(text.length * 2);
+    for (let i = 0; i < text.length; i++) {
+        const code = text.charCodeAt(i);
+        utf16Bytes[i * 2] = code & 0xFF;
+        utf16Bytes[i * 2 + 1] = (code >> 8) & 0xFF;
+    }
+    return crc32_buffer(utf16Bytes);
 }

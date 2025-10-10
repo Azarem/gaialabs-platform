@@ -5,6 +5,7 @@ import { parseSceneMetaFile } from './convert_scene_meta.ts';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createId } from '@paralleldrive/cuid2';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,7 +46,7 @@ async function createProjectFile(projectId: string, type: string, folder: string
   return crc;
 }
 
-async function createGameRomBranchAssets(gameRomBranch: any) {
+async function createGameRomArtifacts(gameRomBranch: any) {
   const blocks = gameRomBranch.blocks as any;
   const blockAssets: any[] = [];
 
@@ -55,9 +56,10 @@ async function createGameRomBranchAssets(gameRomBranch: any) {
     try{
       const text = await loadTextData(rootPath, name + '.asm');
       blockAssets.push({
+        id: createId(),
         name,
         type: 'Assembly',
-        gameRomBranchId: gameRomBranch.id,
+        gameRomId: gameRomBranch.gameRomId,
         text
       });
     } catch (error) {
@@ -65,11 +67,18 @@ async function createGameRomBranchAssets(gameRomBranch: any) {
     }
   }));
 
-  await prisma.gameRomBranchAsset.createMany({
+  await prisma.gameRomArtifact.createMany({
     data: blockAssets
   });
 
-  console.log(`Created ${blockAssets.length} block assets`);
+  await prisma.gameRomBranchArtifact.createMany({
+    data: blockAssets.map((asset) => ({
+      branchId: gameRomBranch.id,
+      artifactId: asset.id
+    }))
+  });
+
+  console.log(`Created ${blockAssets.length} block artifacts`);
 }
 
 async function main() {
@@ -102,7 +111,6 @@ async function main() {
 
     console.log(`✅ Found current active version: ${currentBranch.name} (version ${currentBranch.version})`);
 
-    // Step 2: Deactivate the current branch
     console.log('🔄 Updating current branch...');
     await prisma.gameRomBranch.update({
       where: {
@@ -115,8 +123,7 @@ async function main() {
       }
     });
 
-    await prisma.gameRomBranchAsset.deleteMany({});
-    await createGameRomBranchAssets(currentBranch);
+    await createGameRomArtifacts(currentBranch);
 
     await prisma.platformBranch.update({
       where: {
@@ -439,15 +446,19 @@ async function main() {
   } catch (error) {
     console.error('❌ Migration failed:', error);
     throw error;
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
-main()
-  .catch((e) => {
-    console.error('An error occurred during the migration process:');
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// main()
+//   .catch((e) => {
+//     console.error('An error occurred during the migration process:');
+//     console.error(e);
+//     process.exit(1);
+//   })
+//   .finally(async () => {
+//     await prisma.$disconnect();
+//   });
+
+export default main;

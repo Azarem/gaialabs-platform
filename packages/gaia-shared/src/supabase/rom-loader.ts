@@ -11,17 +11,19 @@ import {
   BaseRomPayload,
   BaseRomBranchData,
   BaseRomFileData,
-  BaseRomFileRaw,
   FromSupabaseByNameOptions,
   ProjectPayload,
   ProjectBranchData,
   ProjectFileData,
-  ProjectFileRaw,
   SupabaseFromError,
   SupabaseErrorCode,
   QueryStats,
   GameRomBranchData,
-  ProjectData
+  ProjectData,
+  FileBaseRaw,
+  FileBaseData,
+  ProjectBranchFileRaw,
+  BaseRomBranchFileRaw
 } from './types';
 
 /**
@@ -59,7 +61,6 @@ export async function fromSupabaseById(baseRomBranchId: string): Promise<BaseRom
         notes,
         baseRomId,
         gameRomBranchId,
-        fileCrcs,
         createdAt,
         updatedAt,
         gameRomBranch:GameRomBranch!inner(
@@ -116,7 +117,7 @@ export async function fromSupabaseById(baseRomBranchId: string): Promise<BaseRom
     }
     
     // Step 2: Load all the BaseRomFile data using the fileCrcs array
-    const files = await loadBaseRomFiles(branchData.baseRomId, branchData.fileCrcs);
+    const files = await loadBaseRomFiles(branchData.id);
     
     fileQueryTime = performance.now() - branchStart - branchQueryTime;
     
@@ -132,7 +133,6 @@ export async function fromSupabaseById(baseRomBranchId: string): Promise<BaseRom
       fileQueryTime,
       totalTime,
       fileCount: files.length,
-      totalDataSize: files.reduce((sum, file) => sum + file.data.length, 0),
     };
     
     console.log('ROM load stats:', stats);
@@ -209,7 +209,6 @@ export async function fromSupabaseByName(
         notes,
         baseRomId,
         gameRomBranchId,
-        fileCrcs,
         createdAt,
         updatedAt,
         gameRomBranch:GameRomBranch!inner(
@@ -298,7 +297,7 @@ export async function fromSupabaseByName(
     }
     
     // Step 2: Load all the BaseRomFile data using the fileCrcs array
-    const files = await loadBaseRomFiles(branchData.baseRomId, branchData.fileCrcs);
+    const files = await loadBaseRomFiles(branchData.id);
     
     fileQueryTime = performance.now() - branchStart - branchQueryTime;
     
@@ -314,7 +313,6 @@ export async function fromSupabaseByName(
       fileQueryTime,
       totalTime,
       fileCount: files.length,
-      totalDataSize: files.reduce((sum, file) => sum + file.data.length, 0),
     };
     
     console.log('ROM load stats:', stats);
@@ -343,65 +341,36 @@ export async function fromSupabaseByName(
  * @throws {SupabaseFromError} If files are not found or conversion fails
  */
 async function loadBaseRomFiles(
-  baseRomId: string, 
-  fileCrcs: number[]
+  baseRomBranchId: string
 ): Promise<BaseRomFileData[]> {
-  if (!fileCrcs || fileCrcs.length === 0) {
-    return [];
-  }
-  
+
   try {
     const client = getSupabaseClient();
     
     // Query all files with matching CRCs in one request
     const { data: filesData, error: filesError } = await client
-      .from('BaseRomFile')
-      .select('id, name, type, version, crc, meta, baseRomId, data, createdAt, updatedAt')
-      .eq('baseRomId', baseRomId)
-      .in('crc', fileCrcs);
+      .from('BaseRomBranchFile')
+      .select<string, BaseRomBranchFileRaw>('*,file:BaseRomFile!inner(*)')
+      .eq('branchId', baseRomBranchId);
     
     if (filesError) {
       throw new SupabaseFromError(
         `Failed to load BaseRomFiles: ${filesError.message}`,
         SupabaseErrorCode.FILES_NOT_FOUND,
-        { baseRomId, fileCrcs, error: filesError }
+        { baseRomBranchId, error: filesError }
       );
     }
     
     if (!filesData || filesData.length === 0) {
       throw new SupabaseFromError(
-        `No BaseRomFiles found for CRCs: ${fileCrcs.join(', ')}`,
+        `No BaseRomFiles found for baseRomBranchId: ${baseRomBranchId}`,
         SupabaseErrorCode.FILES_NOT_FOUND,
-        { baseRomId, fileCrcs }
+        { baseRomBranchId }
       );
     }
     
     // Convert data to Uint8Array for each file (handles both hex and base64 formats)
-    const convertedFiles: BaseRomFileData[] = filesData.map((file: BaseRomFileRaw) => {
-      try {
-        const binaryData = decodeDataString(file.data);
-
-        return {
-          ...file,
-          data: binaryData,
-        } as BaseRomFileData;
-      } catch (error) {
-        throw new SupabaseFromError(
-          `Failed to convert data for file ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          SupabaseErrorCode.INVALID_DATA,
-          { file, error }
-        );
-      }
-    });
-    
-    // Validate that we got all requested files
-    const foundCrcs = new Set(filesData.map(f => f.crc).filter(Boolean));
-    const requestedCrcs = new Set(fileCrcs);
-    const missingCrcs = [...requestedCrcs].filter(crc => !foundCrcs.has(crc));
-    
-    if (missingCrcs.length > 0) {
-      console.warn(`Some files were not found with CRCs: ${missingCrcs.join(', ')}`);
-    }
+    const convertedFiles: BaseRomFileData[] = await convertRawData<BaseRomFileData>(filesData.map(f => f.file));
     
     return convertedFiles;
     
@@ -413,9 +382,26 @@ async function loadBaseRomFiles(
     throw new SupabaseFromError(
       `Failed to load and convert BaseRomFiles: ${error instanceof Error ? error.message : 'Unknown error'}`,
       SupabaseErrorCode.NETWORK_ERROR,
-      { baseRomId, fileCrcs, error }
+      { baseRomBranchId, error }
     );
   }
+}
+
+async function convertRawData<T extends FileBaseData>(files: FileBaseRaw[]): Promise<T[]> {
+  return files.map((file: FileBaseRaw) => {
+    try {
+      return {
+        ...file,
+        data: file.data ? decodeDataString(file.data) : undefined,
+      } as T;
+    } catch (error) {
+      throw new SupabaseFromError(
+        `Failed to convert data for file ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        SupabaseErrorCode.INVALID_DATA,
+        { file, error }
+      );
+    }
+  });
 }
 
 /**
@@ -427,65 +413,35 @@ async function loadBaseRomFiles(
  * @throws {SupabaseFromError} If files are not found or conversion fails
  */
 async function loadProjectFiles(
-  projectId: string, 
-  fileCrcs: number[]
+  projectBranchId: string
 ): Promise<ProjectFileData[]> {
-  if (!fileCrcs || fileCrcs.length === 0) {
-    return [];
-  }
-  
   try {
     const client = getSupabaseClient();
     
     // Query all files with matching CRCs in one request
     const { data: filesData, error: filesError } = await client
-      .from('ProjectFile')
-      .select('id, name, type, module, version, crc, meta, projectId, data, createdAt, updatedAt')
-      .eq('projectId', projectId)
-      .in('crc', fileCrcs);
+      .from('ProjectBranchFile')
+      .select<string, ProjectBranchFileRaw>('*,file:ProjectFile!inner(*)')
+      .eq('branchId', projectBranchId);
     
     if (filesError) {
       throw new SupabaseFromError(
         `Failed to load ProjectFiles: ${filesError.message}`,
         SupabaseErrorCode.FILES_NOT_FOUND,
-        { projectId, fileCrcs, error: filesError }
+        { projectBranchId, error: filesError }
       );
     }
     
     if (!filesData || filesData.length === 0) {
       throw new SupabaseFromError(
-        `No ProjectFiles found for CRCs: ${fileCrcs.join(', ')}`,
+        `No ProjectFiles found for projectBranchId: ${projectBranchId}`,
         SupabaseErrorCode.FILES_NOT_FOUND,
-        { projectId, fileCrcs }
+        { projectBranchId }
       );
     }
     
     // Convert data to Uint8Array for each file (handles both hex and base64 formats)
-    const convertedFiles: ProjectFileData[] = filesData.map((file: ProjectFileRaw) => {
-      try {
-        const binaryData = decodeDataString(file.data);
-
-        return {
-          ...file,
-          data: binaryData,
-        } as ProjectFileData;
-      } catch (error) {
-        throw new SupabaseFromError(
-          `Failed to convert data for file ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          SupabaseErrorCode.INVALID_DATA,
-          { file, error }
-        );
-      }
-    });
-    
-    // Validate that we got all requested files
-    const foundCrcs = new Set(filesData.map(f => f.crc).filter(Boolean));
-    const requestedCrcs = new Set(fileCrcs);
-    const missingCrcs = [...requestedCrcs].filter(crc => !foundCrcs.has(crc));
-    
-    if (missingCrcs.length > 0) {
-      console.warn(`Some files were not found with CRCs: ${missingCrcs.join(', ')}`);
-    }
+    const convertedFiles: ProjectFileData[] = await convertRawData<ProjectFileData>(filesData.map(f => f.file));
     
     return convertedFiles;
     
@@ -497,7 +453,7 @@ async function loadProjectFiles(
     throw new SupabaseFromError(
       `Failed to load and convert ProjectFiles: ${error instanceof Error ? error.message : 'Unknown error'}`,
       SupabaseErrorCode.NETWORK_ERROR,
-      { projectId, fileCrcs, error }
+      { projectBranchId, error }
     );
   }
 }
@@ -554,7 +510,6 @@ export async function fromSupabaseByProject(projectName?: string, branchId?: str
         notes,
         projectId,
         baseRomBranchId,
-        fileCrcs,
         modules,
         createdAt,
         updatedAt,
@@ -575,7 +530,6 @@ export async function fromSupabaseByProject(projectName?: string, branchId?: str
           notes,
           baseRomId,
           gameRomBranchId,
-          fileCrcs,
           createdAt,
           updatedAt,
           baseRom:BaseRom!inner(
@@ -674,9 +628,9 @@ export async function fromSupabaseByProject(projectName?: string, branchId?: str
     const baseRomBranch = branchData.baseRomBranch as unknown as BaseRomBranchData;
     
     // Step 2: Load all the ProjectFile data using the fileCrcs array
-    const projectFiles = await loadProjectFiles(branchData.projectId, branchData.fileCrcs);
+    const projectFiles = await loadProjectFiles(branchData.id);
   
-    const baseRomFiles = await loadBaseRomFiles(baseRomBranch.baseRomId, baseRomBranch.fileCrcs);
+    const baseRomFiles = await loadBaseRomFiles(baseRomBranch.id);
     
 
     fileQueryTime = performance.now() - branchStart - branchQueryTime;
@@ -695,7 +649,6 @@ export async function fromSupabaseByProject(projectName?: string, branchId?: str
       fileQueryTime,
       totalTime,
       fileCount: projectFiles.length,
-      totalDataSize: projectFiles.reduce((sum, file) => sum + file.data.length, 0),
     };
     
     console.log('Project ROM load stats:', stats);
@@ -827,7 +780,6 @@ export async function fromSupabaseByGameRom(gameName?: string, regionName?: stri
       version: null,
       baseRomId: '',
       gameRomBranchId: gameRomBranch.id,
-      fileCrcs: [],
       gameRomBranch,
       baseRom: {
         id: '',
@@ -857,7 +809,6 @@ export async function fromSupabaseByGameRom(gameName?: string, regionName?: stri
       version: null,
       projectId: '',
       baseRomBranchId: '',
-      fileCrcs: [],
       modules: [],
       project,
       baseRomBranch,
@@ -881,7 +832,6 @@ export async function fromSupabaseByGameRom(gameName?: string, regionName?: stri
       fileQueryTime,
       totalTime,
       fileCount: 0,
-      totalDataSize: 0,
     };
 
     console.log('Game ROM load stats:', stats);
@@ -1043,7 +993,6 @@ export async function summaryFromSupabaseByProject(projectName?: string): Promis
       fileQueryTime,
       totalTime,
       fileCount: 0,
-      totalDataSize: 0,
     };
     
     console.log('Project ROM load stats:', stats);

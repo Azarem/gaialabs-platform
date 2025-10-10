@@ -11,33 +11,50 @@ export interface PlatformData {
   updatedAt: string;
 }
 
-/**
- * Platform branch information containing instruction set and addressing modes
- */
-export interface PlatformBranchData {
+export interface BranchBaseData {
   id: string;
   name: string | null;
   version: number | null;
+  isActive?: boolean | null;
+  notes?: string[] | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FileBaseData {
+  id: string;
+  name: string;
+  type: string;
+  version: number | null;
+  crc: number | null;
+  meta: any | null;
+  isText: boolean;
+  text: string | null;
+  data: Uint8Array | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FileBaseRaw extends Omit<FileBaseData, 'data'> {
+  data: string | null;
+}
+
+/**
+ * Platform branch information containing instruction set and addressing modes
+ */
+export interface PlatformBranchData extends BranchBaseData {
   platformId: string;
   addressingModes: any | null; // JSON field
   instructionSet: any | null; // JSON field
   vectors: any | null; // JSON field
   types: any | null; // JSON field
-  // Optional metadata commonly present in branch tables
-  isActive?: boolean | null;
-  notes?: string[] | null;
-  createdAt: string;
-  updatedAt: string;
   platform: PlatformData;
 }
 
 /**
  * Game ROM branch information with platform reference
  */
-export interface GameRomBranchData {
-  id: string;
-  name: string | null;
-  version: number | null;
+export interface GameRomBranchData extends BranchBaseData {
   gameRomId: string;
   platformBranchId: string;
   coplib: any | null; // JSON field
@@ -45,28 +62,26 @@ export interface GameRomBranchData {
   files: any | null; // JSON field
   blocks: any | null; // JSON field
   fixups: any | null; // JSON field
-  //types: any | null; // JSON field
   strings: any | null; // JSON field
   structs: any | null; // JSON field
   scenes: any | null; // JSON field
-  // Optional metadata commonly present in branch tables
-  isActive?: boolean | null;
-  notes?: string[] | null;
   gameRom: GameRomData;
   platformBranch: PlatformBranchData;
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface GameRomBranchAssetData {
+export interface GameRomArtifactData extends FileBaseData {
+  gameRomId: string;
+}
+
+export interface GameRomArtifactRaw extends FileBaseRaw {
+  gameRomId: string;
+}
+
+export interface GameRomBranchArtifactRaw {
   id: string;
-  name: string;
-  type: string;
-  gameRomBranchId: string;
-  text?: string;
-  data?: Uint8Array;
-  createdAt: string;
-  updatedAt: string;
+  branchId: string;
+  artifactId: string;
+  artifact: GameRomArtifactRaw;
 }
 
 /**
@@ -79,8 +94,6 @@ export interface BaseRomData {
   gameRomId: string;
   createdAt: string;
   updatedAt: string;
-  //game: GameData;
-  //gameRom: GameRomData;
 }
 
 export interface GameData {
@@ -115,52 +128,32 @@ export interface GameRomData {
 /**
  * Base ROM branch with complete relationship chain
  */
-export interface BaseRomBranchData {
-  id: string;
-  name: string | null;
-  version: number | null;
+export interface BaseRomBranchData extends BranchBaseData {
   baseRomId: string;
   gameRomBranchId: string;
-  fileCrcs: number[];
-  // Optional metadata commonly present in branch tables
-  isActive?: boolean | null;
-  notes?: string[] | null;
   gameRomBranch: GameRomBranchData;
   baseRom: BaseRomData;
-  createdAt: string;
-  updatedAt: string;
 }
 
 /**
  * Base ROM file containing binary data
  */
-export interface BaseRomFileData {
-  id: string;
-  name: string;
-  type: string;
-  version: number | null;
-  crc: number | null;
-  meta: any | null; // JSON field
+export interface BaseRomFileData extends FileBaseData {
   baseRomId: string;
-  data: Uint8Array; // Converted from base64
-  createdAt: string;
-  updatedAt: string;
+}
+
+export interface BaseRomBranchFileRaw {
+  id: string;
+  branchId: string;
+  fileId: string;
+  file: BaseRomFileRaw;
 }
 
 /**
  * Raw BaseRomFile data as returned from Supabase (before conversion)
  */
-export interface BaseRomFileRaw {
-  id: string;
-  name: string;
-  type: string;
-  version: number | null;
-  crc: number | null;
-  meta: any | null;
+export interface BaseRomFileRaw extends FileBaseRaw {
   baseRomId: string;
-  data: string; // Base64 encoded
-  createdAt: string;
-  updatedAt: string;
 }
 
 /**
@@ -251,61 +244,40 @@ export interface ProjectData {
   baseRomId: string;
   createdAt: string;
   updatedAt: string;
-  //baseRom: BaseRomData | null;
 }
 
 /**
  * Project branch with complete relationship chain
  */
-export interface ProjectBranchData {
-  id: string;
-  name: string | null;
-  version: number | null;
+export interface ProjectBranchData extends BranchBaseData {
   projectId: string;
   baseRomBranchId: string;
-  fileCrcs: number[];
   modules: any[]; // JSON array
-  // Optional metadata commonly present in branch tables
-  isActive?: boolean | null;
-  notes?: string[] | null;
   project: ProjectData;
   baseRomBranch: BaseRomBranchData;
-  createdAt: string;
-  updatedAt: string;
 }
 
 /**
  * Project file containing binary data
  */
-export interface ProjectFileData {
-  id: string;
-  name: string;
-  type: string;
+export interface ProjectFileData extends FileBaseData {
   module: string | null;
-  version: number | null;
-  crc: number | null;
-  meta: any | null; // JSON field
   projectId: string;
-  data: Uint8Array; // Converted from base64
-  createdAt: string;
-  updatedAt: string;
+}
+
+export interface ProjectBranchFileRaw {
+  id: string;
+  branchId: string;
+  fileId: string;
+  file: ProjectFileRaw;
 }
 
 /**
  * Raw ProjectFile data as returned from Supabase (before conversion)
  */
-export interface ProjectFileRaw {
-  id: string;
-  name: string;
-  type: string;
+export interface ProjectFileRaw extends FileBaseRaw {
   module: string | null;
-  version: number | null;
-  crc: number | null;
-  meta: any | null;
   projectId: string;
-  data: string; // Base64 encoded
-  createdAt: string;
-  updatedAt: string;
 }
 
 /**
@@ -346,5 +318,4 @@ export interface QueryStats {
   fileQueryTime: number;
   totalTime: number;
   fileCount: number;
-  totalDataSize: number;
 }

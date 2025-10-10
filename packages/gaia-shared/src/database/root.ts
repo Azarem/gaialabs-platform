@@ -1,5 +1,4 @@
 import { BinType } from '../types/resources';
-import { binaryToUtf8String } from '../utils';
 import type { ICompressionProvider } from '../types/compression';
 import { CompressionRegistry } from '../types/compression-registry';
 import type { DbBlock } from './blocks';
@@ -328,34 +327,26 @@ export class DbRootUtils {
     }).sort((a: any, b: any) => a.parts[0].location - b.parts[0].location);
     
     const baseRomFiles : ChunkFile[] = payload.baseRomFiles && payload.baseRomFiles.map((file: BaseRomFileData) => {
-      const chunkFile = new ChunkFile(
-        file.name, 
-        file.data.length, 
-        0, 
-        file.type as BinType
-      );
-      if(chunkFile.type === BinType.Assembly || chunkFile.type === BinType.Patch) {
-        chunkFile.textData = binaryToUtf8String(file.data);
+      const chunkFile = new ChunkFile(file.name, 0, 0, file.type as BinType);
+      if(file.isText) {
+        chunkFile.textData = file.text ?? undefined;
+        chunkFile.size = file.text?.length ?? 0;
       } else {
         chunkFile.rawData = file.data;
-        chunkFile.size = file.data.length;
+        chunkFile.size = file.data?.length ?? 0;
       }
       return chunkFile;
     });
     
     const projectFiles : ChunkFile[] = payload.projectFiles && payload.projectFiles.map((file: ProjectFileData) => {
-      const chunkFile = new ChunkFile(
-        file.name, 
-        file.data.length, 
-        0, 
-        file.type as BinType
-      );
+      const chunkFile = new ChunkFile(file.name, 0, 0, file.type as BinType);
       chunkFile.group = file.module ?? undefined;
-      if(chunkFile.type === BinType.Assembly || chunkFile.type === BinType.Patch) {
-        chunkFile.textData = binaryToUtf8String(file.data);
+      if(file.isText) {
+        chunkFile.textData = file.text ?? undefined;
+        chunkFile.size = file.text?.length ?? 0;
       } else {
         chunkFile.rawData = file.data;
-        chunkFile.size = file.data.length;
+        chunkFile.size = file.data?.length ?? 0;
       }
       return chunkFile;
     });
@@ -471,8 +462,8 @@ export class DbRootUtils {
     console.log('✅ Successfully transformed Supabase payload to DbRoot');
     console.log(`📁 Files: ${files.length}, 🧱 Blocks: ${blocks.length}`);
     console.log(`🎯 ROM: ${payload.baseRomBranch.baseRom.name} (${payload.baseRomBranch.name || 'main'})`);
-    console.log(`💾 BaseRom files: ${payload.baseRomFiles.length} files, ${payload.baseRomFiles.reduce((sum, f) => sum + f.data.length, 0)} bytes total`);
-    console.log(`💾 Project files: ${payload.projectFiles.length} files, ${payload.projectFiles.reduce((sum, f) => sum + f.data.length, 0)} bytes total`);
+    console.log(`💾 BaseRom files: ${root?.baseRomFiles?.length} files, ${root.baseRomFiles?.reduce((sum, f) => sum + f.size, 0)} bytes total`);
+    console.log(`💾 Project files: ${root?.projectFiles?.length} files, ${root.projectFiles?.reduce((sum, f) => sum + f.size, 0)} bytes total`);
     
     return root;
   }

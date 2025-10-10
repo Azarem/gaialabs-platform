@@ -1,7 +1,8 @@
 import pkg from '@prisma/client';
 const { PrismaClient } = pkg;
 import * as path from 'path';
-import { crc32_buffer, readFileAsBinary } from '@gaialabs/shared';
+import { crc32_buffer, crc32_text_utf8, readFileAsBinary, readFileAsText } from '@gaialabs/shared';
+import { createId } from '@paralleldrive/cuid2';
 
 const prisma = new PrismaClient();
 
@@ -14,13 +15,28 @@ async function loadBinaryData(rootPath: string, filePath: string): Promise<Uint8
   return data;
 }
 
-async function createProjectFile(projectId: string, type: string, folder: string, extension: string, name: string, module?: string): Promise<number> {
+async function createProjectFile(projectId: string, type: string, folder: string, extension: string, name: string, module?: string): Promise<string> {
   const resolvedModule = module ?? 'base';
-  const data = await loadBinaryData(RXLT_PATH, path.join(resolvedModule, folder, name + '.' + extension));
-  const crc = crc32_buffer(data);
+
+  const filePath = path.resolve(path.join(RXLT_PATH, resolvedModule, folder, name + '.' + extension));
+  let crc: number | undefined;
+  let text: string | undefined;
+  let data: Uint8Array | undefined;
+  let isText: boolean = false;
+  if(type === 'Assembly' || type === 'Patch') {
+    text = await readFileAsText(filePath);
+    crc = crc32_text_utf8(text);
+    isText = true;
+  } else {
+    data = await readFileAsBinary(filePath);
+    crc = crc32_buffer(data);
+  }
+
   console.log('Creating project file for ' + name + ' with crc ' + crc);
+  const id = createId();
   await prisma.projectFile.create({
     data: {
+      id,
       projectId,
       name,
       type,
@@ -29,7 +45,8 @@ async function createProjectFile(projectId: string, type: string, folder: string
       module,
     },
   });
-  return crc;
+
+  return id;
 }
 
 async function main() {
@@ -81,31 +98,45 @@ async function main() {
     });
 
     // Step 3: Retrieve the current file CRC list
-    console.log('📋 Retrieving current fileCrcs list...');
-    const fileCrcs = [...currentProject.fileCrcs]; // Create a copy of the array
-    console.log(`✅ Retrieved ${fileCrcs.length} existing file CRCs`);
+    console.log('📋 Retrieving current fileIds list...');
+    const fileIds = (await prisma.projectBranchFile.findMany({
+      where: {
+        branchId: currentProject.id
+      }
+    })).map(file => file.fileId);
+    console.log(`✅ Retrieved ${fileIds.length} existing file CRCs`);
 
     // Step 4: Add new project file to CRC list
     console.log('➕ Adding new jp-mines palette file...');
-    const newFileCrc = await createProjectFile(currentProject.projectId, "Palette", "palettes", "pal", "pal_dm3D_tiles", "jp-mines");
-    fileCrcs.push(newFileCrc);
-    console.log(`✅ Added new file CRC: ${newFileCrc}`);
+    const newFileId = await createProjectFile(currentProject.projectId, "Palette", "palettes", "pal", "pal_dm3D_tiles", "jp-mines");
+    fileIds.push(newFileId);
+    console.log(`✅ Added new file Id: ${newFileId}`);
 
     // Step 5: Create new release branch
     console.log('🚀 Creating new release branch...');
+    const newProjectBranchId = createId();
     const newProjectBranch = await prisma.projectBranch.create({
       data: {
+        id: newProjectBranchId,
         projectId: currentProject.projectId,
         baseRomBranchId: currentProject.baseRomBranchId,
         name: '1.42',
         version: 2,
         isActive: true,
-        fileCrcs,
+        //fileCrcs,
         notes: [
           'Added: JP Mines (purple) palette option'
         ],
         modules: currentProject.modules // Copy the modules configuration
       }
+    });
+
+    await prisma.projectBranchFile.createMany({
+      data: fileIds.map(fileId => ({
+        id: createId(),
+        branchId: newProjectBranchId,
+        fileId: fileId
+      }))
     });
 
     // Update project meta to reflect new current version
@@ -122,21 +153,25 @@ async function main() {
     });
 
     console.log(`✅ Created new project branch: ${newProjectBranch.name} (version ${newProjectBranch.version})`);
-    console.log(`📊 New branch contains ${newProjectBranch.fileCrcs.length} files`);
+    console.log(`📊 New branch contains ${fileIds.length} files`);
     console.log('🎉 Migration to version 1.42 completed successfully!');
 
   } catch (error) {
     console.error('❌ Migration failed:', error);
     throw error;
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
-main()
-  .catch((e) => {
-    console.error('An error occurred during the migration process:');
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// main()
+//   .catch((e) => {
+//     console.error('An error occurred during the migration process:');
+//     console.error(e);
+//     process.exit(1);
+//   })
+//   .finally(async () => {
+//     await prisma.$disconnect();
+//   });
+
+export default main;
