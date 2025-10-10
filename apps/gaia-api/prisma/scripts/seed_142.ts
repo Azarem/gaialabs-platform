@@ -9,12 +9,6 @@ const prisma = new PrismaClient();
 // --- Database Path Configuration ---
 const RXLT_PATH = 'C:/Work/IOGRXLT/IOGRetranslation/modules';
 
-async function loadBinaryData(rootPath: string, filePath: string): Promise<Uint8Array> {
-  const fullPath = path.resolve(path.join(rootPath, filePath));
-  const data = await readFileAsBinary(fullPath);
-  return data;
-}
-
 async function createProjectFile(projectId: string, type: string, folder: string, extension: string, name: string, module?: string): Promise<string> {
   const resolvedModule = module ?? 'base';
 
@@ -97,14 +91,14 @@ async function main() {
       ]
     });
 
-    // Step 3: Retrieve the current file CRC list
+    // Step 3: Retrieve the current file ID list
     console.log('📋 Retrieving current fileIds list...');
     const fileIds = (await prisma.projectBranchFile.findMany({
       where: {
         branchId: currentProject.id
       }
     })).map(file => file.fileId);
-    console.log(`✅ Retrieved ${fileIds.length} existing file CRCs`);
+    console.log(`✅ Retrieved ${fileIds.length} existing file IDs`);
 
     // Step 4: Add new project file to CRC list
     console.log('➕ Adding new jp-mines palette file...');

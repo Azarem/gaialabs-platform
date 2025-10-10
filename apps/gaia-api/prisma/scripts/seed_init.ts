@@ -222,7 +222,8 @@ async function createGameRom(gameId: string, regionId: string, platformBranchId:
       files: await createIogFiles(),
       blocks: await createIogBlocks(),
       fixups: await createIogFixups(),
-      types: await createIogTypes(),
+      structs: await createIogStructs(),
+      strings: await createIogStrings(),
     },
   });
 
@@ -816,9 +817,22 @@ async function createIogBlocks() {
   return blockLookup;
 }
 
-async function createIogTypes() {
-  console.log('🔄 Loading IOG types...');
+async function createIogStructs() {
+  console.log('🔄 Loading IOG structs...');
   const structs = await loadJsonData<DbStruct[]>(DB_PATH, 'structs.json');
+  return structs.reduce((acc, s) => {
+    acc[s.name] = { 
+      types: s.types, 
+      parent: s.parent, 
+      delimiter: s.delimiter, 
+      discriminator: s.discriminator 
+    };
+    return acc;
+  }, {});
+}
+
+async function createIogStrings() {
+  console.log('🔄 Loading IOG strings...');
   const strings = await loadJsonData<DbStringType[]>(DB_PATH, 'stringTypes.json');
   const stringCommands = await loadJsonData<DbStringCommand[]>(DB_PATH, 'stringCommands.json');
   const stringLayers = await loadJsonData<DbStringLayer[]>(DB_PATH, 'stringLayers.json');
@@ -841,20 +855,8 @@ async function createIogTypes() {
     return acc;
   }, {});
 
-  const structLookup = structs.reduce((acc, s) => {
-    acc[s.name] = { 
-      types: s.types, 
-      parent: s.parent, 
-      delimiter: s.delimiter, 
-      discriminator: s.discriminator 
-    };
-    return acc;
-  }, {});
 
-  return {
-    structs: structLookup,
-    strings: stringLookup
-  };
+  return stringLookup;
 }
 
 async function createIogFixups() : Promise<{}> {

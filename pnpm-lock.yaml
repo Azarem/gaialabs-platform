@@ -471,8 +471,8 @@ importers:
   packages/gaia-core:
     dependencies:
       '@gaialabs/shared':
-        specifier: workspace:>=0.1.16
-        version: link:../gaia-shared
+        specifier: '>=0.1.16'
+        version: 0.1.16(prisma@6.16.1(typescript@5.8.3))(typescript@5.8.3)
     devDependencies:
       '@types/node':
         specifier: ^20.10.0
@@ -2308,6 +2308,9 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
+
+  '@gaialabs/shared@0.1.16':
+    resolution: {integrity: sha512-JGYU8XSgu2Bs93DZOa2I/H3jNXguslSXJETJqAQwq53pWMyZmKT5WfrRRKca4hANxzjjzTb7Qb+TgbXBRrtq/A==}
 
   '@hookform/resolvers@3.10.0':
     resolution: {integrity: sha512-79Dv+3mDF7i+2ajj7SkypSKHhl1cbln1OGavqrsF7p6mbUv11xpqpacPsGDCTRvCSjEEIez2ef1NveSVL3b0Ag==}
@@ -12500,6 +12503,17 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
 
   '@floating-ui/utils@0.2.10': {}
+
+  '@gaialabs/shared@0.1.16(prisma@6.16.1(typescript@5.8.3))(typescript@5.8.3)':
+    dependencies:
+      '@prisma/client': 6.11.1(prisma@6.16.1(typescript@5.8.3))(typescript@5.8.3)
+      '@supabase/supabase-js': 2.55.0
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - bufferutil
+      - prisma
+      - typescript
+      - utf-8-validate
 
   '@hookform/resolvers@3.10.0(react-hook-form@7.62.0(react@19.1.0))':
     dependencies:

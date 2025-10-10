@@ -1,6 +1,6 @@
 import pkg from '@prisma/client';
 const { PrismaClient } = pkg;
-import { crc32_buffer, readFileAsBinary, readFileAsText } from '@gaialabs/shared';
+import { crc32_buffer, crc32_text_utf8, readFileAsBinary, readFileAsText } from '@gaialabs/shared';
 import { parseSceneMetaFile } from './convert_scene_meta.ts';
 import fs from 'fs';
 import path from 'path';
@@ -16,34 +16,40 @@ const prisma = new PrismaClient();
 const ASM_PATH = path.join(__dirname, '../../../../truth/asm');
 const RXLT_PATH = 'C:/Work/IOGRXLT/IOGRetranslation/modules';
 
-async function loadBinaryData(rootPath: string, filePath: string): Promise<Uint8Array> {
-  const fullPath = path.resolve(path.join(rootPath, filePath));
-  const data = await readFileAsBinary(fullPath);
-  return data;
-}
-
-async function loadTextData(rootPath: string, filePath: string): Promise<string> {
-  const fullPath = path.resolve(path.join(rootPath, filePath));
-  const data = await readFileAsText(fullPath);
-  return data;
-}
-
-async function createProjectFile(projectId: string, type: string, folder: string, extension: string, name: string, module?: string): Promise<number> {
+async function createProjectFile(projectId: string, type: string, folder: string, extension: string, name: string, module?: string): Promise<string> {
   const resolvedModule = module ?? 'base';
-  const data = await loadBinaryData(RXLT_PATH, path.join(resolvedModule, folder, name + '.' + extension));
-  const crc = crc32_buffer(data);
+
+  const filePath = path.resolve(path.join(RXLT_PATH, resolvedModule, folder ?? '', name + '.' + extension));
+  let crc: number | undefined;
+  let text: string | undefined;
+  let data: Uint8Array | undefined;
+  let isText: boolean = false;
+  if(type === 'Assembly' || type === 'Patch') {
+    text = await readFileAsText(filePath);
+    crc = crc32_text_utf8(text);
+    isText = true;
+  } else {
+    data = await readFileAsBinary(filePath);
+    crc = crc32_buffer(data);
+  }
+
   console.log('Creating project file for ' + name + ' with crc ' + crc);
+  const id = createId();
   await prisma.projectFile.create({
     data: {
+      id,
       projectId,
       name,
       type,
       crc,
       data,
       module,
+      isText,
+      text,
     },
   });
-  return crc;
+
+  return id;
 }
 
 async function createGameRomArtifacts(gameRomBranch: any) {
@@ -54,7 +60,7 @@ async function createGameRomArtifacts(gameRomBranch: any) {
     const block = blocks[name];
     const rootPath = block.group ? path.join(ASM_PATH, block.group) : ASM_PATH;
     try{
-      const text = await loadTextData(rootPath, name + '.asm');
+      const text = await readFileAsText(path.resolve(path.join(rootPath, name + '.asm')));
       blockAssets.push({
         id: createId(),
         name,
@@ -117,8 +123,6 @@ async function main() {
         id: currentBranch.id
       },
       data: {
-        strings: (currentBranch.types as any)?.strings ?? undefined,
-        structs: (currentBranch.types as any)?.structs ?? undefined,
         scenes: sceneData
       }
     });
@@ -403,45 +407,126 @@ async function main() {
       }
     });
 
-    // Step 3: Adjust modules configuration
-    //console.log('🔄 Adjusting modules configuration...');
-    // const jpModule = currentProject.modules[1];
-    // jpModule!['groups'].push({
-    //   name: 'Diamond Mines',
-    //   options: [
-    //     { name: 'NA (Brown)', module: null, default: true },
-    //     { name: 'JP (Purple)', module: 'jp-mines' }
-    //   ]
-    // });
+    // Step 1: Query for the current active version
+    console.log('🔍 Finding current active project version...');
+    const currentProject = await prisma.projectBranch.findFirst({
+      where: {
+        project: {
+          name: "Illusion of Gaia: Retranslated"
+        },
+        name: '1.42',
+        isActive: true
+      },
+      include: {
+        project: true
+      }
+    });
 
-    // Step 3: Retrieve the current file CRC list
-    //console.log('📋 Retrieving current fileCrcs list...');
-    //const fileCrcs = [...currentBranch.fileCrcs]; // Create a copy of the array
-    //console.log(`✅ Retrieved ${fileCrcs.length} existing file CRCs`);
+    if (!currentProject) {
+      throw new Error('Could not find active project branch for "Illusion of Gaia: Retranslated"');
+    }
 
-    // Step 4: Add new project file to CRC list
-    //console.log('➕ Adding new jp-mines palette file...');
-    //const newFileCrc = await createProjectFile(currentProject.projectId, "Palette", "palettes", "pal", "pal_dm3D_tiles", "jp-mines");
-    //fileCrcs.push(newFileCrc);
-    //console.log(`✅ Added new file CRC: ${newFileCrc}`);
+    console.log(`✅ Found current active version: ${currentProject.name} (version ${currentProject.version})`);
 
+    console.log('🔄 Deactivating current branch...');
+    await prisma.projectBranch.update({
+      where: {
+        id: currentProject.id
+      },
+      data: {
+        isActive: null
+      }
+    });
+    console.log('✅ Current branch deactivated');
+    
+    // Retrieve the current file ID list
+    console.log('📋 Retrieving current fileIds list...');
+    const fileIds = (await prisma.projectBranchFile.findMany({
+      where: {
+        branchId: currentProject.id
+      }
+    })).map(file => file.fileId);
+    console.log(`✅ Retrieved ${fileIds.length} existing file IDs`);
 
-    // // Update project meta to reflect new current version
-    // await prisma.project.update({
-    //   where: {
-    //     id: currentBranch.projectId
-    //   },
-    //   data: {
-    //     meta: {
-    //       ...currentBranch.project.meta,
-    //       currentVersion: "1.43"
-    //     }
-    //   }
-    // });
+    // Adjust modules configuration
+    console.log('🔄 Adjusting modules configuration...');
+    const modules = currentProject.modules as any[];
 
-    // console.log(`✅ Created new project branch: ${newGameRomBranch.name} (version ${newGameRomBranch.version})`);
-    // console.log(`📊 New branch contains ${newGameRomBranch.fileCrcs.length} files`);
-    console.log('🎉 Updating types for version 1.43 completed successfully!');
+    // Add title-demo module
+    const titleGroup = modules[0].groups[0];
+    titleGroup!['options'].push({
+      name: 'Demo',
+      module: 'title-demo',
+      description: 'Demo title screen with JP comet background'
+    });
+
+    // Add new project files to ID list
+    console.log('➕ Adding new files...');
+    fileIds.push(await createProjectFile(currentProject.projectId, "Patch", "", "patch.asm", "EnhancedTitle", "title-demo"));
+    fileIds.push(await createProjectFile(currentProject.projectId, "Bitmap", "", "bin", "gfx_title", "title-demo"));
+    fileIds.push(await createProjectFile(currentProject.projectId, "Bitmap", "", "bin", "gfx_title_actors", "title-demo"));
+    fileIds.push(await createProjectFile(currentProject.projectId, "Tilemap", "", "map", "map_title_effect", "title-demo"));
+    fileIds.push(await createProjectFile(currentProject.projectId, "Tilemap", "", "map", "map_title_main", "title-demo"));
+    fileIds.push(await createProjectFile(currentProject.projectId, "Palette", "", "pal", "pal_title", "title-demo"));
+    fileIds.push(await createProjectFile(currentProject.projectId, "Palette", "", "pal", "pal_title_actors", "title-demo"));
+    fileIds.push(await createProjectFile(currentProject.projectId, "Tileset", "", "set", "set_title", "title-demo"));
+    fileIds.push(await createProjectFile(currentProject.projectId, "Spritemap", "", "spm", "spm_title_actors", "title-demo"));
+    
+    // Add no-shira-spotlight module
+    const extrasSection = modules[4];
+    extrasSection.groups.push({
+      name: 'No Shira Spotlight',
+      options: [
+        { name: 'Disable', module: null, default: true },
+        { name: 'Enable', module: 'no-shira-spotlight' },
+      ]
+    });
+
+    fileIds.push(await createProjectFile(currentProject.projectId, "Patch", "", "asm", "NoShiraSpotlight", "no-shira-spotlight"));
+
+    // Step 5: Create new release branch
+    console.log('🚀 Creating new release branch...');
+    const newProjectBranchId = createId();
+    const newProjectBranch = await prisma.projectBranch.create({
+      data: {
+        id: newProjectBranchId,
+        projectId: currentProject.projectId,
+        baseRomBranchId: currentProject.baseRomBranchId,
+        name: '1.43',
+        version: 3,
+        isActive: true,
+        notes: [
+          'Added: Demo title screen',
+          'Added: Option to remove the spotlight on Shira during dream'
+        ],
+        modules // Copy the modules configuration
+      }
+    });
+
+    await prisma.projectBranchFile.createMany({
+      data: fileIds.map(fileId => ({
+        id: createId(),
+        branchId: newProjectBranchId,
+        fileId: fileId
+      }))
+    });
+
+    // Update project meta to reflect new current version
+    await prisma.project.update({
+      where: {
+        id: currentProject.projectId
+      },
+      data: {
+        meta: {
+          ...currentProject.project.meta,
+          currentVersion: "1.43"
+        }
+      }
+    });
+
+    console.log(`✅ Created new project branch: ${newProjectBranch.name} (version ${newProjectBranch.version})`);
+    console.log(`📊 New branch contains ${fileIds.length} files`);
+    console.log('🎉 Updating for version 1.43 completed successfully!');
 
   } catch (error) {
     console.error('❌ Migration failed:', error);
