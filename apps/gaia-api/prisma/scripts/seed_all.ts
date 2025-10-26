@@ -1,6 +1,6 @@
-import seedInit from './seed_init.js';
-import seed142 from './seed_142.js';
-import seed143 from './seed_143.js';
+import seedInit from './seed_init.ts';
+import seed142 from './seed_142.ts';
+import seed143 from './seed_143.ts';
 
 
 async function main() {
