@@ -154,7 +154,6 @@ model GameRomBranch {
   files  Json?
   blocks Json?
   fixups Json?
-  types  Json?
   strings Json?
   structs Json?
   scenes Json?
